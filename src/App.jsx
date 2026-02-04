@@ -62,6 +62,7 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
     { key: 'filmGrain', label: 'Film Grain' },
     { key: 'vignette', label: 'Vignette' },
     { key: 'scanlines', label: 'Scanlines' },
+    { key: 'ascii', label: 'ASCII Shader' },
   ];
 
   const particlePresets = ['none', 'dust', 'snow', 'bokeh', 'embers', 'rain'];
@@ -150,6 +151,7 @@ function AppContent() {
     vignette: true,
     scanlines: true,
     particles: 'dust',
+    ascii: true,
   });
 
   return (
@@ -160,6 +162,7 @@ function AppContent() {
         vignette={overlayConfig.vignette}
         scanlines={overlayConfig.scanlines}
         particles={overlayConfig.particles}
+        ascii={overlayConfig.ascii}
       />
 
       {/* Dev controls */}

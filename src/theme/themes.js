@@ -29,6 +29,7 @@ export const themes = {
       scanlines: 0.03,
       chromaticAberration: 0.002,
       bloom: 0.3,
+      asciiShader: 0.4,
     },
   },
 
@@ -57,6 +58,7 @@ export const themes = {
       scanlines: 0.06,
       chromaticAberration: 0.004,
       bloom: 0.5,
+      asciiShader: 0.6,
     },
   },
 
@@ -85,6 +87,7 @@ export const themes = {
       scanlines: 0,
       chromaticAberration: 0.001,
       bloom: 0.6,
+      asciiShader: 0.2,
     },
   },
 
@@ -113,6 +116,7 @@ export const themes = {
       scanlines: 0,
       chromaticAberration: 0,
       bloom: 0.1,
+      asciiShader: 0.5,
     },
   },
 
@@ -141,6 +145,7 @@ export const themes = {
       scanlines: 0,
       chromaticAberration: 0,
       bloom: 0,
+      asciiShader: 0,
     },
   },
 };

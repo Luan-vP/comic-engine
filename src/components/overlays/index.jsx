@@ -3,6 +3,7 @@ import { FilmGrain } from './FilmGrain';
 import { Vignette } from './Vignette';
 import { Scanlines } from './Scanlines';
 import { Particles } from './Particles';
+import { AsciiShader } from './AsciiShader';
 
 /**
  * OverlayStack - Master controller for all visual overlays
@@ -13,15 +14,18 @@ export function OverlayStack({
   vignette = true,
   scanlines = true,
   particles = null, // null = disabled, or preset name / config object
-  
+  ascii = false, // ASCII shader overlay
+
   // Individual overrides
   filmGrainProps = {},
   vignetteProps = {},
   scanlinesProps = {},
   particlesProps = {},
+  asciiProps = {},
 }) {
   return (
     <>
+      {ascii && <AsciiShader {...asciiProps} />}
       {filmGrain && <FilmGrain {...filmGrainProps} />}
       {vignette && <Vignette {...vignetteProps} />}
       {scanlines && <Scanlines {...scanlinesProps} />}
@@ -37,6 +41,6 @@ export function OverlayStack({
 }
 
 // Re-export individual components for granular control
-export { FilmGrain, Vignette, Scanlines, Particles };
+export { FilmGrain, Vignette, Scanlines, Particles, AsciiShader };
 
 export default OverlayStack;
