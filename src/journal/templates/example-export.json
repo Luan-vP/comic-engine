@@ -1,0 +1,62 @@
+[
+  {
+    "metadata": {
+      "id": "2025-01-15-morning-reflection",
+      "date": "2025-01-15T09:30:00Z",
+      "themes": ["healing", "acceptance"],
+      "comicCandidate": true,
+      "tags": ["#journal", "#to-comic", "#breakthrough"],
+      "storyPrompts": {
+        "characters": ["myself", "my younger self"],
+        "dominantEmotion": "bittersweet relief",
+        "visualMetaphor": "a door opening to light, but with shadows behind",
+        "beforeContext": "Years of carrying this weight alone",
+        "afterContext": "First steps toward letting it go"
+      },
+      "visualStyle": "torn",
+      "emotionalIntensity": 7
+    },
+    "content": "# Morning Reflection\n\nToday something shifted. I've been holding onto this for so long...\n\n[Marked passage begins]\nI realized I don't have to carry all of this anymore. The weight I've been\ndragging through every day - it's not mine to carry. I can set it down.\nI can choose differently.\n[Marked passage ends]\n\nIt feels both terrifying and freeing. Like standing at the edge of something new.",
+    "excerpt": "I realized I don't have to carry all of this anymore. The weight I've been\ndragging through every day - it's not mine to carry. I can set it down.\nI can choose differently."
+  },
+  {
+    "metadata": {
+      "id": "2025-01-22-afternoon-walk",
+      "date": "2025-01-22T15:45:00Z",
+      "themes": ["healing", "nature", "presence"],
+      "comicCandidate": true,
+      "tags": ["#journal", "#to-comic", "#nature"],
+      "storyPrompts": {
+        "characters": ["myself"],
+        "dominantEmotion": "quiet peace",
+        "visualMetaphor": "roots growing deeper while branches reach skyward",
+        "beforeContext": "The decision to change",
+        "afterContext": "Slowly building new patterns"
+      },
+      "visualStyle": "borderless",
+      "emotionalIntensity": 4
+    },
+    "content": "# Afternoon Walk\n\nWalked through the park today. No agenda, just walking.\n\n==The trees don't struggle to grow. They just grow. Maybe I can learn from that - not forcing, just allowing.==\n\nSmall steps. That's all it takes.",
+    "excerpt": "The trees don't struggle to grow. They just grow. Maybe I can learn from that - not forcing, just allowing."
+  },
+  {
+    "metadata": {
+      "id": "2025-02-01-morning-setback",
+      "date": "2025-02-01T08:00:00Z",
+      "themes": ["healing", "resilience", "growth"],
+      "comicCandidate": true,
+      "tags": ["#journal", "#to-comic", "#setback"],
+      "storyPrompts": {
+        "characters": ["myself", "the old patterns"],
+        "dominantEmotion": "frustrated determination",
+        "visualMetaphor": "climbing a mountain, slipping back, but keeping the summit in sight",
+        "beforeContext": "Making progress, feeling hopeful",
+        "afterContext": "Understanding that healing isn't linear"
+      },
+      "visualStyle": "default",
+      "emotionalIntensity": 6
+    },
+    "content": "# Morning - After the Setback\n\nFell back into old patterns yesterday. Felt like I'd lost all progress.\n\n```comic\nBut today I see it differently. Every time I choose again, even after falling,\nI'm building the muscle of resilience. The mountain doesn't judge how many times\nI slip. It just is. And I keep climbing.\n```\n\nThis is the work. Not perfection. Progress.",
+    "excerpt": "Every time I choose again, even after falling, I'm building the muscle of resilience. The mountain doesn't judge how many times I slip. It just is. And I keep climbing."
+  }
+]
