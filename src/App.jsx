@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ThemeProvider, useTheme, themes } from './theme/ThemeContext';
 import { OverlayStack } from './components/overlays';
 import { BeHereMeow } from './pages/BeHereMeow';
+import { BiographySnapshots } from './pages/BiographySnapshots';
 // import { ExamplePage } from './pages/ExamplePage'; // other scenes
 
 /**
@@ -143,9 +144,67 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
 }
 
 /**
+ * Page Switcher - for navigation between demos
+ */
+function PageSwitcher({ currentPage, setCurrentPage }) {
+  const { theme } = useTheme();
+
+  const pages = [
+    { id: 'beheremeow', label: 'Be Here Meow' },
+    { id: 'biography', label: 'Biography Snapshots' },
+  ];
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: '20px',
+        left: '20px',
+        background: 'rgba(0,0,0,0.8)',
+        backdropFilter: 'blur(10px)',
+        border: `1px solid ${theme.colors.border}`,
+        borderRadius: '8px',
+        padding: '12px',
+        zIndex: 10000,
+        fontFamily: theme.typography.fontBody,
+      }}
+    >
+      <div style={{ color: theme.colors.textMuted, fontSize: '10px', marginBottom: '8px', letterSpacing: '1px' }}>
+        PAGE
+      </div>
+      {pages.map((page) => (
+        <button
+          key={page.id}
+          onClick={() => setCurrentPage(page.id)}
+          style={{
+            display: 'block',
+            width: '100%',
+            background: currentPage === page.id ? theme.colors.primary : 'rgba(255,255,255,0.05)',
+            border: `1px solid ${currentPage === page.id ? theme.colors.primary : theme.colors.border}`,
+            borderRadius: '4px',
+            padding: '8px 12px',
+            color: currentPage === page.id ? '#fff' : theme.colors.text,
+            fontSize: '11px',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            marginBottom: '6px',
+            textAlign: 'left',
+            fontWeight: currentPage === page.id ? 'bold' : 'normal',
+            letterSpacing: '0.5px',
+          }}
+        >
+          {page.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
  * Main App Content - separated so it can use theme context
  */
 function AppContent() {
+  const [currentPage, setCurrentPage] = useState('biography'); // Start with Biography Snapshots
   const [overlayConfig, setOverlayConfig] = useState({
     filmGrain: true,
     vignette: true,
@@ -166,11 +225,13 @@ function AppContent() {
       />
 
       {/* Dev controls */}
+      <PageSwitcher currentPage={currentPage} setCurrentPage={setCurrentPage} />
       <ThemeSwitcher />
       <OverlayControls overlayConfig={overlayConfig} setOverlayConfig={setOverlayConfig} />
 
       {/* Main content */}
-      <BeHereMeow />
+      {currentPage === 'beheremeow' && <BeHereMeow />}
+      {currentPage === 'biography' && <BiographySnapshots />}
     </>
   );
 }
