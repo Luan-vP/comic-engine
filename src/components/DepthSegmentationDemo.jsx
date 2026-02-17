@@ -15,7 +15,8 @@ import { useTheme } from '../theme/ThemeContext';
 export function DepthSegmentationDemo() {
   const { theme } = useTheme();
   const [granularity, setGranularity] = useState(0.3);
-  const [blurFill, setBlurFill] = useState(20);
+  const [fillMode, setFillMode] = useState('blur'); // 'none' | 'blur' | 'solid'
+  const [blurRadius, setBlurRadius] = useState(20);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState({ step: '', value: 0 });
   const [result, setResult] = useState(null);
@@ -56,16 +57,16 @@ export function DepthSegmentationDemo() {
     try {
       const pipelineResult = await processPhotoToLayers(sourceImage, {
         granularity,
-        blurFill,
+        blurFill: blurRadius,
         depthModel: 'depth-anything-v2',
         minObjectSize: 100,
         onProgress: (step, value) => {
           const stepNames = {
             'depth-estimation': 'Estimating depth',
-            'quantization': 'Quantizing layers',
-            'segmentation': 'Segmenting objects',
-            'export': 'Preparing export',
-            'complete': 'Complete',
+            quantization: 'Quantizing layers',
+            segmentation: 'Segmenting objects',
+            export: 'Preparing export',
+            complete: 'Complete',
           };
           setProgress({
             step: stepNames[step] || step,
@@ -188,39 +189,84 @@ export function DepthSegmentationDemo() {
             </div>
           </div>
 
-          {/* Blur fill slider */}
-          <div style={{ marginBottom: '8px' }}>
-            <label
+          {/* Fill mode checkboxes */}
+          <div style={{ marginBottom: '12px' }}>
+            <div
               style={{
                 color: theme.colors.text,
                 fontSize: '13px',
-                display: 'block',
                 marginBottom: '8px',
               }}
             >
-              Blur Fill: {blurFill}px
-              <span style={{ color: theme.colors.textMuted, marginLeft: '8px' }}>
-                ({blurFill === 0 ? 'Off' : blurFill < 15 ? 'Subtle' : 'Strong'})
+              Cutout Fill
+            </div>
+            <label
+              style={{
+                color: theme.colors.text,
+                fontSize: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                marginBottom: '4px',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={fillMode === 'blur'}
+                onChange={() => setFillMode(fillMode === 'blur' ? 'none' : 'blur')}
+                disabled={processing}
+              />
+              Blur Fill
+            </label>
+            {fillMode === 'blur' && (
+              <div style={{ marginLeft: '22px', marginBottom: '8px' }}>
+                <input
+                  type="range"
+                  min="5"
+                  max="50"
+                  step="5"
+                  value={blurRadius}
+                  onChange={(e) => setBlurRadius(parseInt(e.target.value, 10))}
+                  disabled={processing}
+                  style={{ width: 'calc(100% - 40px)' }}
+                />
+                <span
+                  style={{ color: theme.colors.textMuted, fontSize: '11px', marginLeft: '8px' }}
+                >
+                  {blurRadius}px
+                </span>
+              </div>
+            )}
+            <label
+              style={{
+                color: theme.colors.text,
+                fontSize: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={fillMode === 'solid'}
+                onChange={() => setFillMode(fillMode === 'solid' ? 'none' : 'solid')}
+                disabled={processing}
+              />
+              Solid Color
+              <span style={{ color: theme.colors.textMuted, fontSize: '11px' }}>
+                (theme background)
               </span>
             </label>
-            <input
-              type="range"
-              min="0"
-              max="50"
-              step="5"
-              value={blurFill}
-              onChange={(e) => setBlurFill(parseInt(e.target.value, 10))}
-              disabled={processing}
-              style={{ width: '100%' }}
-            />
             <div
               style={{
                 fontSize: '11px',
                 color: theme.colors.textMuted,
-                marginTop: '4px',
+                marginTop: '6px',
               }}
             >
-              Fills cut-out areas with blurred source to hide gaps during parallax
+              Fills cut-out areas to hide gaps during parallax
             </div>
           </div>
 
@@ -311,13 +357,12 @@ export function DepthSegmentationDemo() {
     }
 
     return (
-      <Scene
-        perspective={1000}
-        parallaxIntensity={1.2}
-        mouseInfluence={{ x: 60, y: 40 }}
-      >
-        {result.layers.map((layer, index) => {
+      <Scene perspective={1000} parallaxIntensity={1.2} mouseInfluence={{ x: 60, y: 40 }}>
+        {result.layers.map((layer) => {
           const [x, y, z] = layer.sceneObjectProps.position;
+          const useBlur = fillMode === 'blur' && layer.blurFillUrl;
+          const imgSrc = useBlur ? layer.blurFillUrl : layer.imageUrl;
+
           return (
             <SceneObject
               key={layer.id}
@@ -325,18 +370,35 @@ export function DepthSegmentationDemo() {
               parallaxFactor={layer.sceneObjectProps.parallaxFactor}
               interactive={false}
             >
-              <img
-                src={layer.imageUrl}
-                alt={layer.name}
-                style={{
-                  display: 'block',
-                  maxWidth: '80vw',
-                  maxHeight: '80vh',
-                  objectFit: 'contain',
-                  filter: `brightness(${0.8 + layer.depth * 0.4})`,
-                  pointerEvents: 'none',
-                }}
-              />
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                {fillMode === 'solid' && layer.fillMaskUrl && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      backgroundColor: theme.colors.background,
+                      WebkitMaskImage: `url(${layer.fillMaskUrl})`,
+                      maskImage: `url(${layer.fillMaskUrl})`,
+                      WebkitMaskSize: '100% 100%',
+                      maskSize: '100% 100%',
+                      WebkitMaskRepeat: 'no-repeat',
+                      maskRepeat: 'no-repeat',
+                    }}
+                  />
+                )}
+                <img
+                  src={imgSrc}
+                  alt={layer.name}
+                  style={{
+                    display: 'block',
+                    maxWidth: '80vw',
+                    maxHeight: '80vh',
+                    objectFit: 'contain',
+                    filter: `brightness(${0.8 + layer.depth * 0.4})`,
+                    pointerEvents: 'none',
+                  }}
+                />
+              </div>
             </SceneObject>
           );
         })}

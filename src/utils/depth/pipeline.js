@@ -6,7 +6,7 @@
  */
 
 import { estimateDepth, visualizeDepthMap } from './depthEstimation.js';
-import { quantizeDepth, depthToZPosition } from './quantization.js';
+import { quantizeDepth } from './quantization.js';
 import { segmentLayers } from './segmentation.js';
 
 /**
@@ -81,6 +81,8 @@ export async function processPhotoToLayers(image, options = {}) {
         depth: obj.depth,
         zPosition,
         imageUrl: obj.imageData,
+        fillMaskUrl: obj.fillMaskUrl,
+        blurFillUrl: obj.blurFillImageData,
         bounds: obj.bounds,
         componentCount: obj.componentCount,
 
@@ -153,7 +155,7 @@ function calculateParallaxFactor(depth) {
  * @returns {Array<SceneLayer>} Layers with SceneObject props
  */
 export function getSceneLayers(result) {
-  return result.layers.map(layer => ({
+  return result.layers.map((layer) => ({
     id: layer.id,
     name: layer.name,
     imageUrl: layer.imageUrl,
