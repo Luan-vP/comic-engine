@@ -19,9 +19,9 @@ import { segmentLayers } from './segmentation.js';
  * @param {number} options.minObjectSize - Minimum object size in pixels
  * @param {number} options.blurFill - Blur radius (px) to fill cut-out areas. 0 = transparent (default).
  * @param {Function} options.onProgress - Progress callback (step, progress)
- * @param {Function} options.layerArrangement - Z-arrangement function (count) → number[].
- *                                              Defaults to fixedStepArrangement.
- *                                              Use fillRangeArrangement to fill the whole z-range.
+ * @param {Function} options.layerArrangement - Z-arrangement function (count, depths, opts) → number[].
+ *                                              Defaults to depthProportionalArrangement.
+ *                                              Use fixedStepArrangement or fillRangeArrangement for non-proportional spacing.
  * @returns {Promise<PipelineResult>} Processed layers and metadata
  */
 export async function processPhotoToLayers(image, options = {}) {
@@ -69,8 +69,9 @@ export async function processPhotoToLayers(image, options = {}) {
 
     // Step 4: Export format conversion
     if (onProgress) onProgress('export', 0);
-    const arrange = layerArrangement || fixedStepArrangement;
-    const zPositions = arrange(layerObjects.length);
+    const arrange = layerArrangement || depthProportionalArrangement;
+    const depths = layerObjects.map((obj) => obj.depth);
+    const zPositions = arrange(layerObjects.length, depths);
 
     result.layers = layerObjects.map((obj, index) => {
       const zPosition = zPositions[index];
@@ -109,12 +110,13 @@ export async function processPhotoToLayers(image, options = {}) {
  * 3 layers → [-400, -350, -300], 10 layers → [-400, -350, …, 50]
  *
  * @param {number} count - Number of layers
+ * @param {number[]} depths - Array of depth values (ignored by this function)
  * @param {Object} opts
  * @param {number} opts.start - Z of the farthest layer (default -400)
  * @param {number} opts.step  - Distance between adjacent layers (default 50)
  * @returns {number[]} Z positions, one per layer (far → near)
  */
-export function fixedStepArrangement(count, { start = -400, step = 50 } = {}) {
+export function fixedStepArrangement(count, depths, { start = -400, step = 50 } = {}) {
   return Array.from({ length: count }, (_, i) => start + i * step);
 }
 
@@ -123,15 +125,47 @@ export function fixedStepArrangement(count, { start = -400, step = 50 } = {}) {
  * 3 layers → [-400, -100, 200], 10 layers → [-400, -333, …, 200]
  *
  * @param {number} count - Number of layers
+ * @param {number[]} depths - Array of depth values (ignored by this function)
  * @param {Object} opts
  * @param {number} opts.far  - Z of the farthest layer (default -400)
  * @param {number} opts.near - Z of the nearest layer (default 200)
  * @returns {number[]} Z positions, one per layer (far → near)
  */
-export function fillRangeArrangement(count, { far = -400, near = 200 } = {}) {
+export function fillRangeArrangement(count, depths, { far = -400, near = 200 } = {}) {
   if (count <= 1) return [far];
   const step = (near - far) / (count - 1);
   return Array.from({ length: count }, (_, i) => far + i * step);
+}
+
+/**
+ * Arrange layers proportionally to their actual depth values.
+ * Maps each layer's depth [0,1] linearly into the z-range.
+ *
+ * Example with depths [0.1, 0.5, 0.9] and range [-400, 200]:
+ * - Layer at depth 0.1 → z = -340
+ * - Layer at depth 0.5 → z = -100
+ * - Layer at depth 0.9 → z = 140
+ *
+ * Layers with larger depth gaps will have proportionally larger z-gaps.
+ *
+ * @param {number} count - Number of layers (not used, for signature compatibility)
+ * @param {number[]} depths - Array of normalized depth values [0, 1] for each layer
+ * @param {Object} opts
+ * @param {number} opts.far  - Z of the farthest layer (default -400)
+ * @param {number} opts.near - Z of the nearest layer (default 200)
+ * @returns {number[]} Z positions, one per layer (far → near)
+ */
+export function depthProportionalArrangement(
+  count,
+  depths,
+  { far = -400, near = 200 } = {}
+) {
+  if (!depths || depths.length === 0) {
+    return [far];
+  }
+
+  const zRange = near - far;
+  return depths.map((depth) => far + depth * zRange);
 }
 
 /**
