@@ -41,5 +41,13 @@ jobs:
       - name: Duplicate code detection
         run: npx jscpd src/ --threshold 5
 
+      - name: TODO/FIXME tracker
+        run: |
+          echo "## Tech debt summary" >> $GITHUB_STEP_SUMMARY
+          grep -rn "TODO\|FIXME\|HACK\|XXX" src/ --include="*.jsx" --include="*.js" >> $GITHUB_STEP_SUMMARY || echo "No TODOs found" >> $GITHUB_STEP_SUMMARY
+
       - name: Build
         run: npm run build
+
+      - name: Check bundle size
+        run: npm run size:check || true
