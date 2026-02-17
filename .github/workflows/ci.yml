@@ -35,5 +35,11 @@ jobs:
         env:
           CI: true
 
+      - name: Dead code detection
+        run: npx knip --no-exit-code
+
+      - name: Duplicate code detection
+        run: npx jscpd src/ --threshold 5
+
       - name: Build
         run: npm run build
