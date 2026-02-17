@@ -31,45 +31,56 @@ export async function segmentLayers(sourceImage, quantizedMap, options = {}) {
   ctx.drawImage(imgElement, 0, 0, width, height);
   const sourceImageData = ctx.getImageData(0, 0, width, height);
 
-  // Extract each layer
-  const layerObjects = [];
-
+  // Build masks and detect components for every layer first
+  const layerEntries = [];
   for (const layer of layers) {
-    // Create mask for this layer
-    const layerMask = new Uint8Array(width * height);
+    const mask = new Uint8Array(width * height);
     for (let i = 0; i < layerAssignments.length; i++) {
-      layerMask[i] = layerAssignments[i] === layer.id ? 255 : 0;
+      mask[i] = layerAssignments[i] === layer.id ? 255 : 0;
     }
-
-    // Find connected components in this layer
-    const components = findConnectedComponents(layerMask, width, height, minObjectSize);
-
-    // Create an object for each component (or one combined object for the layer)
-    // For simplicity, we'll create one object per layer combining all components
+    const components = findConnectedComponents(mask, width, height, minObjectSize);
     if (components.length > 0) {
-      const layerImage = extractLayerImage(
-        sourceImageData,
-        layerMask,
-        width,
-        height,
-        blurFill > 0 ? { imgElement, blurRadius: blurFill } : null,
-      );
-
-      const bounds = calculateBounds(layerMask, width, height);
-
-      layerObjects.push({
-        layerId: layer.id,
-        depth: layer.depth,
-        zPosition: layer.zPosition,
-        imageData: layerImage,
-        bounds,
-        componentCount: components.length,
-      });
+      layerEntries.push({ layer, mask, components });
     }
   }
 
-  // Sort by depth (far to near) for proper rendering order
-  layerObjects.sort((a, b) => a.depth - b.depth);
+  // Sort far → near (by depth ascending) so we can build the cumulative mask
+  layerEntries.sort((a, b) => a.layer.depth - b.layer.depth);
+
+  // Build a cumulative "above" mask: for each layer, which pixels are
+  // covered by any nearer (higher-index) layer's sharp content.
+  // Process from nearest → farthest so we can accumulate as we go.
+  const aboveMasks = new Array(layerEntries.length);
+  const cumulativeMask = new Uint8Array(width * height); // starts empty
+  for (let i = layerEntries.length - 1; i >= 0; i--) {
+    // This layer's "above" mask is the current cumulative (all nearer layers)
+    aboveMasks[i] = new Uint8Array(cumulativeMask);
+    // Then add this layer's own mask into the cumulative for layers below
+    const { mask } = layerEntries[i];
+    for (let p = 0; p < mask.length; p++) {
+      if (mask[p]) cumulativeMask[p] = 255;
+    }
+  }
+
+  // Extract layer images
+  const layerObjects = layerEntries.map(({ layer, mask, components }, i) => {
+    const layerImage = extractLayerImage(
+      sourceImageData,
+      mask,
+      width,
+      height,
+      blurFill > 0 ? { imgElement, blurRadius: blurFill, aboveMask: aboveMasks[i] } : null,
+    );
+
+    return {
+      layerId: layer.id,
+      depth: layer.depth,
+      zPosition: layer.zPosition,
+      imageData: layerImage,
+      bounds: calculateBounds(mask, width, height),
+      componentCount: components.length,
+    };
+  });
 
   return layerObjects;
 }
@@ -78,16 +89,17 @@ export async function segmentLayers(sourceImage, quantizedMap, options = {}) {
  * Extract image data for a layer with alpha mask.
  *
  * When `blurFillOpts` is provided the transparent (cut-out) regions are
- * filled with a blurred copy of the source image instead of being left
- * fully transparent. This avoids visible holes when layers shift during
- * parallax.
+ * filled with a blurred copy of the source image, but only where no nearer
+ * layer has sharp content (using the cumulative "above" mask). This prevents
+ * a layer's blur from covering sharp content on layers behind it in the
+ * render stack.
  *
  * @private
  * @param {ImageData} sourceImageData
  * @param {Uint8Array} mask - 0 or 255 per pixel
  * @param {number} width
  * @param {number} height
- * @param {{ imgElement: HTMLImageElement, blurRadius: number }|null} blurFillOpts
+ * @param {{ imgElement: HTMLImageElement, blurRadius: number, aboveMask: Uint8Array }|null} blurFillOpts
  */
 function extractLayerImage(sourceImageData, mask, width, height, blurFillOpts) {
   const canvas = document.createElement('canvas');
@@ -95,35 +107,53 @@ function extractLayerImage(sourceImageData, mask, width, height, blurFillOpts) {
   canvas.height = height;
   const ctx = canvas.getContext('2d');
 
-  // If blur-fill is requested, paint a blurred version of the source first
-  // so that cut-out areas show blurred content instead of transparency.
   if (blurFillOpts) {
-    ctx.filter = `blur(${blurFillOpts.blurRadius}px)`;
-    ctx.drawImage(blurFillOpts.imgElement, 0, 0, width, height);
-    ctx.filter = 'none';
+    const { imgElement, blurRadius, aboveMask } = blurFillOpts;
+
+    // Draw a blurred copy of the source into a temporary canvas
+    const blurCanvas = document.createElement('canvas');
+    blurCanvas.width = width;
+    blurCanvas.height = height;
+    const blurCtx = blurCanvas.getContext('2d');
+    blurCtx.filter = `blur(${blurRadius}px)`;
+    blurCtx.drawImage(imgElement, 0, 0, width, height);
+    blurCtx.filter = 'none';
+    const blurredData = blurCtx.getImageData(0, 0, width, height);
+
+    // Composite: for each pixel pick sharp source (own mask), blurred fill
+    // (not in own mask AND not covered by a nearer layer), or transparent.
+    const outData = ctx.createImageData(width, height);
+    for (let i = 0; i < mask.length; i++) {
+      const px = i * 4;
+      if (mask[i]) {
+        // This layer's sharp content
+        outData.data[px]     = sourceImageData.data[px];
+        outData.data[px + 1] = sourceImageData.data[px + 1];
+        outData.data[px + 2] = sourceImageData.data[px + 2];
+        outData.data[px + 3] = 255;
+      } else if (!aboveMask[i]) {
+        // Not covered by any nearer layer — fill with blur
+        outData.data[px]     = blurredData.data[px];
+        outData.data[px + 1] = blurredData.data[px + 1];
+        outData.data[px + 2] = blurredData.data[px + 2];
+        outData.data[px + 3] = 255;
+      }
+      // else: covered by a nearer layer — leave transparent
+    }
+    ctx.putImageData(outData, 0, 0);
+  } else {
+    // No blur fill — sharp content with transparent cut-outs
+    const layerImageData = ctx.createImageData(width, height);
+    for (let i = 0; i < mask.length; i++) {
+      const px = i * 4;
+      layerImageData.data[px]     = sourceImageData.data[px];
+      layerImageData.data[px + 1] = sourceImageData.data[px + 1];
+      layerImageData.data[px + 2] = sourceImageData.data[px + 2];
+      layerImageData.data[px + 3] = mask[i];
+    }
+    ctx.putImageData(layerImageData, 0, 0);
   }
 
-  // Build the sharp masked layer
-  const sharpCanvas = document.createElement('canvas');
-  sharpCanvas.width = width;
-  sharpCanvas.height = height;
-  const sharpCtx = sharpCanvas.getContext('2d');
-  const layerImageData = sharpCtx.createImageData(width, height);
-
-  for (let i = 0; i < mask.length; i++) {
-    const pixelIdx = i * 4;
-    const alpha = mask[i];
-
-    layerImageData.data[pixelIdx] = sourceImageData.data[pixelIdx];         // R
-    layerImageData.data[pixelIdx + 1] = sourceImageData.data[pixelIdx + 1]; // G
-    layerImageData.data[pixelIdx + 2] = sourceImageData.data[pixelIdx + 2]; // B
-    layerImageData.data[pixelIdx + 3] = alpha;                              // A
-  }
-
-  sharpCtx.putImageData(layerImageData, 0, 0);
-
-  // Composite sharp content over the (optionally blurred) background
-  ctx.drawImage(sharpCanvas, 0, 0);
   return canvas.toDataURL('image/png');
 }
 
