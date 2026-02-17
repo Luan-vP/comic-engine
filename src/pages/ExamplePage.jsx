@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scene, SceneObject, Panel, ObjectPresets } from '../components/scene';
+import { Scene, SceneObject, Panel } from '../components/scene';
 import { useTheme } from '../theme/ThemeContext';
 
 /**
@@ -10,7 +10,7 @@ import { useTheme } from '../theme/ThemeContext';
  */
 export function ExamplePage() {
   const { theme } = useTheme();
-  const [activePanel, setActivePanel] = useState(null);
+  const [, setActivePanel] = useState(null);
 
   return (
     <Scene

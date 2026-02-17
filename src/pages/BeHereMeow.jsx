@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scene, SceneObject, Panel } from '../components/scene';
+import { Scene, SceneObject } from '../components/scene';
 import { useTheme } from '../theme/ThemeContext';
 
 /**
