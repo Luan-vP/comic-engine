@@ -1,0 +1,32 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5665:5173"
+    volumes:
+      - ./src:/app/src
+      - ./index.html:/app/index.html
+      - ./vite.config.js:/app/vite.config.js
+    environment:
+      - VITE_API_TARGET=http://backend:8000
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5666:8000"
+    volumes:
+      - ./backend/comic_engine:/app/comic_engine
+      - ./backend/app.py:/app/app.py
+      - hf-cache:/app/models
+    environment:
+      - HF_HOME=/app/models
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+volumes:
+  hf-cache:

@@ -11,6 +11,61 @@
  */
 
 /**
+ * Fetch depth map from the backend API
+ * @private
+ */
+async function fetchDepthFromBackend(imgElement) {
+  // Draw image to canvas to get a blob
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = imgElement.width;
+  canvas.height = imgElement.height;
+  ctx.drawImage(imgElement, 0, 0);
+
+  const blob = await new Promise((resolve) =>
+    canvas.toBlob(resolve, 'image/png')
+  );
+
+  const formData = new FormData();
+  formData.append('file', blob, 'image.png');
+
+  const response = await fetch('/api/depth', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Backend returned ${response.status}`);
+  }
+
+  const width = parseInt(response.headers.get('X-Depth-Width'), 10);
+  const height = parseInt(response.headers.get('X-Depth-Height'), 10);
+
+  // Response is a grayscale PNG — decode it to get depth values
+  const arrayBuffer = await response.arrayBuffer();
+  const depthBlob = new Blob([arrayBuffer], { type: 'image/png' });
+  const depthUrl = URL.createObjectURL(depthBlob);
+
+  const depthImg = await loadImage(depthUrl);
+  URL.revokeObjectURL(depthUrl);
+
+  const depthCanvas = document.createElement('canvas');
+  depthCanvas.width = width;
+  depthCanvas.height = height;
+  const depthCtx = depthCanvas.getContext('2d');
+  depthCtx.drawImage(depthImg, 0, 0, width, height);
+  const depthImageData = depthCtx.getImageData(0, 0, width, height);
+
+  // Extract red channel as depth values normalized to [0, 1]
+  const depthData = new Float32Array(width * height);
+  for (let i = 0; i < depthData.length; i++) {
+    depthData[i] = depthImageData.data[i * 4] / 255;
+  }
+
+  return { width, height, data: depthData };
+}
+
+/**
  * Estimate depth map for an image
  *
  * @param {HTMLImageElement | string} image - Image element or data URL
@@ -19,36 +74,35 @@
  * @returns {Promise<DepthMap>} Depth map with normalized values [0, 1]
  */
 export async function estimateDepth(image, options = {}) {
-  const {
-    model = 'depth-anything-v2',
-  } = options;
+  const { model = 'depth-anything-v2' } = options;
 
-  // Create canvas to work with image data
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-
-  // Load image if it's a URL
   let imgElement = image;
   if (typeof image === 'string') {
     imgElement = await loadImage(image);
   }
 
+  // Try backend API first
+  try {
+    const result = await fetchDepthFromBackend(imgElement);
+    return { ...result, model };
+  } catch (err) {
+    console.warn('Backend depth estimation unavailable, using mock:', err.message);
+  }
+
+  // Fallback to mock
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
   canvas.width = imgElement.width;
   canvas.height = imgElement.height;
   ctx.drawImage(imgElement, 0, 0);
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-  // TODO: Replace with actual depth model inference
-  // For now, generate a simple depth map based on vertical position
-  // (simulates perspective where top = far, bottom = near)
   const depthData = generateMockDepthMap(imageData);
 
   return {
     width: canvas.width,
     height: canvas.height,
-    data: depthData, // Float32Array with normalized depth values [0, 1]
-    model,
+    data: depthData,
+    model: 'mock',
   };
 }
 
