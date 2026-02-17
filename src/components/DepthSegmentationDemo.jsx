@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Scene, SceneObject } from './scene';
-import { processPhotoToLayers } from '../utils/depth';
+import { Scene, SceneObject, SceneObjectGroup } from './scene';
+import { processPhotoToLayers, fillRangeArrangement } from '../utils/depth';
 import { useTheme } from '../theme/ThemeContext';
 
 /**
@@ -22,6 +22,7 @@ export function DepthSegmentationDemo() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [sourceImage, setSourceImage] = useState(null);
+  const [useGroups, setUseGroups] = useState(true);
   const fileInputRef = useRef(null);
 
   const handleImageUpload = async (event) => {
@@ -186,6 +187,38 @@ export function DepthSegmentationDemo() {
               }}
             >
               Lower = more layers (fine detail) · Higher = fewer layers (simplified)
+            </div>
+          </div>
+
+          {/* Group mode toggle */}
+          <div style={{ marginBottom: '12px' }}>
+            <label
+              style={{
+                color: theme.colors.text,
+                fontSize: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={useGroups}
+                onChange={() => setUseGroups(!useGroups)}
+                disabled={processing}
+              />
+              Use SceneObjectGroup (draggable)
+            </label>
+            <div
+              style={{
+                fontSize: '11px',
+                color: theme.colors.textMuted,
+                marginTop: '4px',
+                marginLeft: '22px',
+              }}
+            >
+              Groups layers in a draggable container
             </div>
           </div>
 
@@ -356,52 +389,67 @@ export function DepthSegmentationDemo() {
       );
     }
 
-    return (
-      <Scene perspective={1000} parallaxIntensity={1.2} mouseInfluence={{ x: 60, y: 40 }}>
-        {result.layers.map((layer) => {
-          const [x, y, z] = layer.sceneObjectProps.position;
-          const useBlur = fillMode === 'blur' && layer.blurFillUrl;
-          const imgSrc = useBlur ? layer.blurFillUrl : layer.imageUrl;
+    const renderLayers = () => {
+      return result.layers.map((layer) => {
+        const [x, y, z] = layer.sceneObjectProps.position;
+        const useBlur = fillMode === 'blur' && layer.blurFillUrl;
+        const imgSrc = useBlur ? layer.blurFillUrl : layer.imageUrl;
 
-          return (
-            <SceneObject
-              key={layer.id}
-              position={[x - 150, y - 100, z]}
-              parallaxFactor={layer.sceneObjectProps.parallaxFactor}
-              interactive={false}
-            >
-              <div style={{ position: 'relative', display: 'inline-block' }}>
-                {fillMode === 'solid' && layer.fillMaskUrl && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      backgroundColor: theme.colors.background,
-                      WebkitMaskImage: `url(${layer.fillMaskUrl})`,
-                      maskImage: `url(${layer.fillMaskUrl})`,
-                      WebkitMaskSize: '100% 100%',
-                      maskSize: '100% 100%',
-                      WebkitMaskRepeat: 'no-repeat',
-                      maskRepeat: 'no-repeat',
-                    }}
-                  />
-                )}
-                <img
-                  src={imgSrc}
-                  alt={layer.name}
+        return (
+          <SceneObject
+            key={layer.id}
+            position={useGroups ? [x - 150, y - 100, 0] : [x - 150, y - 100, z]}
+            parallaxFactor={useGroups ? undefined : layer.sceneObjectProps.parallaxFactor}
+            interactive={false}
+          >
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              {fillMode === 'solid' && layer.fillMaskUrl && (
+                <div
                   style={{
-                    display: 'block',
-                    maxWidth: '80vw',
-                    maxHeight: '80vh',
-                    objectFit: 'contain',
-                    filter: `brightness(${0.8 + layer.depth * 0.4})`,
-                    pointerEvents: 'none',
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: theme.colors.background,
+                    WebkitMaskImage: `url(${layer.fillMaskUrl})`,
+                    maskImage: `url(${layer.fillMaskUrl})`,
+                    WebkitMaskSize: '100% 100%',
+                    maskSize: '100% 100%',
+                    WebkitMaskRepeat: 'no-repeat',
+                    maskRepeat: 'no-repeat',
                   }}
                 />
-              </div>
-            </SceneObject>
-          );
-        })}
+              )}
+              <img
+                src={imgSrc}
+                alt={layer.name}
+                style={{
+                  display: 'block',
+                  maxWidth: '80vw',
+                  maxHeight: '80vh',
+                  objectFit: 'contain',
+                  filter: `brightness(${0.8 + layer.depth * 0.4})`,
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
+          </SceneObject>
+        );
+      });
+    };
+
+    return (
+      <Scene perspective={1000} parallaxIntensity={1.2} mouseInfluence={{ x: 60, y: 40 }}>
+        {useGroups ? (
+          <SceneObjectGroup
+            zRange={{ far: -400, near: 200 }}
+            position={[0, 0, 0]}
+            draggable={true}
+            arrangement={fillRangeArrangement}
+          >
+            {renderLayers()}
+          </SceneObjectGroup>
+        ) : (
+          renderLayers()
+        )}
 
         {/* Depth visualization overlay (optional) */}
         {result.depthVisualization && (
