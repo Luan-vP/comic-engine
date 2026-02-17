@@ -61,22 +61,31 @@ export async function processPhotoToLayers(image, options = {}) {
     if (onProgress) onProgress('segmentation', 1);
 
     // Step 4: Export format conversion
+    // Stack layers with a fixed inter-layer distance starting from the far plane.
     if (onProgress) onProgress('export', 0);
-    result.layers = layerObjects.map((obj, index) => ({
-      id: `layer-${obj.layerId}`,
-      name: `Layer ${obj.layerId} (z: ${Math.round(obj.zPosition)})`,
-      depth: obj.depth,
-      zPosition: obj.zPosition,
-      imageUrl: obj.imageData,
-      bounds: obj.bounds,
-      componentCount: obj.componentCount,
+    const Z_START = -400;
+    const Z_STEP = 50;
 
-      // SceneObject props ready to use
-      sceneObjectProps: {
-        position: [0, 0, obj.zPosition],
-        parallaxFactor: calculateParallaxFactor(obj.depth),
-      },
-    }));
+    result.layers = layerObjects.map((obj, index) => {
+      // index 0 = farthest (layerObjects sorted far→near by segmentation)
+      const zPosition = Z_START + index * Z_STEP;
+
+      return {
+        id: `layer-${obj.layerId}`,
+        name: `Layer ${obj.layerId} (z: ${Math.round(zPosition)})`,
+        depth: obj.depth,
+        zPosition,
+        imageUrl: obj.imageData,
+        bounds: obj.bounds,
+        componentCount: obj.componentCount,
+
+        // SceneObject props ready to use
+        sceneObjectProps: {
+          position: [0, 0, zPosition],
+          parallaxFactor: calculateParallaxFactor(obj.depth),
+        },
+      };
+    });
     if (onProgress) onProgress('export', 1);
 
     if (onProgress) onProgress('complete', 1);
