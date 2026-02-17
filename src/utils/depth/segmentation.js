@@ -131,14 +131,15 @@ function extractLayerImage(sourceImageData, mask, width, height, blurFillOpts) {
         outData.data[px + 1] = sourceImageData.data[px + 1];
         outData.data[px + 2] = sourceImageData.data[px + 2];
         outData.data[px + 3] = 255;
-      } else if (!aboveMask[i]) {
-        // Not covered by any nearer layer — fill with blur
+      } else if (aboveMask[i]) {
+        // Covered by a nearer layer — fill with blur so parallax
+        // shifts don't expose empty holes when that layer moves away
         outData.data[px]     = blurredData.data[px];
         outData.data[px + 1] = blurredData.data[px + 1];
         outData.data[px + 2] = blurredData.data[px + 2];
         outData.data[px + 3] = 255;
       }
-      // else: covered by a nearer layer — leave transparent
+      // else: not covered by anything above — leave transparent
     }
     ctx.putImageData(outData, 0, 0);
   } else {
