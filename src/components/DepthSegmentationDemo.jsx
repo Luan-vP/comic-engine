@@ -316,27 +316,30 @@ export function DepthSegmentationDemo() {
         parallaxIntensity={1.2}
         mouseInfluence={{ x: 60, y: 40 }}
       >
-        {result.layers.map((layer, index) => (
-          <SceneObject
-            key={layer.id}
-            position={layer.sceneObjectProps.position}
-            parallaxFactor={layer.sceneObjectProps.parallaxFactor}
-            interactive={false}
-          >
-            <img
-              src={layer.imageUrl}
-              alt={layer.name}
-              style={{
-                display: 'block',
-                maxWidth: '80vw',
-                maxHeight: '80vh',
-                objectFit: 'contain',
-                filter: `brightness(${0.8 + layer.depth * 0.4})`, // Subtle depth brightness
-                pointerEvents: 'none',
-              }}
-            />
-          </SceneObject>
-        ))}
+        {result.layers.map((layer, index) => {
+          const [x, y, z] = layer.sceneObjectProps.position;
+          return (
+            <SceneObject
+              key={layer.id}
+              position={[x - 150, y - 100, z]}
+              parallaxFactor={layer.sceneObjectProps.parallaxFactor}
+              interactive={false}
+            >
+              <img
+                src={layer.imageUrl}
+                alt={layer.name}
+                style={{
+                  display: 'block',
+                  maxWidth: '80vw',
+                  maxHeight: '80vh',
+                  objectFit: 'contain',
+                  filter: `brightness(${0.8 + layer.depth * 0.4})`,
+                  pointerEvents: 'none',
+                }}
+              />
+            </SceneObject>
+          );
+        })}
 
         {/* Depth visualization overlay (optional) */}
         {result.depthVisualization && (
