@@ -37,6 +37,10 @@ backend/models/*
 !backend/models/.gitkeep
 dist/
 
+# Saved scenes (can be committed selectively)
+public/scenes/*
+!public/scenes/.gitkeep
+
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build
 packages/react-devtools-extensions/chrome/*.crx

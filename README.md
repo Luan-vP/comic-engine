@@ -7,6 +7,8 @@ A React-based visual engine for creating cinematic comic-style experiences with 
 - **Theme system** — Noir, Cyberpunk, Dreamscape, Pulp, and Minimal presets with full customization
 - **Visual overlays** — Film grain, vignette, scanlines, ASCII shader, and particle effects (dust, snow, bokeh, embers, rain)
 - **Scene composition** — Panel-based layout with configurable scene objects
+- **Depth segmentation** — Convert photos into depth-based layers with parallax effects
+- **Scene persistence** — Save and load processed scenes as portable JSON files ([docs](docs/scenes.md))
 
 ## Setup
 
@@ -57,14 +59,21 @@ src/
 │   │   ├── Particles.jsx
 │   │   ├── Scanlines.jsx
 │   │   └── Vignette.jsx
-│   └── scene/                 # Scene composition
-│       ├── Panel.jsx
-│       ├── Scene.jsx
-│       └── SceneObject.jsx
+│   ├── scene/                 # Scene composition
+│   │   ├── Panel.jsx
+│   │   ├── Scene.jsx
+│   │   └── SceneObject.jsx
+│   ├── DepthSegmentationDemo.jsx  # Photo-to-layers pipeline demo
+│   └── SceneViewer.jsx        # Saved scene viewer
 ├── pages/                     # Page-level scene compositions
 │   ├── BeHereMeow.jsx
-│   └── ExamplePage.jsx
-└── theme/                     # Theme definitions and context
-    ├── ThemeContext.jsx
-    └── themes.js
+│   ├── ExamplePage.jsx
+│   ├── DepthSegmentationPage.jsx
+│   └── SceneViewerPage.jsx
+├── theme/                     # Theme definitions and context
+│   ├── ThemeContext.jsx
+│   └── themes.js
+└── utils/                     # Utilities
+    ├── depth/                 # Depth segmentation pipeline
+    └── sceneExport.js         # Scene save/load utilities
 ```

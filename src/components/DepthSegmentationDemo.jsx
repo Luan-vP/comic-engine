@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Scene, SceneObject } from './scene';
 import { processPhotoToLayers } from '../utils/depth';
+import { exportSceneAsZip } from '../utils/sceneExport';
 import { useTheme } from '../theme/ThemeContext';
 
 /**
@@ -21,6 +22,7 @@ export function DepthSegmentationDemo() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [sourceImage, setSourceImage] = useState(null);
+  const [sourceFilename, setSourceFilename] = useState('scene');
   const fileInputRef = useRef(null);
 
   const handleImageUpload = async (event) => {
@@ -32,6 +34,9 @@ export function DepthSegmentationDemo() {
       setError('Please select a valid image file (JPEG or PNG)');
       return;
     }
+
+    // Store filename for export
+    setSourceFilename(file.name);
 
     // Load image
     const reader = new FileReader();
@@ -80,6 +85,27 @@ export function DepthSegmentationDemo() {
       setError(err.message || 'Failed to process image');
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleSaveScene = async () => {
+    if (!result || !sourceImage) return;
+
+    try {
+      await exportSceneAsZip(
+        result,
+        sourceImage,
+        {
+          granularity,
+          blurFill,
+          depthModel: 'depth-anything-v2',
+          minObjectSize: 100,
+        },
+        sourceFilename
+      );
+    } catch (err) {
+      console.error('Export error:', err);
+      setError(err.message || 'Failed to export scene');
     }
   };
 
@@ -267,6 +293,24 @@ export function DepthSegmentationDemo() {
           <span style={{ color: theme.colors.textMuted, fontSize: '11px' }}>
             Move your mouse to see parallax effect
           </span>
+          <button
+            onClick={handleSaveScene}
+            style={{
+              background: theme.colors.primary,
+              color: '#000',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '12px',
+              fontFamily: theme.typography.fontBody,
+              width: '100%',
+              marginTop: '12px',
+            }}
+          >
+            Save Scene
+          </button>
         </div>
       )}
 

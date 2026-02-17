@@ -5,6 +5,7 @@ import { OverlayStack } from './components/overlays';
 import { BeHereMeow } from './pages/BeHereMeow';
 import { ExamplePage } from './pages/ExamplePage';
 import { DepthSegmentationPage } from './pages/DepthSegmentationPage';
+import { SceneViewerPage } from './pages/SceneViewerPage';
 
 /**
  * Theme Switcher UI - for development/demo purposes
@@ -155,6 +156,7 @@ function PageNavigator() {
     { path: '/', label: 'BeHereMeow' },
     { path: '/example', label: 'Example' },
     { path: '/depth-segmentation', label: 'Depth Segmentation' },
+    { path: '/scene-viewer', label: 'Scene Viewer' },
   ];
 
   return (
@@ -217,8 +219,8 @@ function AppContent() {
     ascii: true,
   });
 
-  // Don't show overlays on depth segmentation page (has its own controls)
-  const showOverlays = location.pathname !== '/depth-segmentation';
+  // Don't show overlays on depth segmentation or scene viewer pages (they have their own controls)
+  const showOverlays = location.pathname !== '/depth-segmentation' && location.pathname !== '/scene-viewer';
 
   return (
     <>
@@ -249,6 +251,7 @@ function AppContent() {
         <Route path="/" element={<BeHereMeow />} />
         <Route path="/example" element={<ExamplePage />} />
         <Route path="/depth-segmentation" element={<DepthSegmentationPage />} />
+        <Route path="/scene-viewer" element={<SceneViewerPage />} />
       </Routes>
     </>
   );

@@ -1,0 +1,10 @@
+# Scenes Directory
+
+This directory is for saved scene files that can be statically served.
+
+## Usage
+
+1. Process an image in the Depth Segmentation page
+2. Click "Save Scene" to download a `.scene.json` file
+3. (Optional) Place the file here to make it available in production builds
+4. Use the Scene Viewer page to load and view saved scenes
