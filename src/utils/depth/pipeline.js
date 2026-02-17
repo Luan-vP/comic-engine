@@ -18,6 +18,9 @@ import { segmentLayers } from './segmentation.js';
  * @param {string} options.depthModel - Depth model to use
  * @param {number} options.minObjectSize - Minimum object size in pixels
  * @param {Function} options.onProgress - Progress callback (step, progress)
+ * @param {Function} options.layerArrangement - Z-arrangement function (count) → number[].
+ *                                              Defaults to fixedStepArrangement.
+ *                                              Use fillRangeArrangement to fill the whole z-range.
  * @returns {Promise<PipelineResult>} Processed layers and metadata
  */
 export async function processPhotoToLayers(image, options = {}) {
@@ -26,6 +29,7 @@ export async function processPhotoToLayers(image, options = {}) {
     depthModel = 'depth-anything-v2',
     minObjectSize = 100,
     onProgress = null,
+    layerArrangement = null,
   } = options;
 
   const result = {
@@ -61,14 +65,12 @@ export async function processPhotoToLayers(image, options = {}) {
     if (onProgress) onProgress('segmentation', 1);
 
     // Step 4: Export format conversion
-    // Stack layers with a fixed inter-layer distance starting from the far plane.
     if (onProgress) onProgress('export', 0);
-    const Z_START = -400;
-    const Z_STEP = 50;
+    const arrange = layerArrangement || fixedStepArrangement;
+    const zPositions = arrange(layerObjects.length);
 
     result.layers = layerObjects.map((obj, index) => {
-      // index 0 = farthest (layerObjects sorted far→near by segmentation)
-      const zPosition = Z_START + index * Z_STEP;
+      const zPosition = zPositions[index];
 
       return {
         id: `layer-${obj.layerId}`,
@@ -95,6 +97,36 @@ export async function processPhotoToLayers(image, options = {}) {
     console.error('Pipeline error:', error);
     throw new Error(`Depth segmentation pipeline failed: ${error.message}`);
   }
+}
+
+/**
+ * Arrange layers with a fixed step between each, starting from the far plane.
+ * 3 layers → [-400, -350, -300], 10 layers → [-400, -350, …, 50]
+ *
+ * @param {number} count - Number of layers
+ * @param {Object} opts
+ * @param {number} opts.start - Z of the farthest layer (default -400)
+ * @param {number} opts.step  - Distance between adjacent layers (default 50)
+ * @returns {number[]} Z positions, one per layer (far → near)
+ */
+export function fixedStepArrangement(count, { start = -400, step = 50 } = {}) {
+  return Array.from({ length: count }, (_, i) => start + i * step);
+}
+
+/**
+ * Arrange layers so they fill the entire z-range evenly.
+ * 3 layers → [-400, -100, 200], 10 layers → [-400, -333, …, 200]
+ *
+ * @param {number} count - Number of layers
+ * @param {Object} opts
+ * @param {number} opts.far  - Z of the farthest layer (default -400)
+ * @param {number} opts.near - Z of the nearest layer (default 200)
+ * @returns {number[]} Z positions, one per layer (far → near)
+ */
+export function fillRangeArrangement(count, { far = -400, near = 200 } = {}) {
+  if (count <= 1) return [far];
+  const step = (near - far) / (count - 1);
+  return Array.from({ length: count }, (_, i) => far + i * step);
 }
 
 /**
