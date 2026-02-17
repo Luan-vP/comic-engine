@@ -194,8 +194,8 @@ export function Particles({
             background: presetConfig.color,
             opacity: particle.opacity,
             filter: presetConfig.blur ? `blur(${presetConfig.blur}px)` : 'none',
-            boxShadow: presetConfig.glow 
-              ? `0 0 ${particle.size * 2}px ${presetConfig.color}` 
+            boxShadow: presetConfig.glow
+              ? `0 0 ${particle.size * 2}px ${presetConfig.color}`
               : 'none',
             animation: getAnimation(presetConfig.direction, particle.speed),
             animationDelay: `${particle.delay}s`,

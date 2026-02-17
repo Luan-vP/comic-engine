@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { ThemeProvider, useTheme, themes } from './theme/ThemeContext';
 import { OverlayStack } from './components/overlays';
 import { BeHereMeow } from './pages/BeHereMeow';
-// import { ExamplePage } from './pages/ExamplePage'; // other scenes
+import { ExamplePage } from './pages/ExamplePage';
+import { DepthSegmentationPage } from './pages/DepthSegmentationPage';
 
 /**
  * Theme Switcher UI - for development/demo purposes
@@ -143,9 +145,70 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
 }
 
 /**
+ * Page Navigator - for switching between demo pages
+ */
+function PageNavigator() {
+  const { theme } = useTheme();
+  const location = useLocation();
+
+  const pages = [
+    { path: '/', label: 'BeHereMeow' },
+    { path: '/example', label: 'Example' },
+    { path: '/depth-segmentation', label: 'Depth Segmentation' },
+  ];
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '20px',
+        left: '20px',
+        background: 'rgba(0,0,0,0.8)',
+        backdropFilter: 'blur(10px)',
+        border: `1px solid ${theme.colors.border}`,
+        borderRadius: '8px',
+        padding: '12px',
+        zIndex: 10000,
+        fontFamily: theme.typography.fontBody,
+      }}
+    >
+      <div style={{ color: theme.colors.textMuted, fontSize: '10px', marginBottom: '8px', letterSpacing: '1px' }}>
+        PAGES
+      </div>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {pages.map(({ path, label }) => {
+          const isActive = location.pathname === path;
+          return (
+            <Link
+              key={path}
+              to={path}
+              style={{
+                background: isActive ? theme.colors.primary : 'rgba(255,255,255,0.1)',
+                color: isActive ? '#000' : theme.colors.text,
+                border: `1px solid ${isActive ? theme.colors.primary : theme.colors.border}`,
+                borderRadius: '4px',
+                padding: '6px 12px',
+                fontSize: '11px',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontWeight: isActive ? 'bold' : 'normal',
+                textDecoration: 'none',
+              }}
+            >
+              {label}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
  * Main App Content - separated so it can use theme context
  */
 function AppContent() {
+  const location = useLocation();
   const [overlayConfig, setOverlayConfig] = useState({
     filmGrain: true,
     vignette: true,
@@ -154,23 +217,39 @@ function AppContent() {
     ascii: true,
   });
 
+  // Don't show overlays on depth segmentation page (has its own controls)
+  const showOverlays = location.pathname !== '/depth-segmentation';
+
   return (
     <>
       {/* Global overlays */}
-      <OverlayStack
-        filmGrain={overlayConfig.filmGrain}
-        vignette={overlayConfig.vignette}
-        scanlines={overlayConfig.scanlines}
-        particles={overlayConfig.particles}
-        ascii={overlayConfig.ascii}
-      />
+      {showOverlays && (
+        <OverlayStack
+          filmGrain={overlayConfig.filmGrain}
+          vignette={overlayConfig.vignette}
+          scanlines={overlayConfig.scanlines}
+          particles={overlayConfig.particles}
+          ascii={overlayConfig.ascii}
+        />
+      )}
 
       {/* Dev controls */}
-      <ThemeSwitcher />
-      <OverlayControls overlayConfig={overlayConfig} setOverlayConfig={setOverlayConfig} />
+      {showOverlays && (
+        <>
+          <ThemeSwitcher />
+          <OverlayControls overlayConfig={overlayConfig} setOverlayConfig={setOverlayConfig} />
+        </>
+      )}
+
+      {/* Page navigation */}
+      <PageNavigator />
 
       {/* Main content */}
-      <BeHereMeow />
+      <Routes>
+        <Route path="/" element={<BeHereMeow />} />
+        <Route path="/example" element={<ExamplePage />} />
+        <Route path="/depth-segmentation" element={<DepthSegmentationPage />} />
+      </Routes>
     </>
   );
 }

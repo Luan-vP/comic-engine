@@ -29,6 +29,14 @@ chrome-user-data
 *.swo
 /tmp
 
+# Python backend
+__pycache__/
+*.egg-info/
+.venv/
+backend/models/*
+!backend/models/.gitkeep
+dist/
+
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build
 packages/react-devtools-extensions/chrome/*.crx
