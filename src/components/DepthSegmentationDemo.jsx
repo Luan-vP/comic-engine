@@ -15,6 +15,7 @@ import { useTheme } from '../theme/ThemeContext';
 export function DepthSegmentationDemo() {
   const { theme } = useTheme();
   const [granularity, setGranularity] = useState(0.3);
+  const [blurFill, setBlurFill] = useState(20);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState({ step: '', value: 0 });
   const [result, setResult] = useState(null);
@@ -55,6 +56,7 @@ export function DepthSegmentationDemo() {
     try {
       const pipelineResult = await processPhotoToLayers(sourceImage, {
         granularity,
+        blurFill,
         depthModel: 'depth-anything-v2',
         minObjectSize: 100,
         onProgress: (step, value) => {
@@ -183,6 +185,42 @@ export function DepthSegmentationDemo() {
               }}
             >
               Lower = more layers (fine detail) · Higher = fewer layers (simplified)
+            </div>
+          </div>
+
+          {/* Blur fill slider */}
+          <div style={{ marginBottom: '8px' }}>
+            <label
+              style={{
+                color: theme.colors.text,
+                fontSize: '13px',
+                display: 'block',
+                marginBottom: '8px',
+              }}
+            >
+              Blur Fill: {blurFill}px
+              <span style={{ color: theme.colors.textMuted, marginLeft: '8px' }}>
+                ({blurFill === 0 ? 'Off' : blurFill < 15 ? 'Subtle' : 'Strong'})
+              </span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="50"
+              step="5"
+              value={blurFill}
+              onChange={(e) => setBlurFill(parseInt(e.target.value, 10))}
+              disabled={processing}
+              style={{ width: '100%' }}
+            />
+            <div
+              style={{
+                fontSize: '11px',
+                color: theme.colors.textMuted,
+                marginTop: '4px',
+              }}
+            >
+              Fills cut-out areas with blurred source to hide gaps during parallax
             </div>
           </div>
 

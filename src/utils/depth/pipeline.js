@@ -17,6 +17,7 @@ import { segmentLayers } from './segmentation.js';
  * @param {number} options.granularity - Layer granularity (0.0-1.0)
  * @param {string} options.depthModel - Depth model to use
  * @param {number} options.minObjectSize - Minimum object size in pixels
+ * @param {number} options.blurFill - Blur radius (px) to fill cut-out areas. 0 = transparent (default).
  * @param {Function} options.onProgress - Progress callback (step, progress)
  * @param {Function} options.layerArrangement - Z-arrangement function (count) → number[].
  *                                              Defaults to fixedStepArrangement.
@@ -28,6 +29,7 @@ export async function processPhotoToLayers(image, options = {}) {
     granularity = 0.3,
     depthModel = 'depth-anything-v2',
     minObjectSize = 100,
+    blurFill = 0,
     onProgress = null,
     layerArrangement = null,
   } = options;
@@ -61,6 +63,7 @@ export async function processPhotoToLayers(image, options = {}) {
     if (onProgress) onProgress('segmentation', 0);
     const layerObjects = await segmentLayers(image, quantizedMap, {
       minObjectSize,
+      blurFill,
     });
     if (onProgress) onProgress('segmentation', 1);
 

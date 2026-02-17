@@ -14,7 +14,7 @@
  * @returns {Promise<Array<LayerObject>>} Array of segmented layer objects
  */
 export async function segmentLayers(sourceImage, quantizedMap, options = {}) {
-  const { minObjectSize = 100 } = options;
+  const { minObjectSize = 100, blurFill = 0 } = options;
   const { width, height, layerAssignments, layers } = quantizedMap;
 
   // Load source image
@@ -51,7 +51,8 @@ export async function segmentLayers(sourceImage, quantizedMap, options = {}) {
         sourceImageData,
         layerMask,
         width,
-        height
+        height,
+        blurFill > 0 ? { imgElement, blurRadius: blurFill } : null,
       );
 
       const bounds = calculateBounds(layerMask, width, height);
@@ -74,17 +75,41 @@ export async function segmentLayers(sourceImage, quantizedMap, options = {}) {
 }
 
 /**
- * Extract image data for a layer with alpha mask
+ * Extract image data for a layer with alpha mask.
+ *
+ * When `blurFillOpts` is provided the transparent (cut-out) regions are
+ * filled with a blurred copy of the source image instead of being left
+ * fully transparent. This avoids visible holes when layers shift during
+ * parallax.
+ *
  * @private
+ * @param {ImageData} sourceImageData
+ * @param {Uint8Array} mask - 0 or 255 per pixel
+ * @param {number} width
+ * @param {number} height
+ * @param {{ imgElement: HTMLImageElement, blurRadius: number }|null} blurFillOpts
  */
-function extractLayerImage(sourceImageData, mask, width, height) {
+function extractLayerImage(sourceImageData, mask, width, height, blurFillOpts) {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
-  const layerImageData = ctx.createImageData(width, height);
 
-  // Copy source pixels where mask is active, set alpha channel
+  // If blur-fill is requested, paint a blurred version of the source first
+  // so that cut-out areas show blurred content instead of transparency.
+  if (blurFillOpts) {
+    ctx.filter = `blur(${blurFillOpts.blurRadius}px)`;
+    ctx.drawImage(blurFillOpts.imgElement, 0, 0, width, height);
+    ctx.filter = 'none';
+  }
+
+  // Build the sharp masked layer
+  const sharpCanvas = document.createElement('canvas');
+  sharpCanvas.width = width;
+  sharpCanvas.height = height;
+  const sharpCtx = sharpCanvas.getContext('2d');
+  const layerImageData = sharpCtx.createImageData(width, height);
+
   for (let i = 0; i < mask.length; i++) {
     const pixelIdx = i * 4;
     const alpha = mask[i];
@@ -95,7 +120,10 @@ function extractLayerImage(sourceImageData, mask, width, height) {
     layerImageData.data[pixelIdx + 3] = alpha;                              // A
   }
 
-  ctx.putImageData(layerImageData, 0, 0);
+  sharpCtx.putImageData(layerImageData, 0, 0);
+
+  // Composite sharp content over the (optionally blurred) background
+  ctx.drawImage(sharpCanvas, 0, 0);
   return canvas.toDataURL('image/png');
 }
 
