@@ -1,23 +1,19 @@
 import React, { useState } from 'react';
-import { Scene, SceneObject, Panel, ObjectPresets } from '../components/scene';
+import { Scene, SceneObject, Panel } from '../components/scene';
 import { useTheme } from '../theme/ThemeContext';
 
 /**
  * ExamplePage - Demonstrates how to compose a scene
- * 
+ *
  * This shows various ways to place objects in 3D space with parallax.
  * Copy this pattern for your own pages.
  */
 export function ExamplePage() {
   const { theme } = useTheme();
-  const [activePanel, setActivePanel] = useState(null);
+  const [, setActivePanel] = useState(null);
 
   return (
-    <Scene
-      perspective={1000}
-      parallaxIntensity={1}
-      mouseInfluence={{ x: 50, y: 30 }}
-    >
+    <Scene perspective={1000} parallaxIntensity={1} mouseInfluence={{ x: 50, y: 30 }}>
       {/* ===== FAR BACKGROUND LAYER ===== */}
       {/* Decorative shapes that barely move */}
       <SceneObject
@@ -133,11 +129,7 @@ export function ExamplePage() {
         rotation={[0, -35, 0]} // Rotated to face left
         parallaxFactor={0.5}
       >
-        <Panel
-          width={200}
-          height={300}
-          variant="polaroid"
-        >
+        <Panel width={200} height={300} variant="polaroid">
           <div
             style={{
               width: '100%',
@@ -198,9 +190,7 @@ export function ExamplePage() {
               }}
             />
           </div>
-          <span style={{ color: '#555', fontSize: '9px', marginTop: '10px' }}>
-            VIDEO / IFRAME
-          </span>
+          <span style={{ color: '#555', fontSize: '9px', marginTop: '10px' }}>VIDEO / IFRAME</span>
         </div>
       </SceneObject>
 
@@ -262,7 +252,14 @@ export function ExamplePage() {
           zIndex: 100,
         }}
       >
-        <h3 style={{ color: theme.colors.primary, margin: '0 0 12px 0', fontSize: '14px', letterSpacing: '2px' }}>
+        <h3
+          style={{
+            color: theme.colors.primary,
+            margin: '0 0 12px 0',
+            fontSize: '14px',
+            letterSpacing: '2px',
+          }}
+        >
           SCENE COMPOSITION
         </h3>
         <p style={{ color: theme.colors.textMuted, margin: 0, fontSize: '11px', lineHeight: 1.6 }}>

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Scene, SceneObject, Panel } from '../components/scene';
+import { Scene, SceneObject } from '../components/scene';
 import { useTheme } from '../theme/ThemeContext';
 
 /**
  * BeHereMeow - A meditative scene with a cat buddha
- * 
+ *
  * Layer breakdown (back to front):
  * - Distant mountains/clouds (z: -400)
  * - Floating lotus flowers (z: -250)
@@ -18,11 +18,7 @@ export function BeHereMeow() {
   const [isOmmming, setIsOmmming] = useState(false);
 
   return (
-    <Scene
-      perspective={1200}
-      parallaxIntensity={0.8}
-      mouseInfluence={{ x: 40, y: 25 }}
-    >
+    <Scene perspective={1200} parallaxIntensity={0.8} mouseInfluence={{ x: 40, y: 25 }}>
       {/* ===== DISTANT BACKGROUND - MOUNTAINS/CLOUDS ===== */}
       <SceneObject
         position={[0, 50, -450]}
@@ -96,11 +92,7 @@ export function BeHereMeow() {
       </SceneObject>
 
       {/* ===== MAIN CAT BUDDHA - CENTER STAGE ===== */}
-      <SceneObject
-        position={[0, 20, 0]}
-        rotation={[0, 0, 0]}
-        parallaxFactor={0.5}
-      >
+      <SceneObject position={[0, 20, 0]} rotation={[0, 0, 0]} parallaxFactor={0.5}>
         <div
           onClick={() => setIsOmmming(!isOmmming)}
           style={{
@@ -172,7 +164,7 @@ export function BeHereMeow() {
 
             {/* Cat face area */}
             <div style={{ fontSize: '48px', marginBottom: '10px' }}>🐱</div>
-            
+
             {/* Placeholder text */}
             <span
               style={{
@@ -193,7 +185,7 @@ export function BeHereMeow() {
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
-                background: isOmmming 
+                background: isOmmming
                   ? `radial-gradient(${theme.colors.accent}, ${theme.colors.primary})`
                   : theme.colors.textSubtle,
                 boxShadow: isOmmming ? `0 0 20px ${theme.colors.accent}` : 'none',
@@ -245,12 +237,7 @@ export function BeHereMeow() {
         parallaxFactor={0.85}
         interactive={false}
       >
-        <FloatingText 
-          text="OM" 
-          color={theme.colors.primary} 
-          size={36}
-          animate={isOmmming}
-        />
+        <FloatingText text="OM" color={theme.colors.primary} size={36} animate={isOmmming} />
       </SceneObject>
 
       <SceneObject
@@ -259,9 +246,9 @@ export function BeHereMeow() {
         parallaxFactor={0.9}
         interactive={false}
       >
-        <FloatingText 
-          text="MANI" 
-          color={theme.colors.secondary} 
+        <FloatingText
+          text="MANI"
+          color={theme.colors.secondary}
           size={28}
           delay={0.5}
           animate={isOmmming}
@@ -274,9 +261,9 @@ export function BeHereMeow() {
         parallaxFactor={0.95}
         interactive={false}
       >
-        <FloatingText 
-          text="PADME" 
-          color={theme.colors.accent} 
+        <FloatingText
+          text="PADME"
+          color={theme.colors.accent}
           size={24}
           delay={1}
           animate={isOmmming}
@@ -289,9 +276,9 @@ export function BeHereMeow() {
         parallaxFactor={1.0}
         interactive={false}
       >
-        <FloatingText 
-          text="HUM" 
-          color={theme.colors.primary} 
+        <FloatingText
+          text="HUM"
+          color={theme.colors.primary}
           size={32}
           delay={1.5}
           animate={isOmmming}

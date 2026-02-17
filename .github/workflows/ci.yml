@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Test with coverage
+        run: npx vitest run --coverage
+        env:
+          CI: true
+
+      - name: Dead code detection
+        run: npx knip --no-exit-code
+
+      - name: Duplicate code detection
+        run: npx jscpd src/ --threshold 5
+
+      - name: TODO/FIXME tracker
+        run: |
+          echo "## Tech debt summary" >> $GITHUB_STEP_SUMMARY
+          grep -rn "TODO\|FIXME\|HACK\|XXX" src/ --include="*.jsx" --include="*.js" >> $GITHUB_STEP_SUMMARY || echo "No TODOs found" >> $GITHUB_STEP_SUMMARY
+
+      - name: Build
+        run: npm run build
+
+      - name: Check bundle size
+        run: npm run size:check || true

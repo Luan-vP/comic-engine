@@ -1,5 +1,20 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTheme } from '../../theme/ThemeContext';
+
+function generateSeeds(count) {
+  const seeds = [];
+  for (let i = 0; i < count; i++) {
+    seeds.push({
+      size: Math.random(),
+      speed: Math.random(),
+      opacity: Math.random(),
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      delayFactor: Math.random(),
+    });
+  }
+  return seeds;
+}
 
 /**
  * Particles - Floating dust/bokeh/snow particles
@@ -65,24 +80,26 @@ export function Particles({
     return configs[preset] || configs.dust;
   }, [preset, colorOverride, theme.colors.primary]);
 
+  const [seeds] = useState(() => generateSeeds(count));
+
   const particles = useMemo(() => {
-    return Array.from({ length: count }, (_, i) => {
+    return seeds.map((seed, i) => {
       const { sizeRange, speedRange, opacityRange } = presetConfig;
-      const size = sizeRange[0] + Math.random() * (sizeRange[1] - sizeRange[0]);
-      const speed = speedRange[0] + Math.random() * (speedRange[1] - speedRange[0]);
-      const opacity = opacityRange[0] + Math.random() * (opacityRange[1] - opacityRange[0]);
+      const size = sizeRange[0] + seed.size * (sizeRange[1] - sizeRange[0]);
+      const speed = speedRange[0] + seed.speed * (speedRange[1] - speedRange[0]);
+      const opacity = opacityRange[0] + seed.opacity * (opacityRange[1] - opacityRange[0]);
 
       return {
         id: i,
         size,
         speed,
         opacity,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        delay: Math.random() * speed,
+        x: seed.x,
+        y: seed.y,
+        delay: seed.delayFactor * speed,
       };
     });
-  }, [count, presetConfig]);
+  }, [seeds, presetConfig]);
 
   if (!enabled) return null;
 
@@ -177,8 +194,8 @@ export function Particles({
             background: presetConfig.color,
             opacity: particle.opacity,
             filter: presetConfig.blur ? `blur(${presetConfig.blur}px)` : 'none',
-            boxShadow: presetConfig.glow 
-              ? `0 0 ${particle.size * 2}px ${presetConfig.color}` 
+            boxShadow: presetConfig.glow
+              ? `0 0 ${particle.size * 2}px ${presetConfig.color}`
               : 'none',
             animation: getAnimation(presetConfig.direction, particle.speed),
             animationDelay: `${particle.delay}s`,
