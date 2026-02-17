@@ -62,21 +62,28 @@ export async function segmentLayers(sourceImage, quantizedMap, options = {}) {
     }
   }
 
-  // Extract layer images
+  // Extract layer images — always produce sharp + fill mask;
+  // optionally produce blur-filled version when blurFill > 0.
   const layerObjects = layerEntries.map(({ layer, mask, components }, i) => {
-    const layerImage = extractLayerImage(
-      sourceImageData,
-      mask,
-      width,
-      height,
-      blurFill > 0 ? { imgElement, blurRadius: blurFill, aboveMask: aboveMasks[i] } : null,
-    );
+    const sharpImage = extractLayerImage(sourceImageData, mask, width, height, null);
+    const fillMask = generateFillMask(aboveMasks[i], width, height);
+
+    let blurImage = null;
+    if (blurFill > 0) {
+      blurImage = extractLayerImage(sourceImageData, mask, width, height, {
+        imgElement,
+        blurRadius: blurFill,
+        aboveMask: aboveMasks[i],
+      });
+    }
 
     return {
       layerId: layer.id,
       depth: layer.depth,
       zPosition: layer.zPosition,
-      imageData: layerImage,
+      imageData: sharpImage,
+      fillMaskUrl: fillMask,
+      blurFillImageData: blurImage,
       bounds: calculateBounds(mask, width, height),
       componentCount: components.length,
     };
@@ -127,14 +134,14 @@ function extractLayerImage(sourceImageData, mask, width, height, blurFillOpts) {
       const px = i * 4;
       if (mask[i]) {
         // This layer's sharp content
-        outData.data[px]     = sourceImageData.data[px];
+        outData.data[px] = sourceImageData.data[px];
         outData.data[px + 1] = sourceImageData.data[px + 1];
         outData.data[px + 2] = sourceImageData.data[px + 2];
         outData.data[px + 3] = 255;
       } else if (aboveMask[i]) {
         // Covered by a nearer layer — fill with blur so parallax
         // shifts don't expose empty holes when that layer moves away
-        outData.data[px]     = blurredData.data[px];
+        outData.data[px] = blurredData.data[px];
         outData.data[px + 1] = blurredData.data[px + 1];
         outData.data[px + 2] = blurredData.data[px + 2];
         outData.data[px + 3] = 255;
@@ -147,7 +154,7 @@ function extractLayerImage(sourceImageData, mask, width, height, blurFillOpts) {
     const layerImageData = ctx.createImageData(width, height);
     for (let i = 0; i < mask.length; i++) {
       const px = i * 4;
-      layerImageData.data[px]     = sourceImageData.data[px];
+      layerImageData.data[px] = sourceImageData.data[px];
       layerImageData.data[px + 1] = sourceImageData.data[px + 1];
       layerImageData.data[px + 2] = sourceImageData.data[px + 2];
       layerImageData.data[px + 3] = mask[i];
@@ -155,6 +162,28 @@ function extractLayerImage(sourceImageData, mask, width, height, blurFillOpts) {
     ctx.putImageData(layerImageData, 0, 0);
   }
 
+  return canvas.toDataURL('image/png');
+}
+
+/**
+ * Generate a fill-mask PNG from the cumulative "above" mask.
+ * White (opaque) where fill should appear, transparent elsewhere.
+ * @private
+ */
+function generateFillMask(aboveMask, width, height) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.createImageData(width, height);
+  for (let i = 0; i < aboveMask.length; i++) {
+    const px = i * 4;
+    imageData.data[px] = 255;
+    imageData.data[px + 1] = 255;
+    imageData.data[px + 2] = 255;
+    imageData.data[px + 3] = aboveMask[i]; // 0 or 255
+  }
+  ctx.putImageData(imageData, 0, 0);
   return canvas.toDataURL('image/png');
 }
 
