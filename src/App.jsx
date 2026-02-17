@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { ThemeProvider, useTheme, themes } from './theme/ThemeContext';
 import { OverlayStack } from './components/overlays';
 import { BeHereMeow } from './pages/BeHereMeow';
@@ -146,13 +147,14 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
 /**
  * Page Navigator - for switching between demo pages
  */
-function PageNavigator({ currentPage, setCurrentPage }) {
+function PageNavigator() {
   const { theme } = useTheme();
+  const location = useLocation();
 
   const pages = [
-    { id: 'meow', label: 'BeHereMeow' },
-    { id: 'example', label: 'Example' },
-    { id: 'depth', label: 'Depth Segmentation' },
+    { path: '/', label: 'BeHereMeow' },
+    { path: '/example', label: 'Example' },
+    { path: '/depth-segmentation', label: 'Depth Segmentation' },
   ];
 
   return (
@@ -174,25 +176,29 @@ function PageNavigator({ currentPage, setCurrentPage }) {
         PAGES
       </div>
       <div style={{ display: 'flex', gap: '8px' }}>
-        {pages.map(({ id, label }) => (
-          <button
-            key={id}
-            onClick={() => setCurrentPage(id)}
-            style={{
-              background: currentPage === id ? theme.colors.primary : 'rgba(255,255,255,0.1)',
-              color: currentPage === id ? '#000' : theme.colors.text,
-              border: `1px solid ${currentPage === id ? theme.colors.primary : theme.colors.border}`,
-              borderRadius: '4px',
-              padding: '6px 12px',
-              fontSize: '11px',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontWeight: currentPage === id ? 'bold' : 'normal',
-            }}
-          >
-            {label}
-          </button>
-        ))}
+        {pages.map(({ path, label }) => {
+          const isActive = location.pathname === path;
+          return (
+            <Link
+              key={path}
+              to={path}
+              style={{
+                background: isActive ? theme.colors.primary : 'rgba(255,255,255,0.1)',
+                color: isActive ? '#000' : theme.colors.text,
+                border: `1px solid ${isActive ? theme.colors.primary : theme.colors.border}`,
+                borderRadius: '4px',
+                padding: '6px 12px',
+                fontSize: '11px',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontWeight: isActive ? 'bold' : 'normal',
+                textDecoration: 'none',
+              }}
+            >
+              {label}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
@@ -202,7 +208,7 @@ function PageNavigator({ currentPage, setCurrentPage }) {
  * Main App Content - separated so it can use theme context
  */
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState('depth'); // Default to depth segmentation demo
+  const location = useLocation();
   const [overlayConfig, setOverlayConfig] = useState({
     filmGrain: true,
     vignette: true,
@@ -212,7 +218,7 @@ function AppContent() {
   });
 
   // Don't show overlays on depth segmentation page (has its own controls)
-  const showOverlays = currentPage !== 'depth';
+  const showOverlays = location.pathname !== '/depth-segmentation';
 
   return (
     <>
@@ -236,12 +242,14 @@ function AppContent() {
       )}
 
       {/* Page navigation */}
-      <PageNavigator currentPage={currentPage} setCurrentPage={setCurrentPage} />
+      <PageNavigator />
 
       {/* Main content */}
-      {currentPage === 'meow' && <BeHereMeow />}
-      {currentPage === 'example' && <ExamplePage />}
-      {currentPage === 'depth' && <DepthSegmentationPage />}
+      <Routes>
+        <Route path="/" element={<BeHereMeow />} />
+        <Route path="/example" element={<ExamplePage />} />
+        <Route path="/depth-segmentation" element={<DepthSegmentationPage />} />
+      </Routes>
     </>
   );
 }
