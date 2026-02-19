@@ -15,9 +15,7 @@ afterEach(cleanup);
 
 describe('MemoryCardModal', () => {
   it('renders file input and caption input', () => {
-    renderWithTheme(
-      <MemoryCardModal onConfirm={() => {}} onCancel={() => {}} slug="test-scene" />,
-    );
+    renderWithTheme(<MemoryCardModal onConfirm={() => {}} onCancel={() => {}} slug="test-scene" />);
     expect(screen.getByText('MEMORY CARD')).toBeDefined();
     expect(screen.getByPlaceholderText('A memory...')).toBeDefined();
     // File input
@@ -27,25 +25,19 @@ describe('MemoryCardModal', () => {
 
   it('calls onCancel when Cancel is clicked', () => {
     const onCancel = vi.fn();
-    renderWithTheme(
-      <MemoryCardModal onConfirm={() => {}} onCancel={onCancel} slug="test-scene" />,
-    );
+    renderWithTheme(<MemoryCardModal onConfirm={() => {}} onCancel={onCancel} slug="test-scene" />);
     fireEvent.click(screen.getByText('Cancel'));
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
   it('shows error when Insert is clicked without selecting an image', () => {
-    renderWithTheme(
-      <MemoryCardModal onConfirm={() => {}} onCancel={() => {}} slug="test-scene" />,
-    );
+    renderWithTheme(<MemoryCardModal onConfirm={() => {}} onCancel={() => {}} slug="test-scene" />);
     fireEvent.click(screen.getByText('Insert'));
     expect(screen.getByText('Please select an image.')).toBeDefined();
   });
 
   it('shows error for unsupported file type', () => {
-    renderWithTheme(
-      <MemoryCardModal onConfirm={() => {}} onCancel={() => {}} slug="test-scene" />,
-    );
+    renderWithTheme(<MemoryCardModal onConfirm={() => {}} onCancel={() => {}} slug="test-scene" />);
     const fileInput = document.querySelector('input[type="file"]');
     const file = new File(['data'], 'test.gif', { type: 'image/gif' });
     fireEvent.change(fileInput, { target: { files: [file] } });

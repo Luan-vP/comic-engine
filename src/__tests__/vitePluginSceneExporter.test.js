@@ -21,7 +21,7 @@ describe('generatePageTemplate — layers only', () => {
 
   it('imports Scene and SceneObject but not Panel when no objects', () => {
     const result = generatePageTemplate('MyScene', 'my-scene', [sampleLayer], {});
-    expect(result).toContain("import { Scene, SceneObject }");
+    expect(result).toContain('import { Scene, SceneObject }');
     expect(result).not.toContain('Panel');
   });
 
@@ -64,7 +64,7 @@ describe('generatePageTemplate — with inserted objects', () => {
       },
     ];
     const result = generatePageTemplate('MyScene', 'my-scene', [sampleLayer], {}, objects);
-    expect(result).toContain("import { Scene, SceneObject, Panel }");
+    expect(result).toContain('import { Scene, SceneObject, Panel }');
   });
 
   it('renders memory object with polaroid variant', () => {

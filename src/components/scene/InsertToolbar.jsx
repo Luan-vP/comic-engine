@@ -104,10 +104,7 @@ export function InsertToolbar({ onInsert, slug }) {
         />
       )}
       {activeModal === 'text' && (
-        <TextCardModal
-          onConfirm={(data) => handleConfirm('text', data)}
-          onCancel={handleCancel}
-        />
+        <TextCardModal onConfirm={(data) => handleConfirm('text', data)} onCancel={handleCancel} />
       )}
     </>
   );

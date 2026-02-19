@@ -159,7 +159,12 @@ export function MemoryCardModal({ onConfirm, onCancel, slug }) {
             <img
               src={imageDataUrl}
               alt="Preview"
-              style={{ maxWidth: '100%', maxHeight: '120px', borderRadius: '4px', display: 'block' }}
+              style={{
+                maxWidth: '100%',
+                maxHeight: '120px',
+                borderRadius: '4px',
+                display: 'block',
+              }}
             />
           </div>
         )}
