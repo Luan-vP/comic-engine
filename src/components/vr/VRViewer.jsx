@@ -159,7 +159,7 @@ export function VRViewer({
             removeOrientation = () =>
               window.removeEventListener('deviceorientation', onOrientation);
           }
-        } catch (_) {
+        } catch {
           // Permission denied or API missing — stay on mouse fallback
         }
       };
