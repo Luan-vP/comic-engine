@@ -30,10 +30,10 @@ describe('MemoryCardModal', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
-  it('shows error when Insert is clicked without selecting an image', () => {
+  it('disables Insert button when no image is selected', () => {
     renderWithTheme(<MemoryCardModal onConfirm={() => {}} onCancel={() => {}} slug="test-scene" />);
-    fireEvent.click(screen.getByText('Insert'));
-    expect(screen.getByText('Please select an image.')).toBeDefined();
+    const insertBtn = screen.getByText('Insert').closest('button');
+    expect(insertBtn.disabled).toBe(true);
   });
 
   it('shows error for unsupported file type', () => {
