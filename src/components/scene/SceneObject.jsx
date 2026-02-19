@@ -59,8 +59,14 @@ export function SceneObject({
   // Anchor point relative to parent (alternative to absolute positioning)
   anchor = null, // 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | { x: '50%', y: '50%' }
 }) {
-  const { mousePos, scrollZ, parallaxIntensity, mouseInfluence, editActive, groupOffset: sceneGroupOffset } =
-    useScene();
+  const {
+    mousePos,
+    scrollZ,
+    parallaxIntensity,
+    mouseInfluence,
+    editActive,
+    groupOffset: sceneGroupOffset,
+  } = useScene();
   // Prefer the nearest group's offset over the scene-level offset so each
   // SceneObjectGroup can move its children independently.
   const group = useGroup();

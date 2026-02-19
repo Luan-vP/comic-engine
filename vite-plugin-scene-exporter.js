@@ -150,7 +150,9 @@ function generatePageTemplate(componentName, slug, layers, sceneConfig) {
     for (const [gid, gLayers] of groupMap.entries()) {
       if (gid === '__ungrouped__' || gid === 'initial') {
         // Render flat
-        blocks.push(gLayers.map((l) => buildSceneObjectJsx(l, fillMode, slug, '      ')).join('\n\n'));
+        blocks.push(
+          gLayers.map((l) => buildSceneObjectJsx(l, fillMode, slug, '      ')).join('\n\n'),
+        );
       } else {
         // Compute z-range from actual layer positions
         const zValues = gLayers.map((l) => (l.position ? l.position[2] : 0));
