@@ -7,4 +7,9 @@
 export { estimateDepth, visualizeDepthMap } from './depthEstimation.js';
 export { quantizeDepth, depthToZPosition } from './quantization.js';
 export { segmentLayers } from './segmentation.js';
-export { processPhotoToLayers, getSceneLayers, fixedStepArrangement, fillRangeArrangement } from './pipeline.js';
+export {
+  processPhotoToLayers,
+  getSceneLayers,
+  fixedStepArrangement,
+  fillRangeArrangement,
+} from './pipeline.js';

@@ -4,7 +4,7 @@ import { useTheme } from '../../theme/ThemeContext';
 /**
  * Vignette - Darkened edges for dramatic framing
  */
-export function Vignette({ 
+export function Vignette({
   intensity: intensityOverride,
   color = 'black',
   shape = 'ellipse', // 'ellipse' | 'rectangle'
@@ -15,9 +15,10 @@ export function Vignette({
 
   if (intensity === 0) return null;
 
-  const gradient = shape === 'ellipse'
-    ? `radial-gradient(ellipse at center, transparent 0%, transparent ${100 - spread}%, ${color} 100%)`
-    : `
+  const gradient =
+    shape === 'ellipse'
+      ? `radial-gradient(ellipse at center, transparent 0%, transparent ${100 - spread}%, ${color} 100%)`
+      : `
         linear-gradient(to right, ${color}, transparent ${spread}%, transparent ${100 - spread}%, ${color}),
         linear-gradient(to bottom, ${color}, transparent ${spread}%, transparent ${100 - spread}%, ${color})
       `;

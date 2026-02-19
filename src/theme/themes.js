@@ -8,7 +8,8 @@ export const themes = {
     name: 'Noir',
     colors: {
       background: '#0a0a0f',
-      backgroundGradient: 'radial-gradient(ellipse at 30% 20%, #1a0a2e 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, #16213e 0%, transparent 40%), radial-gradient(ellipse at 50% 50%, #0f0f23 0%, #000 100%)',
+      backgroundGradient:
+        'radial-gradient(ellipse at 30% 20%, #1a0a2e 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, #16213e 0%, transparent 40%), radial-gradient(ellipse at 50% 50%, #0f0f23 0%, #000 100%)',
       primary: '#e94560',
       secondary: '#667eea',
       accent: '#f093fb',
@@ -37,7 +38,8 @@ export const themes = {
     name: 'Cyberpunk',
     colors: {
       background: '#0d0221',
-      backgroundGradient: 'radial-gradient(ellipse at 20% 80%, #541388 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, #0d0221 0%, transparent 60%), linear-gradient(180deg, #0d0221 0%, #0a0a0a 100%)',
+      backgroundGradient:
+        'radial-gradient(ellipse at 20% 80%, #541388 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, #0d0221 0%, transparent 60%), linear-gradient(180deg, #0d0221 0%, #0a0a0a 100%)',
       primary: '#ff2a6d',
       secondary: '#05d9e8',
       accent: '#d1f7ff',
@@ -66,7 +68,8 @@ export const themes = {
     name: 'Dreamscape',
     colors: {
       background: '#1a1a2e',
-      backgroundGradient: 'radial-gradient(ellipse at 50% 0%, #4a3f6b 0%, transparent 50%), radial-gradient(ellipse at 0% 100%, #2d4059 0%, transparent 40%), radial-gradient(ellipse at 100% 100%, #3d2c5e 0%, transparent 40%), linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
+      backgroundGradient:
+        'radial-gradient(ellipse at 50% 0%, #4a3f6b 0%, transparent 50%), radial-gradient(ellipse at 0% 100%, #2d4059 0%, transparent 40%), radial-gradient(ellipse at 100% 100%, #3d2c5e 0%, transparent 40%), linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
       primary: '#a855f7',
       secondary: '#6ee7b7',
       accent: '#fbbf24',
