@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from '../theme/ThemeContext';
 import { JournalPage } from '../pages/JournalPage';
@@ -33,6 +33,8 @@ function renderJournalPage() {
     </MemoryRouter>,
   );
 }
+
+afterEach(cleanup);
 
 describe('JournalPage', () => {
   it('renders without crashing', () => {

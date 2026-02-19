@@ -56,7 +56,7 @@ export function emotionToVariant(emotion) {
  * @returns {number}
  */
 export function intensityToZDepth(intensity) {
-  const clamped = Math.max(1, Math.min(10, intensity || 5));
+  const clamped = Math.max(1, Math.min(10, intensity ?? 5));
   // Linear interpolation: intensity 1 → -350, intensity 10 → 200
   return Math.round(-350 + ((clamped - 1) / 9) * 550);
 }
@@ -68,7 +68,7 @@ export function intensityToZDepth(intensity) {
  * @returns {number}
  */
 export function intensityToParallaxFactor(intensity) {
-  const clamped = Math.max(1, Math.min(10, intensity || 5));
+  const clamped = Math.max(1, Math.min(10, intensity ?? 5));
   // 0.1 (far) to 1.1 (very close)
   return Math.round((0.1 + ((clamped - 1) / 9) * 1.0) * 10) / 10;
 }
