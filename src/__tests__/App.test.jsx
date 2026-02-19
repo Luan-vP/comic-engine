@@ -12,6 +12,14 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   fillText: vi.fn(),
   measureText: vi.fn(() => ({ width: 10 })),
   clearRect: vi.fn(),
+  createImageData: vi.fn((w, h) => ({
+    data: new Uint8ClampedArray(w * h * 4),
+    width: w,
+    height: h,
+  })),
+  putImageData: vi.fn(),
+  getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4), width: 1, height: 1 })),
+  drawImage: vi.fn(),
   canvas: { width: 100, height: 100 },
 }));
 
