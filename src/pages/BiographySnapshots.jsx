@@ -100,8 +100,7 @@ export function BiographySnapshots() {
 
   const selectedChars = selectedSnapshot
     ? characters.filter(
-        (c) =>
-          selectedSnapshot.characterIds && selectedSnapshot.characterIds.includes(c.id),
+        (c) => selectedSnapshot.characterIds && selectedSnapshot.characterIds.includes(c.id),
       )
     : [];
 
@@ -136,7 +135,14 @@ export function BiographySnapshots() {
           >
             Biography
           </h1>
-          <p style={{ margin: 0, color: theme.colors.textMuted, fontSize: '11px', letterSpacing: '1px' }}>
+          <p
+            style={{
+              margin: 0,
+              color: theme.colors.textMuted,
+              fontSize: '11px',
+              letterSpacing: '1px',
+            }}
+          >
             Visual snapshots of life memories
           </p>
         </div>
@@ -186,7 +192,9 @@ export function BiographySnapshots() {
               style={{
                 background: active ? theme.colors.primary + '20' : 'none',
                 border: 'none',
-                borderBottom: active ? `2px solid ${theme.colors.primary}` : '2px solid transparent',
+                borderBottom: active
+                  ? `2px solid ${theme.colors.primary}`
+                  : '2px solid transparent',
                 color: active ? theme.colors.primary : theme.colors.textMuted,
                 padding: '8px 16px',
                 cursor: 'pointer',
@@ -205,7 +213,6 @@ export function BiographySnapshots() {
 
       {/* ─── Content ─────────────────────────────────────────────────────── */}
       <div style={{ padding: '32px 40px' }}>
-
         {/* Timeline tab */}
         {activeTab === 'Timeline' && (
           <div>
@@ -228,10 +235,7 @@ export function BiographySnapshots() {
                   alignItems: 'flex-start',
                 }}
               >
-                <SnapshotPanel
-                  snapshot={selectedSnapshot}
-                  characters={selectedChars}
-                />
+                <SnapshotPanel snapshot={selectedSnapshot} characters={selectedChars} />
 
                 <div style={{ flex: 1, maxWidth: '360px' }}>
                   <h2
@@ -248,7 +252,13 @@ export function BiographySnapshots() {
                   </h2>
 
                   {selectedSnapshot.when && (
-                    <div style={{ color: theme.colors.textMuted, fontSize: '11px', marginBottom: '4px' }}>
+                    <div
+                      style={{
+                        color: theme.colors.textMuted,
+                        fontSize: '11px',
+                        marginBottom: '4px',
+                      }}
+                    >
                       {selectedSnapshot.when}
                       {selectedSnapshot.where && ` · ${selectedSnapshot.where}`}
                     </div>
@@ -287,7 +297,14 @@ export function BiographySnapshots() {
 
                   {selectedChars.length > 0 && (
                     <div>
-                      <div style={{ fontSize: '9px', letterSpacing: '1px', color: theme.colors.textSubtle, marginBottom: '8px' }}>
+                      <div
+                        style={{
+                          fontSize: '9px',
+                          letterSpacing: '1px',
+                          color: theme.colors.textSubtle,
+                          marginBottom: '8px',
+                        }}
+                      >
                         PEOPLE
                       </div>
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

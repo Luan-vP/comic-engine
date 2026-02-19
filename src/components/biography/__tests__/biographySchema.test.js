@@ -19,9 +19,7 @@ describe('TEMPLATES', () => {
       expect(tmpl).toHaveProperty('label');
       expect(tmpl).toHaveProperty('panelVariant');
       expect(tmpl).toHaveProperty('color');
-      expect(['default', 'borderless', 'torn', 'polaroid', 'monitor']).toContain(
-        tmpl.panelVariant,
-      );
+      expect(['default', 'borderless', 'torn', 'polaroid', 'monitor']).toContain(tmpl.panelVariant);
     }
   });
 });

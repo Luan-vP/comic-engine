@@ -8,12 +8,17 @@ import { SnapshotPanel } from './SnapshotPanel';
  * No timeline library. Just a flex container with overflow-x: auto.
  * Snapshots are sorted chronologically by createdAt.
  */
-export function TimelineView({ snapshots, characters = [], onEdit, onDelete, onSelect, selectedId }) {
+export function TimelineView({
+  snapshots,
+  characters = [],
+  onEdit,
+  onDelete,
+  onSelect,
+  selectedId,
+}) {
   const { theme } = useTheme();
 
-  const sorted = [...snapshots].sort(
-    (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-  );
+  const sorted = [...snapshots].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
   if (sorted.length === 0) {
     return (
@@ -115,11 +120,7 @@ export function TimelineView({ snapshots, characters = [], onEdit, onDelete, onS
                     borderRadius: '4px',
                   }}
                 >
-                  <SnapshotPanel
-                    snapshot={snapshot}
-                    characters={snapshotChars}
-                    compact
-                  />
+                  <SnapshotPanel snapshot={snapshot} characters={snapshotChars} compact />
                 </div>
 
                 {/* Edit / Delete */}

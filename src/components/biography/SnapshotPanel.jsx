@@ -70,9 +70,10 @@ export function SnapshotPanel({ snapshot, characters = [], compact = false }) {
           style={{
             fontFamily: theme.typography.fontDisplay,
             fontSize: compact ? '13px' : '16px',
-            color: template.panelVariant === 'torn' || template.panelVariant === 'polaroid'
-              ? '#333'
-              : theme.colors.text,
+            color:
+              template.panelVariant === 'torn' || template.panelVariant === 'polaroid'
+                ? '#333'
+                : theme.colors.text,
             fontWeight: 'bold',
             lineHeight: 1.2,
             textTransform: 'uppercase',
@@ -90,9 +91,10 @@ export function SnapshotPanel({ snapshot, characters = [], compact = false }) {
           style={{
             fontFamily: theme.typography.fontNarrative,
             fontSize: compact ? '9px' : '11px',
-            color: template.panelVariant === 'torn' || template.panelVariant === 'polaroid'
-              ? '#666'
-              : theme.colors.textMuted,
+            color:
+              template.panelVariant === 'torn' || template.panelVariant === 'polaroid'
+                ? '#666'
+                : theme.colors.textMuted,
             fontStyle: 'italic',
           }}
         >
@@ -106,9 +108,10 @@ export function SnapshotPanel({ snapshot, characters = [], compact = false }) {
               flex: 1,
               fontFamily: theme.typography.fontNarrative,
               fontSize: '11px',
-              color: template.panelVariant === 'torn' || template.panelVariant === 'polaroid'
-                ? '#555'
-                : theme.colors.textMuted,
+              color:
+                template.panelVariant === 'torn' || template.panelVariant === 'polaroid'
+                  ? '#555'
+                  : theme.colors.textMuted,
               lineHeight: 1.5,
               overflow: 'hidden',
               display: '-webkit-box',
@@ -174,9 +177,10 @@ export function SnapshotPanel({ snapshot, characters = [], compact = false }) {
           bottom: '8px',
           right: '10px',
           fontSize: '8px',
-          color: template.panelVariant === 'torn' || template.panelVariant === 'polaroid'
-            ? '#999'
-            : theme.colors.textSubtle,
+          color:
+            template.panelVariant === 'torn' || template.panelVariant === 'polaroid'
+              ? '#999'
+              : theme.colors.textSubtle,
           fontFamily: theme.typography.fontBody,
           letterSpacing: '1px',
           textTransform: 'uppercase',

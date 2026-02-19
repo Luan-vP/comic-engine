@@ -63,8 +63,22 @@ export function CharacterLibrary({ characters, snapshots = [], onAdd, onUpdate, 
       }}
     >
       {/* Header row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ margin: 0, fontSize: '13px', letterSpacing: '2px', color: theme.colors.textMuted }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
+        }}
+      >
+        <h3
+          style={{
+            margin: 0,
+            fontSize: '13px',
+            letterSpacing: '2px',
+            color: theme.colors.textMuted,
+          }}
+        >
           CHARACTERS
         </h3>
         <button
@@ -120,7 +134,14 @@ export function CharacterLibrary({ characters, snapshots = [], onAdd, onUpdate, 
             </datalist>
             {/* Colour picker */}
             <div>
-              <div style={{ fontSize: '10px', color: theme.colors.textMuted, marginBottom: '6px', letterSpacing: '1px' }}>
+              <div
+                style={{
+                  fontSize: '10px',
+                  color: theme.colors.textMuted,
+                  marginBottom: '6px',
+                  letterSpacing: '1px',
+                }}
+              >
                 COLOUR
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>

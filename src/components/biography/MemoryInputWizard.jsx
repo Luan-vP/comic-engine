@@ -116,8 +116,23 @@ export function MemoryInputWizard({ initialSnapshot, characters = [], onSave, on
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, color: theme.colors.text, fontSize: '16px', letterSpacing: '2px', textTransform: 'uppercase' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px',
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              color: theme.colors.text,
+              fontSize: '16px',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+            }}
+          >
             {initialSnapshot?.id ? 'Edit Memory' : 'New Memory'}
           </h2>
           <button
@@ -166,7 +181,13 @@ export function MemoryInputWizard({ initialSnapshot, characters = [], onSave, on
               >
                 {i + 1}
               </div>
-              <span style={{ fontSize: '9px', color: i === step ? theme.colors.text : theme.colors.textSubtle, letterSpacing: '0.5px' }}>
+              <span
+                style={{
+                  fontSize: '9px',
+                  color: i === step ? theme.colors.text : theme.colors.textSubtle,
+                  letterSpacing: '0.5px',
+                }}
+              >
                 {label}
               </span>
             </div>
@@ -261,10 +282,19 @@ export function MemoryInputWizard({ initialSnapshot, characters = [], onSave, on
                       transition: 'border-color 0.2s',
                     }}
                   >
-                    <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '4px', color: active ? tmpl.color : theme.colors.text }}>
+                    <div
+                      style={{
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        marginBottom: '4px',
+                        color: active ? tmpl.color : theme.colors.text,
+                      }}
+                    >
                       {tmpl.label}
                     </div>
-                    <div style={{ fontSize: '10px', color: theme.colors.textMuted, lineHeight: 1.4 }}>
+                    <div
+                      style={{ fontSize: '10px', color: theme.colors.textMuted, lineHeight: 1.4 }}
+                    >
                       {tmpl.description}
                     </div>
                   </button>
@@ -303,8 +333,12 @@ export function MemoryInputWizard({ initialSnapshot, characters = [], onSave, on
                     }}
                   >
                     <div>
-                      <span style={{ fontWeight: 'bold', fontSize: '12px', marginRight: '8px' }}>{mood.label}</span>
-                      <span style={{ fontSize: '10px', color: theme.colors.textMuted }}>{mood.description}</span>
+                      <span style={{ fontWeight: 'bold', fontSize: '12px', marginRight: '8px' }}>
+                        {mood.label}
+                      </span>
+                      <span style={{ fontSize: '10px', color: theme.colors.textMuted }}>
+                        {mood.description}
+                      </span>
                     </div>
                     {active && (
                       <span style={{ color: theme.colors.primary, fontSize: '14px' }}>✓</span>
@@ -366,7 +400,13 @@ export function MemoryInputWizard({ initialSnapshot, characters = [], onSave, on
                         {char.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div style={{ color: theme.colors.text, fontSize: '12px', fontWeight: tagged ? 'bold' : 'normal' }}>
+                        <div
+                          style={{
+                            color: theme.colors.text,
+                            fontSize: '12px',
+                            fontWeight: tagged ? 'bold' : 'normal',
+                          }}
+                        >
                           {char.name}
                         </div>
                         {char.relationship && (
