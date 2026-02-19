@@ -42,7 +42,7 @@ export function SceneObjectGroup({
   draggable = true,
   groupId,
 }) {
-  const { editActive, selectedGroupId, setSelectedGroupId } = useScene();
+  const { editActive, selectedGroupId, setSelectedGroupId, registerGroupOffset } = useScene();
   const { theme } = useTheme();
 
   // Per-group drag offset, independent of other groups
@@ -95,7 +95,14 @@ export function SceneObjectGroup({
     };
   }, [isDragging]);
 
-  const [px, py] = position;
+  // Report this group's drag offset to the Scene so handleSave can collect all offsets.
+  useEffect(() => {
+    if (registerGroupOffset && groupId) {
+      registerGroupOffset(groupId, editActive ? groupOffset : { x: 0, y: 0 });
+    }
+  }, [registerGroupOffset, groupId, groupOffset, editActive]);
+
+  const [px, py, pz = 0] = position;
 
   // Expose offset to children (zero when not in edit mode so parallax is unaffected)
   const contextValue = {
@@ -115,7 +122,7 @@ export function SceneObjectGroup({
           position: 'absolute',
           inset: 0,
           // Static base-position offset from the position prop
-          transform: `translate(${px}px, ${py}px)`,
+          transform: `translate3d(${px}px, ${py}px, ${pz}px)`,
           // Preserve the 3D transform chain for child SceneObjects
           transformStyle: 'preserve-3d',
           // Visual selection highlight in edit mode

@@ -189,12 +189,12 @@ ${layerImports}
 export function ${componentName}() {
   const { theme } = useTheme();
 
-  const handleSave = useCallback(async ({ groupOffset }) => {
+  const handleSave = useCallback(async ({ groupOffset, groupOffsets }) => {
     try {
       const res = await fetch('/_dev/scenes/${slug}', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupOffset }),
+        body: JSON.stringify({ groupOffset, groupOffsets }),
       });
       if (!res.ok) throw new Error('Save failed');
       window.location.reload();
@@ -483,19 +483,27 @@ export default function sceneExporter() {
           meta.updatedAt = new Date().toISOString();
           fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
 
-          // Generate a code snippet for the user to paste
-          const codeSnippet = layers
-            .map((_, i) => {
+          // Generate a code snippet for the user to paste.
+          // All new layers share the same groupId, so wrap them in <SceneObjectGroup>.
+          const zValues = layerMeta.map((l) => (l.position ? l.position[2] : 0));
+          const zFar = Math.min(...zValues);
+          const zNear = Math.max(...zValues);
+          const innerSnippet = layerMeta
+            .map((lm, i) => {
               const layerIndex = nextIndex + i;
-              return `<SceneObject
-  position={[${(layerMeta[i].position || [0, 0, 0]).join(', ')}]}
-  parallaxFactor={${layerMeta[i].parallaxFactor}}
-  interactive={false}
->
-  <img src="/scenes/${slug}/layer-${layerIndex}.png" alt="Layer ${layerIndex}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
-</SceneObject>`;
+              return `  <SceneObject
+    position={[${lm.position.join(', ')}]}
+    parallaxFactor={${lm.parallaxFactor}}
+    interactive={false}
+  >
+    <img src="/scenes/${slug}/layer-${layerIndex}.png" alt="Layer ${layerIndex}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
+  </SceneObject>`;
             })
             .join('\n\n');
+          const codeSnippet =
+            `<SceneObjectGroup groupId="${groupId}" zRange={{ far: ${zFar}, near: ${zNear} }}>` +
+            `\n${innerSnippet}\n` +
+            `</SceneObjectGroup>`;
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ savedFiles, codeSnippet }));
