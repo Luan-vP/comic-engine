@@ -104,7 +104,7 @@ export function generatePageTemplate(meta) {
         parallaxFactor={${pf}}
       >
         <Panel variant="monitor">
-          <iframe src="${obj.data.url}" width={280} height={200} sandbox="allow-scripts allow-same-origin" style={{ border: 'none' }} title="Embedded content" />
+          <iframe src="${obj.data.url}" width={280} height={200} sandbox="allow-scripts" style={{ border: 'none' }} title="Embedded content" />
         </Panel>
       </SceneObject>`;
       } else if (obj.type === 'text') {
@@ -443,6 +443,14 @@ export default function sceneExporter() {
           if (!imageUrl) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'imageUrl (data URL) is required' }));
+            return;
+          }
+
+          const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+          const mimeMatch = imageUrl.match(/^data:([^;]+);base64,/);
+          if (!mimeMatch || !ALLOWED_MIME.has(mimeMatch[1])) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Only image uploads are accepted' }));
             return;
           }
 

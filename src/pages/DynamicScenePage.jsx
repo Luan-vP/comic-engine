@@ -195,7 +195,7 @@ function SavedObjectRenderer({ object }) {
           src={object.data.url}
           width={280}
           height={200}
-          sandbox="allow-scripts allow-same-origin"
+          sandbox="allow-scripts"
           style={{ display: 'block', border: 'none' }}
           title="Embedded content"
         />
