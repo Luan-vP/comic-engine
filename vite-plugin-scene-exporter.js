@@ -45,7 +45,7 @@ function readBody(req) {
   });
 }
 
-function generatePageTemplate(componentName, slug, layers, sceneConfig) {
+function generatePageTemplate(componentName, slug, layers, sceneConfig, objects = []) {
   const {
     perspective = 1000,
     parallaxIntensity = 1.2,
@@ -122,20 +122,80 @@ function generatePageTemplate(componentName, slug, layers, sceneConfig) {
     })
     .join('\n\n');
 
+  const hasObjects = objects && objects.length > 0;
+  const panelImport = hasObjects ? ', Panel' : '';
+
+  const objectsJsx = hasObjects
+    ? objects
+        .map((obj) => {
+          const pos = obj.position || [0, 0, 0];
+          const pf = obj.parallaxFactor ?? 0.6;
+          if (obj.type === 'memory') {
+            const caption = obj.data?.caption
+              ? `
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, textAlign: 'center', fontSize: '11px', color: '#333', padding: '6px 8px 8px' }}>
+            ${obj.data.caption}
+          </div>`
+              : '';
+            return `      <SceneObject
+        position={[${pos.join(', ')}]}
+        parallaxFactor={${pf}}
+        interactive={false}
+      >
+        <Panel variant="polaroid" width={220} height={280}>
+          <img src="${obj.data?.imageUrl || ''}" alt="${obj.data?.caption || 'Memory'}" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />${caption}
+        </Panel>
+      </SceneObject>`;
+          } else if (obj.type === 'iframe') {
+            return `      <SceneObject
+        position={[${pos.join(', ')}]}
+        parallaxFactor={${pf}}
+        interactive={false}
+      >
+        <Panel variant="monitor" width={296} height={216}>
+          <iframe src="${obj.data?.url || ''}" width="280" height="200" sandbox="allow-scripts allow-same-origin" style={{ border: 'none', display: 'block' }} title="Embedded content" />
+        </Panel>
+      </SceneObject>`;
+          } else if (obj.type === 'text') {
+            const titleJsx = obj.data?.title
+              ? `<h2 style={{ margin: '0 0 8px 0', fontSize: '18px', color: theme.colors.text, fontFamily: theme.typography.fontHeading }}>${obj.data.title}</h2>`
+              : '';
+            const bodyJsx = obj.data?.body
+              ? `<p style={{ margin: 0, fontSize: '13px', color: theme.colors.textMuted, lineHeight: 1.5 }}>${obj.data.body}</p>`
+              : '';
+            return `      <SceneObject
+        position={[${pos.join(', ')}]}
+        parallaxFactor={${pf}}
+        interactive={false}
+      >
+        <Panel width={280} height={200}>
+          <div style={{ padding: '20px' }}>
+            ${titleJsx}
+            ${bodyJsx}
+          </div>
+        </Panel>
+      </SceneObject>`;
+          }
+          return '';
+        })
+        .filter(Boolean)
+        .join('\n\n')
+    : '';
+
   return `import React, { useCallback } from 'react';
-import { Scene, SceneObject } from '../components/scene';
+import { Scene, SceneObject${panelImport} } from '../components/scene';
 import { useTheme } from '../theme/ThemeContext';
 ${layerImports}
 
 export function ${componentName}() {
   const { theme } = useTheme();
 
-  const handleSave = useCallback(async ({ groupOffset }) => {
+  const handleSave = useCallback(async ({ groupOffset, objects }) => {
     try {
       const res = await fetch('/_dev/scenes/${slug}', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupOffset }),
+        body: JSON.stringify({ groupOffset, objects }),
       });
       if (!res.ok) throw new Error('Save failed');
       window.location.reload();
@@ -145,8 +205,9 @@ export function ${componentName}() {
   }, []);
 
   return (
-    <Scene perspective={${perspective}} parallaxIntensity={${parallaxIntensity}} mouseInfluence={{ x: ${mouseInfluence.x}, y: ${mouseInfluence.y} }} editable onSave={handleSave}>
+    <Scene perspective={${perspective}} parallaxIntensity={${parallaxIntensity}} mouseInfluence={{ x: ${mouseInfluence.x}, y: ${mouseInfluence.y} }} editable slug="${slug}" onSave={handleSave}>
 ${sceneObjects}
+${objectsJsx ? '\n' + objectsJsx : ''}
 
       {/* Title */}
       <SceneObject
@@ -177,6 +238,8 @@ ${sceneObjects}
 export default ${componentName};
 `;
 }
+
+export { generatePageTemplate };
 
 export default function sceneExporter() {
   return {
@@ -446,7 +509,52 @@ export default function sceneExporter() {
         }
       });
 
-      // PATCH /_dev/scenes/:slug — Update layer positions (from edit mode drag)
+      // POST /_dev/scenes/:slug/assets — Upload an image asset for a scene
+      server.middlewares.use('/_dev/scenes', async (req, res, next) => {
+        if (req.method !== 'POST') return next();
+
+        const match = req.url?.match(/^\/([a-z0-9-]+)\/assets\/?$/);
+        if (!match) return next();
+
+        const slug = match[1];
+
+        try {
+          const sceneDir = path.join(scenesDir, slug);
+          const metaPath = path.join(sceneDir, 'scene.json');
+
+          if (!fs.existsSync(metaPath)) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: `Scene "${slug}" not found` }));
+            return;
+          }
+
+          const body = await readBody(req);
+          const { imageUrl } = body;
+
+          if (!imageUrl) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'imageUrl is required' }));
+            return;
+          }
+
+          // Derive extension from data URL content type
+          const mimeMatch = imageUrl.match(/^data:([^;]+);base64,/);
+          const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+          const ext = mimeType === 'image/jpeg' ? 'jpg' : 'png';
+
+          const filename = `upload-${Date.now()}.${ext}`;
+          const filePath = path.join(sceneDir, filename);
+          fs.writeFileSync(filePath, dataUrlToBuffer(imageUrl));
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ path: `/scenes/${slug}/${filename}` }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+
+      // PATCH /_dev/scenes/:slug — Update layer positions and/or inserted objects
       server.middlewares.use('/_dev/scenes', async (req, res, next) => {
         if (req.method !== 'PATCH') return next();
 
@@ -466,11 +574,11 @@ export default function sceneExporter() {
           }
 
           const body = await readBody(req);
-          const { groupOffset } = body;
+          const { groupOffset, objects } = body;
 
-          if (!groupOffset) {
+          if (!groupOffset && objects === undefined) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'groupOffset is required' }));
+            res.end(JSON.stringify({ error: 'groupOffset or objects is required' }));
             return;
           }
 
@@ -478,16 +586,24 @@ export default function sceneExporter() {
           const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
 
           // Apply offset to each layer's position
-          for (const layer of meta.layers) {
-            if (layer.position) {
-              layer.position[0] += groupOffset.x;
-              layer.position[1] += groupOffset.y;
+          if (groupOffset) {
+            for (const layer of meta.layers) {
+              if (layer.position) {
+                layer.position[0] += groupOffset.x;
+                layer.position[1] += groupOffset.y;
+              }
             }
           }
+
+          // Persist inserted objects
+          if (objects !== undefined) {
+            meta.objects = objects;
+          }
+
           meta.updatedAt = new Date().toISOString();
           fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
 
-          // Regenerate the page component with updated positions
+          // Regenerate the page component with updated positions and objects
           const componentName = toPascalCase(slug);
           const pagePath = path.join(pagesDir, `${componentName}.jsx`);
           if (fs.existsSync(pagePath)) {
@@ -496,6 +612,7 @@ export default function sceneExporter() {
               slug,
               meta.layers,
               meta.sceneConfig,
+              meta.objects || [],
             );
             fs.writeFileSync(pagePath, pageContent);
           }

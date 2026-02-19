@@ -1,5 +1,7 @@
-import React, { useRef, useState, useEffect, useCallback, createContext, useContext } from 'react';
+import React, { useRef, useState, useEffect, useCallback, createContext, useContext, useMemo } from 'react';
 import { useTheme } from '../../theme/ThemeContext';
+import { InsertToolbar } from './InsertToolbar';
+import { Panel } from './Panel';
 
 /**
  * Scene Context - shares camera/mouse state with all scene objects
@@ -29,6 +31,129 @@ export function useScene() {
  * Objects further from camera (negative Z) move less = background
  * Objects closer to camera (positive Z) move more = foreground
  */
+/**
+ * InsertedObjectRenderer - renders a dynamically inserted scene object
+ * with parallax support. Defined here to avoid circular imports with SceneObject.
+ */
+function InsertedObjectRenderer({ obj }) {
+  const { mousePos, scrollZ, parallaxIntensity, mouseInfluence, editActive, groupOffset } =
+    useScene();
+  const { theme } = useTheme();
+
+  const [x, y, z] = obj.position;
+  const effectiveParallax = obj.parallaxFactor ?? 0.7 + z / 1000;
+
+  const mouseOffset = useMemo(
+    () => ({
+      x: mousePos.x * mouseInfluence.x * effectiveParallax * parallaxIntensity,
+      y: mousePos.y * mouseInfluence.y * effectiveParallax * parallaxIntensity,
+    }),
+    [mousePos, mouseInfluence, effectiveParallax, parallaxIntensity],
+  );
+
+  const gx = groupOffset?.x || 0;
+  const gy = groupOffset?.y || 0;
+
+  const transform = useMemo(
+    () =>
+      [
+        `translate3d(${x + mouseOffset.x + gx}px, ${y + mouseOffset.y + gy}px, ${z + scrollZ}px)`,
+        'rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1)',
+      ].join(' '),
+    [x, y, z, mouseOffset, scrollZ, gx, gy],
+  );
+
+  let content = null;
+  if (obj.type === 'memory') {
+    content = (
+      <Panel variant="polaroid" width={220} height={280}>
+        <img
+          src={obj.data.imageUrl}
+          alt={obj.data.caption || 'Memory'}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+        {obj.data.caption && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              fontSize: '11px',
+              color: '#333',
+              padding: '6px 8px 8px',
+            }}
+          >
+            {obj.data.caption}
+          </div>
+        )}
+      </Panel>
+    );
+  } else if (obj.type === 'iframe') {
+    content = (
+      <Panel variant="monitor" width={296} height={216}>
+        <iframe
+          src={obj.data.url}
+          width="280"
+          height="200"
+          sandbox="allow-scripts allow-same-origin"
+          style={{ border: 'none', display: 'block' }}
+          title="Embedded content"
+        />
+      </Panel>
+    );
+  } else if (obj.type === 'text') {
+    content = (
+      <Panel width={280} height={200}>
+        <div style={{ padding: '20px' }}>
+          {obj.data.title && (
+            <h2
+              style={{
+                margin: '0 0 8px 0',
+                fontSize: '18px',
+                color: theme.colors.text,
+                fontFamily: theme.typography.fontHeading,
+              }}
+            >
+              {obj.data.title}
+            </h2>
+          )}
+          {obj.data.body && (
+            <p
+              style={{
+                margin: 0,
+                fontSize: '13px',
+                color: theme.colors.textMuted,
+                lineHeight: 1.5,
+              }}
+            >
+              {obj.data.body}
+            </p>
+          )}
+        </div>
+      </Panel>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        transform,
+        transformStyle: 'preserve-3d',
+        transformOrigin: 'center',
+        pointerEvents: editActive ? 'none' : 'auto',
+        transition: editActive ? 'none' : 'transform 0.1s ease-out',
+      }}
+    >
+      {content}
+    </div>
+  );
+}
+
 export function Scene({
   children,
   perspective = 1000, // Lower = more dramatic perspective
@@ -37,7 +162,8 @@ export function Scene({
   scrollEnabled = false, // Enable scroll-based Z movement
   scrollDepth = 500, // How much Z changes on scroll
   editable = false, // Show edit mode checkbox
-  onSave = null, // Called with { groupOffset: {x, y} } when save is clicked
+  slug = null, // Scene slug, required for image uploads via Insert toolbar
+  onSave = null, // Called with { groupOffset: {x, y}, objects: [...] } when save is clicked
   className = '',
   style = {},
 }) {
@@ -52,6 +178,7 @@ export function Scene({
   const [editActive, setEditActive] = useState(false);
   const [groupOffset, setGroupOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [insertedObjects, setInsertedObjects] = useState([]);
   const dragStartRef = useRef(null);
 
   // Track mouse position normalized to -1 to 1
@@ -139,13 +266,30 @@ export function Scene({
 
   const handleSave = useCallback(() => {
     if (onSave) {
-      onSave({ groupOffset });
+      onSave({ groupOffset, objects: insertedObjects });
     }
-  }, [onSave, groupOffset]);
+  }, [onSave, groupOffset, insertedObjects]);
+
+  const handleInsert = useCallback((type, data) => {
+    const id = `obj-${Date.now()}`;
+    setInsertedObjects((prev) => [
+      ...prev,
+      {
+        id,
+        type,
+        position: data.position,
+        parallaxFactor: data.parallaxFactor,
+        panelVariant: data.panelVariant,
+        data,
+      },
+    ]);
+  }, []);
 
   const handleReset = useCallback(() => {
     setGroupOffset({ x: 0, y: 0 });
   }, []);
+
+  const saveDisabled = groupOffset.x === 0 && groupOffset.y === 0 && insertedObjects.length === 0;
 
   const contextValue = {
     mousePos: editActive ? { x: 0, y: 0 } : mousePos,
@@ -185,6 +329,9 @@ export function Scene({
           }}
         >
           {children}
+          {insertedObjects.map((obj) => (
+            <InsertedObjectRenderer key={obj.id} obj={obj} />
+          ))}
         </div>
 
         {/* Edit mode controls */}
@@ -242,18 +389,14 @@ export function Scene({
                   {onSave && (
                     <button
                       onClick={handleSave}
-                      disabled={groupOffset.x === 0 && groupOffset.y === 0}
+                      disabled={saveDisabled}
                       style={{
-                        background:
-                          groupOffset.x === 0 && groupOffset.y === 0
-                            ? '#555'
-                            : theme.colors.primary,
-                        color: groupOffset.x === 0 && groupOffset.y === 0 ? '#999' : '#000',
+                        background: saveDisabled ? '#555' : theme.colors.primary,
+                        color: saveDisabled ? '#999' : '#000',
                         border: 'none',
                         borderRadius: '4px',
                         padding: '6px 12px',
-                        cursor:
-                          groupOffset.x === 0 && groupOffset.y === 0 ? 'not-allowed' : 'pointer',
+                        cursor: saveDisabled ? 'not-allowed' : 'pointer',
                         fontWeight: 'bold',
                         fontSize: '11px',
                         fontFamily: theme.typography.fontBody,
@@ -278,6 +421,7 @@ export function Scene({
                     Reset
                   </button>
                 </div>
+                <InsertToolbar slug={slug} onInsert={handleInsert} />
               </div>
             )}
           </div>
