@@ -22,9 +22,7 @@ async function fetchDepthFromBackend(imgElement) {
   canvas.height = imgElement.height;
   ctx.drawImage(imgElement, 0, 0);
 
-  const blob = await new Promise((resolve) =>
-    canvas.toBlob(resolve, 'image/png')
-  );
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
 
   const formData = new FormData();
   formData.append('file', blob, 'image.png');
@@ -172,10 +170,10 @@ export function visualizeDepthMap(depthMap) {
     const brightness = Math.floor(depth * 255);
     const pixelIdx = i * 4;
 
-    imageData.data[pixelIdx] = brightness;     // R
+    imageData.data[pixelIdx] = brightness; // R
     imageData.data[pixelIdx + 1] = brightness; // G
     imageData.data[pixelIdx + 2] = brightness; // B
-    imageData.data[pixelIdx + 3] = 255;        // A
+    imageData.data[pixelIdx + 3] = 255; // A
   }
 
   ctx.putImageData(imageData, 0, 0);

@@ -4,7 +4,7 @@ import { useTheme } from '../../theme/ThemeContext';
 /**
  * Scanlines - CRT monitor / TV effect
  */
-export function Scanlines({ 
+export function Scanlines({
   intensity: intensityOverride,
   spacing = 4, // pixels between lines
   color = 'rgba(0, 0, 0, 0.8)',

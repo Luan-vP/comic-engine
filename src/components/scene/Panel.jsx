@@ -3,10 +3,10 @@ import { useTheme } from '../../theme/ThemeContext';
 
 /**
  * Panel - A comic book panel that can contain layered artwork
- * 
+ *
  * This wraps content in a styled panel frame. Use inside SceneObject
  * to position it in 3D space.
- * 
+ *
  * For layered artwork, pass children as multiple absolutely-positioned
  * elements, or use the layers prop for automatic stacking.
  */
@@ -20,7 +20,7 @@ export function Panel({
   onClick,
   className = '',
   style = {},
-  
+
   // For automatic layer stacking
   layers = null, // Array of { src, style, className } for layered images
 }) {
@@ -98,7 +98,8 @@ export function Panel({
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)',
+            background:
+              'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)',
             pointerEvents: 'none',
             zIndex: 10,
           }}

@@ -22,6 +22,13 @@ export function DepthSegmentationDemo() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [sourceImage, setSourceImage] = useState(null);
+  const [exportMode, setExportMode] = useState(null); // null | 'new' | 'existing'
+  const [sceneName, setSceneName] = useState('');
+  const [existingScenes, setExistingScenes] = useState([]);
+  const [selectedScene, setSelectedScene] = useState('');
+  const [exportResult, setExportResult] = useState(null);
+  const [exportError, setExportError] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleImageUpload = async (event) => {
@@ -81,6 +88,91 @@ export function DepthSegmentationDemo() {
       setError(err.message || 'Failed to process image');
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const prepareLayers = () => {
+    if (!result) return [];
+    return result.layers.map((layer) => ({
+      imageUrl: layer.imageUrl,
+      fillMaskUrl: layer.fillMaskUrl || null,
+      blurFillUrl: layer.blurFillUrl || null,
+      depth: layer.depth,
+      name: layer.name,
+      position: layer.sceneObjectProps.position,
+      parallaxFactor: layer.sceneObjectProps.parallaxFactor,
+    }));
+  };
+
+  const handleExportNew = async () => {
+    if (!sceneName.trim()) return;
+    setExporting(true);
+    setExportError(null);
+    setExportResult(null);
+
+    try {
+      const res = await fetch('/_dev/scenes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: sceneName.trim(),
+          layers: prepareLayers(),
+          sceneConfig: {
+            perspective: 1000,
+            parallaxIntensity: 1.2,
+            mouseInfluence: { x: 60, y: 40 },
+            fillMode,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Export failed');
+      setExportResult({ type: 'new', routePath: data.routePath });
+      setExportMode(null);
+    } catch (err) {
+      setExportError(err.message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportExisting = async () => {
+    if (!selectedScene) return;
+    setExporting(true);
+    setExportError(null);
+    setExportResult(null);
+
+    try {
+      const res = await fetch(`/_dev/scenes/${selectedScene}/layers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ layers: prepareLayers() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Export failed');
+      setExportResult({
+        type: 'existing',
+        savedFiles: data.savedFiles,
+        codeSnippet: data.codeSnippet,
+      });
+      setExportMode(null);
+    } catch (err) {
+      setExportError(err.message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const fetchExistingScenes = async () => {
+    try {
+      const res = await fetch('/_dev/scenes');
+      const data = await res.json();
+      setExistingScenes(data);
+      if (data.length > 0) setSelectedScene(data[0].slug);
+    } catch {
+      setExistingScenes([]);
     }
   };
 
@@ -313,6 +405,248 @@ export function DepthSegmentationDemo() {
           <span style={{ color: theme.colors.textMuted, fontSize: '11px' }}>
             Move your mouse to see parallax effect
           </span>
+          {/* Export buttons */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <button
+              onClick={() => {
+                setExportMode('new');
+                setExportResult(null);
+                setExportError(null);
+              }}
+              disabled={exporting}
+              style={{
+                flex: 1,
+                background: theme.colors.primary,
+                color: '#000',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '8px 12px',
+                cursor: exporting ? 'not-allowed' : 'pointer',
+                fontWeight: 'bold',
+                fontSize: '12px',
+                fontFamily: theme.typography.fontBody,
+              }}
+            >
+              Export to New Scene
+            </button>
+            <button
+              onClick={() => {
+                setExportMode('existing');
+                setExportResult(null);
+                setExportError(null);
+                fetchExistingScenes();
+              }}
+              disabled={exporting}
+              style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.1)',
+                color: theme.colors.text,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: '4px',
+                padding: '8px 12px',
+                cursor: exporting ? 'not-allowed' : 'pointer',
+                fontWeight: 'bold',
+                fontSize: '12px',
+                fontFamily: theme.typography.fontBody,
+              }}
+            >
+              Export to Existing Scene
+            </button>
+          </div>
+          {/* New scene flow */}
+          {exportMode === 'new' && (
+            <div
+              style={{
+                marginTop: '12px',
+                padding: '12px',
+                background: 'rgba(255,255,255,0.05)',
+                borderRadius: '4px',
+                border: `1px solid ${theme.colors.border}`,
+              }}
+            >
+              <label
+                style={{
+                  color: theme.colors.text,
+                  fontSize: '12px',
+                  display: 'block',
+                  marginBottom: '6px',
+                }}
+              >
+                Scene Name
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  value={sceneName}
+                  onChange={(e) => setSceneName(e.target.value)}
+                  placeholder="My Scene"
+                  disabled={exporting}
+                  style={{
+                    flex: 1,
+                    background: 'rgba(0,0,0,0.4)',
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: '4px',
+                    color: theme.colors.text,
+                    padding: '8px 10px',
+                    fontSize: '12px',
+                    fontFamily: theme.typography.fontBody,
+                  }}
+                />
+                <button
+                  onClick={handleExportNew}
+                  disabled={exporting || !sceneName.trim()}
+                  style={{
+                    background: exporting ? '#555' : theme.colors.secondary,
+                    color: exporting ? '#999' : '#000',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '8px 16px',
+                    cursor: exporting || !sceneName.trim() ? 'not-allowed' : 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '12px',
+                    fontFamily: theme.typography.fontBody,
+                  }}
+                >
+                  {exporting ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </div>
+          )}
+          {/* Existing scene flow */}
+          {exportMode === 'existing' && (
+            <div
+              style={{
+                marginTop: '12px',
+                padding: '12px',
+                background: 'rgba(255,255,255,0.05)',
+                borderRadius: '4px',
+                border: `1px solid ${theme.colors.border}`,
+              }}
+            >
+              {existingScenes.length === 0 ? (
+                <div style={{ color: theme.colors.textMuted, fontSize: '12px' }}>
+                  No existing scenes found. Create a new scene first.
+                </div>
+              ) : (
+                <>
+                  <label
+                    style={{
+                      color: theme.colors.text,
+                      fontSize: '12px',
+                      display: 'block',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Select Scene
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <select
+                      value={selectedScene}
+                      onChange={(e) => setSelectedScene(e.target.value)}
+                      disabled={exporting}
+                      style={{
+                        flex: 1,
+                        background: 'rgba(0,0,0,0.4)',
+                        border: `1px solid ${theme.colors.border}`,
+                        borderRadius: '4px',
+                        color: theme.colors.text,
+                        padding: '8px 10px',
+                        fontSize: '12px',
+                        fontFamily: theme.typography.fontBody,
+                      }}
+                    >
+                      {existingScenes.map((s) => (
+                        <option key={s.slug} value={s.slug} style={{ background: '#222' }}>
+                          {s.name} ({s.layerCount} layers)
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleExportExisting}
+                      disabled={exporting || !selectedScene}
+                      style={{
+                        background: exporting ? '#555' : theme.colors.secondary,
+                        color: exporting ? '#999' : '#000',
+                        border: 'none',
+                        borderRadius: '4px',
+                        padding: '8px 16px',
+                        cursor: exporting || !selectedScene ? 'not-allowed' : 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        fontFamily: theme.typography.fontBody,
+                      }}
+                    >
+                      {exporting ? 'Saving...' : 'Save Layers'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Export success feedback */}
+      {exportResult && (
+        <div
+          style={{
+            marginTop: '16px',
+            padding: '12px',
+            background: 'rgba(0,255,0,0.1)',
+            border: `1px solid ${theme.colors.primary}50`,
+            borderRadius: '4px',
+            fontSize: '12px',
+            color: theme.colors.text,
+          }}
+        >
+          {exportResult.type === 'new' ? (
+            <>
+              <strong>Scene created!</strong>
+              <br />
+              <a
+                href={exportResult.routePath}
+                style={{ color: theme.colors.primary, marginTop: '4px', display: 'inline-block' }}
+              >
+                Open {exportResult.routePath}
+              </a>
+            </>
+          ) : (
+            <>
+              <strong>Layers saved!</strong> ({exportResult.savedFiles?.length} files)
+              <pre
+                style={{
+                  marginTop: '8px',
+                  padding: '8px',
+                  background: 'rgba(0,0,0,0.4)',
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  overflow: 'auto',
+                  maxHeight: '200px',
+                  whiteSpace: 'pre-wrap',
+                  color: theme.colors.textMuted,
+                }}
+              >
+                {exportResult.codeSnippet}
+              </pre>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Export error */}
+      {exportError && (
+        <div
+          style={{
+            marginTop: '16px',
+            padding: '12px',
+            background: 'rgba(255,0,0,0.1)',
+            border: '1px solid rgba(255,0,0,0.5)',
+            borderRadius: '4px',
+            fontSize: '12px',
+            color: '#ff6b6b',
+          }}
+        >
+          Export failed: {exportError}
         </div>
       )}
 
