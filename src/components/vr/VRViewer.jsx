@@ -22,9 +22,7 @@ function VRLayer({ layer, lookX, lookY, mouseInfluence, parallaxIntensity }) {
 
   // Match SceneObject's auto-calculate formula: 0.7 + z/1000
   const effectiveParallax =
-    parallaxFactor !== undefined && parallaxFactor !== null
-      ? parallaxFactor
-      : 0.7 + z / 1000;
+    parallaxFactor !== undefined && parallaxFactor !== null ? parallaxFactor : 0.7 + z / 1000;
 
   const offsetX = lookX * mouseInfluence.x * effectiveParallax * parallaxIntensity;
   const offsetY = lookY * mouseInfluence.y * effectiveParallax * parallaxIntensity;
