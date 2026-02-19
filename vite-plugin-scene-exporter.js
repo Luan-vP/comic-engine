@@ -112,12 +112,12 @@ function generatePageTemplate(componentName, slug, layers, sceneConfig) {
       const i = layer.index;
       const lines = [];
       if (fillMode === 'blur') {
-        lines.push(`import layer${i}Blur from '/scenes/${slug}/layer-${i}-blur.png';`);
+        lines.push(`import layer${i}Blur from '/local-scenes/${slug}/layer-${i}-blur.png';`);
       } else {
-        lines.push(`import layer${i} from '/scenes/${slug}/layer-${i}.png';`);
+        lines.push(`import layer${i} from '/local-scenes/${slug}/layer-${i}.png';`);
       }
       if (fillMode === 'solid') {
-        lines.push(`import layer${i}Fill from '/scenes/${slug}/layer-${i}-fill.png';`);
+        lines.push(`import layer${i}Fill from '/local-scenes/${slug}/layer-${i}-fill.png';`);
       }
       return lines.join('\n');
     })
@@ -242,10 +242,35 @@ export default function sceneExporter() {
     name: 'scene-exporter',
     configureServer(server) {
       const root = server.config.root || process.cwd();
-      const publicDir = path.join(root, 'public');
-      const scenesDir = path.join(publicDir, 'scenes');
+      const scenesDir = path.join(root, '.local', 'scenes');
       const pagesDir = path.join(root, 'src', 'pages');
       const appFile = path.join(root, 'src', 'App.jsx');
+
+      // Serve static files from .local/scenes/* at /local-scenes/*
+      server.middlewares.use('/local-scenes', (req, res, next) => {
+        const filePath = path.join(scenesDir, req.url || '');
+        // Prevent path traversal
+        if (!filePath.startsWith(scenesDir)) {
+          res.writeHead(403);
+          res.end('Forbidden');
+          return;
+        }
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+          const ext = path.extname(filePath).toLowerCase();
+          const contentType =
+            ext === '.png'
+              ? 'image/png'
+              : ext === '.jpg' || ext === '.jpeg'
+                ? 'image/jpeg'
+                : ext === '.json'
+                  ? 'application/json'
+                  : 'application/octet-stream';
+          res.writeHead(200, { 'Content-Type': contentType });
+          res.end(fs.readFileSync(filePath));
+        } else {
+          next();
+        }
+      });
 
       // GET /_dev/scenes — List scenes
       server.middlewares.use('/_dev/scenes', (req, res, next) => {
@@ -496,7 +521,7 @@ export default function sceneExporter() {
     parallaxFactor={${lm.parallaxFactor}}
     interactive={false}
   >
-    <img src="/scenes/${slug}/layer-${layerIndex}.png" alt="Layer ${layerIndex}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
+    <img src="/local-scenes/${slug}/layer-${layerIndex}.png" alt="Layer ${layerIndex}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
   </SceneObject>`;
             })
             .join('\n\n');
