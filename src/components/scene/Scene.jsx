@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { useTheme } from '../../theme/ThemeContext';
+import { InsertToolbar } from './InsertToolbar';
 
 /**
  * Scene Context - shares camera/mouse state with all scene objects
@@ -12,6 +13,126 @@ export function useScene() {
     throw new Error('useScene must be used within a Scene component');
   }
   return context;
+}
+
+/**
+ * InsertedObjectRenderer - Renders a dynamically inserted scene object.
+ * Defined here (not in SceneObject.jsx) to avoid a circular import between
+ * Scene ↔ SceneObject.
+ */
+function InsertedObjectRenderer({ object }) {
+  const { mousePos, scrollZ, parallaxIntensity, mouseInfluence, editActive, groupOffset } =
+    useContext(SceneContext);
+
+  const [x, y, z] = object.position || [0, 0, 0];
+  const parallaxFactor = object.parallaxFactor ?? 0.7 + z / 1000;
+
+  const mouseOffsetX = mousePos.x * mouseInfluence.x * parallaxFactor * parallaxIntensity;
+  const mouseOffsetY = mousePos.y * mouseInfluence.y * parallaxFactor * parallaxIntensity;
+
+  const gx = groupOffset?.x || 0;
+  const gy = groupOffset?.y || 0;
+
+  const transform = [
+    `translate3d(${x + mouseOffsetX + gx}px, ${y + mouseOffsetY + gy}px, ${z + scrollZ}px)`,
+  ].join(' ');
+
+  let content = null;
+  if (object.type === 'memory') {
+    content = (
+      <div
+        style={{
+          background: '#fff',
+          padding: '12px 12px 48px 12px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          borderRadius: '2px',
+          display: 'inline-block',
+        }}
+      >
+        <img
+          src={object.data.imageUrl}
+          alt={object.data.caption || 'Memory'}
+          style={{ display: 'block', width: '200px', height: '200px', objectFit: 'cover' }}
+        />
+        {object.data.caption && (
+          <div
+            style={{
+              textAlign: 'center',
+              marginTop: '6px',
+              fontSize: '11px',
+              color: '#333',
+              fontFamily: 'Georgia, serif',
+            }}
+          >
+            {object.data.caption}
+          </div>
+        )}
+      </div>
+    );
+  } else if (object.type === 'iframe') {
+    content = (
+      <div
+        style={{
+          background: '#111',
+          border: '8px solid #222',
+          borderRadius: '4px',
+          boxShadow: '0 0 30px rgba(0,255,0,0.2)',
+          display: 'inline-block',
+        }}
+      >
+        <iframe
+          src={object.data.url}
+          width={280}
+          height={200}
+          sandbox="allow-scripts allow-same-origin"
+          style={{ display: 'block', border: 'none' }}
+          title="Embedded content"
+        />
+      </div>
+    );
+  } else if (object.type === 'text') {
+    content = (
+      <div
+        style={{
+          padding: '20px',
+          background: 'rgba(0,0,0,0.8)',
+          border: '2px solid rgba(255,255,255,0.2)',
+          borderRadius: '8px',
+          maxWidth: '280px',
+        }}
+      >
+        {object.data.title && (
+          <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#fff' }}>
+            {object.data.title}
+          </h2>
+        )}
+        {object.data.body && (
+          <p style={{ margin: 0, fontSize: '13px', color: '#aaa', lineHeight: 1.5 }}>
+            {object.data.body}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (!content) return null;
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '50%',
+        transform,
+        transformStyle: 'preserve-3d',
+        transformOrigin: 'center',
+        pointerEvents: editActive ? 'none' : 'auto',
+        transition: editActive ? 'none' : 'transform 0.1s ease-out',
+      }}
+    >
+      {content}
+    </div>
+  );
 }
 
 /**
@@ -37,7 +158,8 @@ export function Scene({
   scrollEnabled = false, // Enable scroll-based Z movement
   scrollDepth = 500, // How much Z changes on scroll
   editable = false, // Show edit mode checkbox
-  onSave = null, // Called with { groupOffset: {x, y} } when save is clicked
+  onSave = null, // Called with { groupOffset, groupOffsets, objects } when save is clicked
+  slug = null, // Scene slug, used by InsertToolbar for asset uploads
   className = '',
   style = {},
 }) {
@@ -56,6 +178,9 @@ export function Scene({
   const dragStartRef = useRef(null);
   // Which SceneObjectGroup is currently selected for dragging (null = ungrouped drag)
   const [selectedGroupId, setSelectedGroupId] = useState(null);
+
+  // Dynamically inserted objects (persisted on save)
+  const [insertedObjects, setInsertedObjects] = useState([]);
 
   // Track mouse position normalized to -1 to 1
   useEffect(() => {
@@ -147,17 +272,23 @@ export function Scene({
   const hasAnyOffset =
     groupOffset.x !== 0 ||
     groupOffset.y !== 0 ||
-    Object.values(groupOffsets).some((o) => o.x !== 0 || o.y !== 0);
+    Object.values(groupOffsets).some((o) => o.x !== 0 || o.y !== 0) ||
+    insertedObjects.length > 0;
+
+  const handleInsert = useCallback((objectData) => {
+    setInsertedObjects((prev) => [...prev, objectData]);
+  }, []);
 
   const handleSave = useCallback(() => {
     if (onSave) {
-      onSave({ groupOffset, groupOffsets });
+      onSave({ groupOffset, groupOffsets, objects: insertedObjects });
     }
-  }, [onSave, groupOffset, groupOffsets]);
+  }, [onSave, groupOffset, groupOffsets, insertedObjects]);
 
   const handleReset = useCallback(() => {
     setGroupOffset({ x: 0, y: 0 });
     setGroupOffsets({});
+    setInsertedObjects([]);
   }, []);
 
   const contextValue = {
@@ -205,6 +336,9 @@ export function Scene({
           }}
         >
           {children}
+          {insertedObjects.map((obj) => (
+            <InsertedObjectRenderer key={obj.id} object={obj} />
+          ))}
         </div>
 
         {/* Edit mode controls */}
@@ -297,6 +431,7 @@ export function Scene({
                     Reset
                   </button>
                 </div>
+                {slug && <InsertToolbar slug={slug} onInsert={handleInsert} />}
               </div>
             )}
           </div>
