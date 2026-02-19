@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Scene, SceneObject, Panel } from '../components/scene';
 import { useTheme } from '../theme/ThemeContext';
+import { VRButton, VRViewer } from '../components/vr';
 
 /**
  * ExamplePage - Demonstrates how to compose a scene
@@ -11,8 +12,138 @@ import { useTheme } from '../theme/ThemeContext';
 export function ExamplePage() {
   const { theme } = useTheme();
   const [, setActivePanel] = useState(null);
+  const [isVR, setIsVR] = useState(false);
+
+  // Layer data for the VR viewer — mirrors the scene objects below.
+  // Kept separate so VRViewer works as a parallel rendering path
+  // without touching Scene.jsx or SceneObject.jsx.
+  const vrLayers = useMemo(
+    () => [
+      {
+        id: 'bg-circle',
+        position: [-200, -100, -400],
+        parallaxFactor: 0.1,
+        content: (
+          <div
+            style={{
+              width: '200px',
+              height: '200px',
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: '50%',
+              opacity: 0.3,
+            }}
+          />
+        ),
+      },
+      {
+        id: 'bg-square',
+        position: [250, 150, -350],
+        parallaxFactor: 0.15,
+        content: (
+          <div
+            style={{
+              width: '150px',
+              height: '150px',
+              border: `1px solid ${theme.colors.secondary}`,
+              opacity: 0.2,
+            }}
+          />
+        ),
+      },
+      {
+        id: 'bg-panel',
+        position: [-180, 30, -200],
+        parallaxFactor: 0.3,
+        content: (
+          <div
+            style={{
+              width: '280px',
+              height: '360px',
+              border: `1px solid ${theme.colors.border}`,
+              background: 'rgba(0,0,0,0.4)',
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: theme.colors.textSubtle,
+              fontSize: '11px',
+            }}
+          >
+            CHAPTER I
+          </div>
+        ),
+      },
+      {
+        id: 'mid-panel',
+        position: [50, -20, 0],
+        parallaxFactor: 0.6,
+        content: (
+          <div
+            style={{
+              width: '320px',
+              height: '420px',
+              border: `1px solid ${theme.colors.primary}50`,
+              background: `linear-gradient(135deg, ${theme.colors.primary}20, ${theme.colors.secondary}20)`,
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: theme.colors.textMuted,
+              fontSize: '11px',
+            }}
+          >
+            THE PRESENT
+          </div>
+        ),
+      },
+      {
+        id: 'side-panel',
+        position: [320, 0, -50],
+        parallaxFactor: 0.5,
+        content: (
+          <div
+            style={{
+              width: '200px',
+              height: '300px',
+              background: '#333',
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#666',
+              fontSize: '10px',
+            }}
+          >
+            MEMORY
+          </div>
+        ),
+      },
+      {
+        id: 'fg-text',
+        position: [200, -150, 250],
+        parallaxFactor: 1.1,
+        content: (
+          <div
+            style={{
+              fontFamily: theme.typography.fontDisplay,
+              fontSize: '48px',
+              color: theme.colors.primary,
+              opacity: 0.15,
+              textTransform: 'uppercase',
+              letterSpacing: '8px',
+            }}
+          >
+            2025
+          </div>
+        ),
+      },
+    ],
+    [theme]
+  );
 
   return (
+    <>
     <Scene perspective={1000} parallaxIntensity={1} mouseInfluence={{ x: 50, y: 30 }}>
       {/* ===== FAR BACKGROUND LAYER ===== */}
       {/* Decorative shapes that barely move */}
@@ -272,6 +403,13 @@ export function ExamplePage() {
         </p>
       </div>
     </Scene>
+
+    {/* VR toggle — fixed bottom-right, visible on all pages */}
+    <VRButton isVR={isVR} onToggle={() => setIsVR((v) => !v)} />
+
+    {/* VR viewer — fullscreen stereoscopic overlay, rendered outside Scene */}
+    {isVR && <VRViewer layers={vrLayers} />}
+    </>
   );
 }
 
