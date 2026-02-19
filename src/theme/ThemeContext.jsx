@@ -12,7 +12,7 @@ export function ThemeProvider({ children, initialTheme = defaultTheme }) {
 
   const theme = useMemo(() => {
     const baseTheme = themes[themeName] || themes[defaultTheme];
-    
+
     // Deep merge custom overrides
     return {
       ...baseTheme,
@@ -31,7 +31,7 @@ export function ThemeProvider({ children, initialTheme = defaultTheme }) {
   }, []);
 
   const overrideTheme = useCallback((overrides) => {
-    setCustomOverrides(prev => ({
+    setCustomOverrides((prev) => ({
       ...prev,
       ...overrides,
       colors: { ...prev.colors, ...overrides.colors },
@@ -45,26 +45,29 @@ export function ThemeProvider({ children, initialTheme = defaultTheme }) {
   }, []);
 
   // Generate CSS custom properties from theme
-  const cssVariables = useMemo(() => ({
-    '--color-background': theme.colors.background,
-    '--color-background-gradient': theme.colors.backgroundGradient,
-    '--color-primary': theme.colors.primary,
-    '--color-secondary': theme.colors.secondary,
-    '--color-accent': theme.colors.accent,
-    '--color-text': theme.colors.text,
-    '--color-text-muted': theme.colors.textMuted,
-    '--color-text-subtle': theme.colors.textSubtle,
-    '--color-border': theme.colors.border,
-    '--color-shadow': theme.colors.shadow,
-    '--font-display': theme.typography.fontDisplay,
-    '--font-body': theme.typography.fontBody,
-    '--font-narrative': theme.typography.fontNarrative,
-    '--effect-film-grain': theme.effects.filmGrain,
-    '--effect-vignette': theme.effects.vignette,
-    '--effect-scanlines': theme.effects.scanlines,
-    '--effect-chromatic-aberration': theme.effects.chromaticAberration,
-    '--effect-bloom': theme.effects.bloom,
-  }), [theme]);
+  const cssVariables = useMemo(
+    () => ({
+      '--color-background': theme.colors.background,
+      '--color-background-gradient': theme.colors.backgroundGradient,
+      '--color-primary': theme.colors.primary,
+      '--color-secondary': theme.colors.secondary,
+      '--color-accent': theme.colors.accent,
+      '--color-text': theme.colors.text,
+      '--color-text-muted': theme.colors.textMuted,
+      '--color-text-subtle': theme.colors.textSubtle,
+      '--color-border': theme.colors.border,
+      '--color-shadow': theme.colors.shadow,
+      '--font-display': theme.typography.fontDisplay,
+      '--font-body': theme.typography.fontBody,
+      '--font-narrative': theme.typography.fontNarrative,
+      '--effect-film-grain': theme.effects.filmGrain,
+      '--effect-vignette': theme.effects.vignette,
+      '--effect-scanlines': theme.effects.scanlines,
+      '--effect-chromatic-aberration': theme.effects.chromaticAberration,
+      '--effect-bloom': theme.effects.bloom,
+    }),
+    [theme],
+  );
 
   const value = {
     theme,
@@ -78,9 +81,7 @@ export function ThemeProvider({ children, initialTheme = defaultTheme }) {
 
   return (
     <ThemeContext.Provider value={value}>
-      <div style={cssVariables}>
-        {children}
-      </div>
+      <div style={cssVariables}>{children}</div>
     </ThemeContext.Provider>
   );
 }

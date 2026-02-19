@@ -5,7 +5,7 @@ import { useTheme } from '../../theme/ThemeContext';
  * FilmGrain - Animated noise overlay for that analog film look
  * Uses canvas for performant real-time noise generation
  */
-export function FilmGrain({ 
+export function FilmGrain({
   intensity: intensityOverride,
   speed = 60, // fps for grain animation
   monochrome = true,
@@ -43,13 +43,13 @@ export function FilmGrain({
 
       for (let i = 0; i < data.length; i += 4) {
         const value = Math.random() * 255;
-        
+
         if (monochrome) {
-          data[i] = value;     // R
+          data[i] = value; // R
           data[i + 1] = value; // G
           data[i + 2] = value; // B
         } else {
-          data[i] = Math.random() * 255;     // R
+          data[i] = Math.random() * 255; // R
           data[i + 1] = Math.random() * 255; // G
           data[i + 2] = Math.random() * 255; // B
         }

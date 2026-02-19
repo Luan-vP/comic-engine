@@ -22,8 +22,6 @@ export function quantizeDepth(depthMap, granularity = 0.3) {
 
   // Find unique depth layers by bucketing similar depths
   const layerAssignments = new Uint8Array(width * height);
-  const layerDepths = [];
-  let currentLayerId = 0;
 
   // Build a histogram of depth values to find natural breakpoints
   const histogram = buildDepthHistogram(data, 100);
@@ -91,9 +89,7 @@ function findHistogramPeaks(histogram, minDistance) {
     if (!isLocalMax) continue;
 
     // Check if this peak is far enough from existing peaks
-    const isFarEnough = peaks.every(
-      existingPeak => Math.abs(i - existingPeak) >= minDistance
-    );
+    const isFarEnough = peaks.every((existingPeak) => Math.abs(i - existingPeak) >= minDistance);
 
     if (isFarEnough && bins[i] > bins.length / 10) {
       // Only include peaks with significant pixel count

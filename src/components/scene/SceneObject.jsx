@@ -3,37 +3,37 @@ import { useScene } from './Scene';
 
 /**
  * SceneObject - Place any content in the 3D parallax space
- * 
+ *
  * POSITIONING IN 3D SPACE:
- * 
+ *
  * position: [x, y, z]
  *   - x: horizontal position (0 = center, negative = left, positive = right)
  *   - y: vertical position (0 = center, negative = up, positive = down)
  *   - z: depth (negative = background/far, 0 = mid, positive = foreground/near)
- * 
+ *
  * rotation: [rx, ry, rz] (in degrees)
  *   - rx: Rotation around X axis (tilts top away/toward you)
  *         Positive = top tilts away (like a paper tilted back)
  *         Negative = top tilts toward you
  *   - ry: Rotation around Y axis (turns left/right like a door)
  *         Positive = right side comes toward you
- *         Negative = left side comes toward you  
+ *         Negative = left side comes toward you
  *   - rz: Rotation around Z axis (2D rotation, like turning a steering wheel)
  *         Positive = clockwise
  *         Negative = counter-clockwise
- * 
+ *
  * PARALLAX BEHAVIOR:
  * The parallaxFactor determines how much this object moves relative to mouse:
  *   - 0 = no movement (fixed background)
  *   - 0.5 = half movement (mid-ground)
  *   - 1 = full movement (foreground)
  *   - >1 = exaggerated movement (extreme foreground)
- * 
+ *
  * Objects with lower Z naturally feel like background because perspective
  * makes them smaller. The parallaxFactor enhances this by controlling movement.
- * 
+ *
  * ORIENTATION EXAMPLES FOR FLAT PANELS:
- * 
+ *
  * Facing camera directly:        rotation={[0, 0, 0]}
  * Tilted back slightly:          rotation={[15, 0, 0]}
  * Angled like a book cover:      rotation={[0, -20, 0]}
@@ -54,12 +54,13 @@ export function SceneObject({
   style = {},
   onClick,
   onHover,
-  
+
   // Anchor point relative to parent (alternative to absolute positioning)
   anchor = null, // 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | { x: '50%', y: '50%' }
 }) {
-  const { mousePos, scrollZ, parallaxIntensity, mouseInfluence } = useScene();
-  
+  const { mousePos, scrollZ, parallaxIntensity, mouseInfluence, editActive, groupOffset } =
+    useScene();
+
   const [x, y, z] = position;
   const [rx, ry, rz] = rotation;
 
@@ -68,14 +69,17 @@ export function SceneObject({
   const effectiveParallax = useMemo(() => {
     if (parallaxFactor !== null) return parallaxFactor;
     // Map Z from [-500, 500] to parallax [0.2, 1.2]
-    return 0.7 + (z / 1000);
+    return 0.7 + z / 1000;
   }, [z, parallaxFactor]);
 
   // Calculate mouse-driven offset
-  const mouseOffset = useMemo(() => ({
-    x: mousePos.x * mouseInfluence.x * effectiveParallax * parallaxIntensity,
-    y: mousePos.y * mouseInfluence.y * effectiveParallax * parallaxIntensity,
-  }), [mousePos, mouseInfluence, effectiveParallax, parallaxIntensity]);
+  const mouseOffset = useMemo(
+    () => ({
+      x: mousePos.x * mouseInfluence.x * effectiveParallax * parallaxIntensity,
+      y: mousePos.y * mouseInfluence.y * effectiveParallax * parallaxIntensity,
+    }),
+    [mousePos, mouseInfluence, effectiveParallax, parallaxIntensity],
+  );
 
   // Calculate anchor position
   const anchorStyles = useMemo(() => {
@@ -96,7 +100,7 @@ export function SceneObject({
     }
 
     const anchorMap = {
-      'center': { left: '50%', top: '50%' },
+      center: { left: '50%', top: '50%' },
       'top-left': { left: '10%', top: '10%' },
       'top-right': { left: '90%', top: '10%' },
       'bottom-left': { left: '10%', top: '90%' },
@@ -109,15 +113,19 @@ export function SceneObject({
 
     return {
       position: 'absolute',
-      ...anchorMap[anchor] || anchorMap['center'],
+      ...(anchorMap[anchor] || anchorMap['center']),
     };
   }, [anchor]);
+
+  // Apply group offset from edit mode
+  const gx = groupOffset?.x || 0;
+  const gy = groupOffset?.y || 0;
 
   // Build the 3D transform
   const transform = useMemo(() => {
     const parts = [
-      // First translate to position (including mouse offset)
-      `translate3d(${x + mouseOffset.x}px, ${y + mouseOffset.y}px, ${z + scrollZ}px)`,
+      // First translate to position (including mouse offset and group drag offset)
+      `translate3d(${x + mouseOffset.x + gx}px, ${y + mouseOffset.y + gy}px, ${z + scrollZ}px)`,
       // Then apply rotations
       `rotateX(${rx}deg)`,
       `rotateY(${ry}deg)`,
@@ -126,7 +134,7 @@ export function SceneObject({
       `scale(${scale})`,
     ];
     return parts.join(' ');
-  }, [x, y, z, rx, ry, rz, scale, mouseOffset, scrollZ]);
+  }, [x, y, z, rx, ry, rz, scale, mouseOffset, scrollZ, gx, gy]);
 
   return (
     <div
@@ -139,8 +147,8 @@ export function SceneObject({
         transform,
         transformStyle: 'preserve-3d',
         transformOrigin: origin,
-        pointerEvents: interactive ? 'auto' : 'none',
-        transition: 'transform 0.1s ease-out',
+        pointerEvents: editActive ? 'none' : interactive ? 'auto' : 'none',
+        transition: editActive ? 'none' : 'transform 0.1s ease-out',
         ...style,
       }}
     >
@@ -158,52 +166,52 @@ export const ObjectPresets = {
     position: [0, 0, -400],
     parallaxFactor: 0.1,
   },
-  
+
   // Standard background
   background: {
     position: [0, 0, -200],
     parallaxFactor: 0.3,
   },
-  
+
   // Midground - default depth
   midground: {
     position: [0, 0, 0],
     parallaxFactor: 0.6,
   },
-  
+
   // Foreground - close to camera
   foreground: {
     position: [0, 0, 150],
     parallaxFactor: 0.9,
   },
-  
+
   // Extreme foreground - things passing very close
   nearForeground: {
     position: [0, 0, 300],
     parallaxFactor: 1.2,
   },
-  
+
   // Wall on left side of scene
   leftWall: {
     position: [-300, 0, 0],
     rotation: [0, 45, 0],
     parallaxFactor: 0.5,
   },
-  
+
   // Wall on right side of scene
   rightWall: {
     position: [300, 0, 0],
     rotation: [0, -45, 0],
     parallaxFactor: 0.5,
   },
-  
+
   // Floor element
   floor: {
     position: [0, 200, -100],
     rotation: [60, 0, 0],
     parallaxFactor: 0.4,
   },
-  
+
   // Dramatic tilt
   heroShot: {
     position: [0, 50, 0],
