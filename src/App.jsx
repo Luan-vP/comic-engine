@@ -6,6 +6,7 @@ import { BeHereMeow } from './pages/BeHereMeow';
 import { ExamplePage } from './pages/ExamplePage';
 import { DepthSegmentationPage } from './pages/DepthSegmentationPage';
 import { BiographySnapshots } from './pages/BiographySnapshots';
+import { JournalPage } from './pages/JournalPage';
 // @scene-imports
 
 /**
@@ -180,6 +181,7 @@ function PageNavigator() {
     { path: '/example', label: 'Example' },
     { path: '/depth-segmentation', label: 'Depth Segmentation' },
     { path: '/biography', label: 'Biography' },
+    { path: '/journal', label: 'Journal' },
     // @scene-pages
   ];
 
@@ -283,6 +285,7 @@ function AppContent() {
         <Route path="/example" element={<ExamplePage />} />
         <Route path="/depth-segmentation" element={<DepthSegmentationPage />} />
         <Route path="/biography" element={<BiographySnapshots />} />
+        <Route path="/journal" element={<JournalPage />} />
         {/* @scene-routes */}
       </Routes>
     </>
