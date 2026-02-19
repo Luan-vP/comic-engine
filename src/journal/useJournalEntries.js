@@ -46,7 +46,7 @@ export function useJournalEntries() {
   // Generate scene object configs from the filtered entries
   const sceneObjects = useMemo(
     () => generateSceneObjects(filteredEntries, layout),
-    [filteredEntries, layout]
+    [filteredEntries, layout],
   );
 
   const loadFiles = useCallback(async (files) => {

@@ -77,8 +77,10 @@ function parseSimpleYaml(yaml) {
     }
 
     // Quoted string
-    if ((rawValue.startsWith('"') && rawValue.endsWith('"')) ||
-        (rawValue.startsWith("'") && rawValue.endsWith("'"))) {
+    if (
+      (rawValue.startsWith('"') && rawValue.endsWith('"')) ||
+      (rawValue.startsWith("'") && rawValue.endsWith("'"))
+    ) {
       result[key] = rawValue.slice(1, -1);
       i++;
       continue;
@@ -92,8 +94,16 @@ function parseSimpleYaml(yaml) {
     }
 
     // Boolean
-    if (rawValue === 'true') { result[key] = true; i++; continue; }
-    if (rawValue === 'false') { result[key] = false; i++; continue; }
+    if (rawValue === 'true') {
+      result[key] = true;
+      i++;
+      continue;
+    }
+    if (rawValue === 'false') {
+      result[key] = false;
+      i++;
+      continue;
+    }
 
     result[key] = rawValue;
     i++;

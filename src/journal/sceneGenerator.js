@@ -213,7 +213,7 @@ export function groupEntriesByTheme(entries) {
     }
   }
 
-  return Array.from(themeMap.entries()).map(([theme, themeEntries]) =>
-    createThemeSequence(theme, themeEntries)
+  return Array.from(themeMap.entries()).map(
+    ([theme, themeEntries]) => createThemeSequence(theme, themeEntries),
   );
 }

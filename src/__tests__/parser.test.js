@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { extractFrontmatter, extractPassages, parseMarkdown, parseJsonExport } from '../journal/parser.js';
+import {
+  extractFrontmatter,
+  extractPassages,
+  parseMarkdown,
+  parseJsonExport,
+} from '../journal/parser.js';
 
 // ---------------------------------------------------------------------------
 // extractFrontmatter
