@@ -6,6 +6,7 @@ import layer1Blur from '/scenes/desk/layer-1-blur.png';
 import layer2Blur from '/scenes/desk/layer-2-blur.png';
 import layer3Blur from '/scenes/desk/layer-3-blur.png';
 import layer4Blur from '/scenes/desk/layer-4-blur.png';
+import layer5Blur from '/scenes/desk/layer-5-blur.png';
 
 export function Desk() {
   const { theme } = useTheme();
@@ -32,11 +33,7 @@ export function Desk() {
       editable
       onSave={handleSave}
     >
-      <SceneObject
-        position={[-542, -495, -400]}
-        parallaxFactor={0.10450000000000001}
-        interactive={false}
-      >
+      <SceneObject position={[-693, -345, -400]} parallaxFactor={0.1135} interactive={false}>
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <img
             src={layer0Blur}
@@ -46,18 +43,14 @@ export function Desk() {
               maxWidth: '80vw',
               maxHeight: '80vh',
               objectFit: 'contain',
-              filter: 'brightness(0.80)',
+              filter: 'brightness(0.81)',
               pointerEvents: 'none',
             }}
           />
         </div>
       </SceneObject>
 
-      <SceneObject
-        position={[-542, -495, -350]}
-        parallaxFactor={0.14950000000000002}
-        interactive={false}
-      >
+      <SceneObject position={[-693, -345, -350]} parallaxFactor={0.3115} interactive={false}>
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <img
             src={layer1Blur}
@@ -67,14 +60,18 @@ export function Desk() {
               maxWidth: '80vw',
               maxHeight: '80vh',
               objectFit: 'contain',
-              filter: 'brightness(0.82)',
+              filter: 'brightness(0.89)',
               pointerEvents: 'none',
             }}
           />
         </div>
       </SceneObject>
 
-      <SceneObject position={[-542, -495, -300]} parallaxFactor={0.4285} interactive={false}>
+      <SceneObject
+        position={[-693, -345, -300]}
+        parallaxFactor={0.49150000000000005}
+        interactive={false}
+      >
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <img
             src={layer2Blur}
@@ -84,14 +81,14 @@ export function Desk() {
               maxWidth: '80vw',
               maxHeight: '80vh',
               objectFit: 'contain',
-              filter: 'brightness(0.95)',
+              filter: 'brightness(0.97)',
               pointerEvents: 'none',
             }}
           />
         </div>
       </SceneObject>
 
-      <SceneObject position={[-542, -495, -250]} parallaxFactor={0.7075} interactive={false}>
+      <SceneObject position={[-693, -345, -250]} parallaxFactor={0.6715} interactive={false}>
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <img
             src={layer3Blur}
@@ -101,7 +98,7 @@ export function Desk() {
               maxWidth: '80vw',
               maxHeight: '80vh',
               objectFit: 'contain',
-              filter: 'brightness(1.07)',
+              filter: 'brightness(1.05)',
               pointerEvents: 'none',
             }}
           />
@@ -109,14 +106,35 @@ export function Desk() {
       </SceneObject>
 
       <SceneObject
-        position={[-542, -495, -200]}
-        parallaxFactor={0.9954999999999999}
+        position={[-693, -345, -200]}
+        parallaxFactor={0.8514999999999999}
         interactive={false}
       >
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <img
             src={layer4Blur}
             alt="Layer 4"
+            style={{
+              display: 'block',
+              maxWidth: '80vw',
+              maxHeight: '80vh',
+              objectFit: 'contain',
+              filter: 'brightness(1.13)',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
+      </SceneObject>
+
+      <SceneObject
+        position={[-693, -345, -150]}
+        parallaxFactor={0.9954999999999999}
+        interactive={false}
+      >
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <img
+            src={layer5Blur}
+            alt="Layer 5"
             style={{
               display: 'block',
               maxWidth: '80vw',

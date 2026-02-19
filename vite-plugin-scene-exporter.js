@@ -46,7 +46,12 @@ function readBody(req) {
 }
 
 function generatePageTemplate(componentName, slug, layers, sceneConfig) {
-  const { perspective = 1000, parallaxIntensity = 1.2, mouseInfluence = { x: 60, y: 40 }, fillMode = 'blur' } = sceneConfig || {};
+  const {
+    perspective = 1000,
+    parallaxIntensity = 1.2,
+    mouseInfluence = { x: 60, y: 40 },
+    fillMode = 'blur',
+  } = sceneConfig || {};
   const title = slugToTitle(slug);
 
   const layerImports = layers
@@ -261,17 +266,26 @@ export default function sceneExporter() {
 
             // Main image
             if (layer.imageUrl) {
-              fs.writeFileSync(path.join(sceneDir, `layer-${i}.png`), dataUrlToBuffer(layer.imageUrl));
+              fs.writeFileSync(
+                path.join(sceneDir, `layer-${i}.png`),
+                dataUrlToBuffer(layer.imageUrl),
+              );
             }
 
             // Fill mask
             if (layer.fillMaskUrl) {
-              fs.writeFileSync(path.join(sceneDir, `layer-${i}-fill.png`), dataUrlToBuffer(layer.fillMaskUrl));
+              fs.writeFileSync(
+                path.join(sceneDir, `layer-${i}-fill.png`),
+                dataUrlToBuffer(layer.fillMaskUrl),
+              );
             }
 
             // Blur-filled version
             if (layer.blurFillUrl) {
-              fs.writeFileSync(path.join(sceneDir, `layer-${i}-blur.png`), dataUrlToBuffer(layer.blurFillUrl));
+              fs.writeFileSync(
+                path.join(sceneDir, `layer-${i}-blur.png`),
+                dataUrlToBuffer(layer.blurFillUrl),
+              );
             }
 
             layerMeta.push({
@@ -305,23 +319,20 @@ export default function sceneExporter() {
 
           // Insert import
           const importLine = `import { ${componentName} } from './pages/${componentName}';`;
-          appContent = appContent.replace(
-            '// @scene-imports',
-            `${importLine}\n// @scene-imports`
-          );
+          appContent = appContent.replace('// @scene-imports', `${importLine}\n// @scene-imports`);
 
           // Insert page nav entry
           const pageEntry = `    { path: '/${slug}', label: '${slugToTitle(slug)}' },`;
           appContent = appContent.replace(
             '    // @scene-pages',
-            `${pageEntry}\n    // @scene-pages`
+            `${pageEntry}\n    // @scene-pages`,
           );
 
           // Insert route
           const routeEntry = `        <Route path="/${slug}" element={<${componentName} />} />`;
           appContent = appContent.replace(
             '        {/* @scene-routes */}',
-            `${routeEntry}\n        {/* @scene-routes */}`
+            `${routeEntry}\n        {/* @scene-routes */}`,
           );
 
           fs.writeFileSync(appFile, appContent);
@@ -470,7 +481,12 @@ export default function sceneExporter() {
           const componentName = toPascalCase(slug);
           const pagePath = path.join(pagesDir, `${componentName}.jsx`);
           if (fs.existsSync(pagePath)) {
-            const pageContent = generatePageTemplate(componentName, slug, meta.layers, meta.sceneConfig);
+            const pageContent = generatePageTemplate(
+              componentName,
+              slug,
+              meta.layers,
+              meta.sceneConfig,
+            );
             fs.writeFileSync(pagePath, pageContent);
           }
 

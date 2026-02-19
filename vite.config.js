@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import sceneExporter from './vite-plugin-scene-exporter.js'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import sceneExporter from './vite-plugin-scene-exporter.js';
 
 export default defineConfig({
   plugins: [react(), sceneExporter()],
@@ -16,4 +16,4 @@ export default defineConfig({
     environment: 'jsdom',
     exclude: ['e2e/**', 'node_modules/**'],
   },
-})
+});

@@ -8,10 +8,10 @@ import { useTheme } from '../../theme/ThemeContext';
 
 // Character sets ordered from dense/dark to sparse/light
 const CHARSETS = {
-  standard: '@%#*+=-:. ',           // 10 chars, classic ASCII
-  simple: '@#*-. ',                  // 6 chars, more performant
-  blocks: '█▓▒░ ',                   // 5 chars, solid blocks
-  matrix: 'ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ01 ',  // Matrix style
+  standard: '@%#*+=-:. ', // 10 chars, classic ASCII
+  simple: '@#*-. ', // 6 chars, more performant
+  blocks: '█▓▒░ ', // 5 chars, solid blocks
+  matrix: 'ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ01 ', // Matrix style
 };
 
 export function AsciiShader({
@@ -43,9 +43,7 @@ export function AsciiShader({
     let rows = 0;
 
     // Get character set
-    const charsetString = typeof charset === 'string'
-      ? (CHARSETS[charset] || charset)
-      : charset;
+    const charsetString = typeof charset === 'string' ? CHARSETS[charset] || charset : charset;
     const chars = charsetString.split('');
 
     const resize = () => {
@@ -75,10 +73,9 @@ export function AsciiShader({
       const freq2 = 0.03;
       const timeScale = 0.0002;
 
-      const n1 = Math.sin(x * freq1 + time * timeScale) *
-                 Math.cos(y * freq1 + time * timeScale);
-      const n2 = Math.sin(x * freq2 - time * timeScale * 0.5) *
-                 Math.cos(y * freq2 - time * timeScale * 0.5);
+      const n1 = Math.sin(x * freq1 + time * timeScale) * Math.cos(y * freq1 + time * timeScale);
+      const n2 =
+        Math.sin(x * freq2 - time * timeScale * 0.5) * Math.cos(y * freq2 - time * timeScale * 0.5);
       const n3 = Math.sin((x + y) * 0.02 + time * timeScale * 1.5);
 
       return (n1 + n2 * 0.5 + n3 * 0.3) / 1.8; // Range: -1 to 1
