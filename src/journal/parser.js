@@ -64,7 +64,12 @@ function parseSimpleYaml(yaml) {
       const listItems = [];
       i++;
       while (i < lines.length && /^\s+-\s+/.test(lines[i])) {
-        listItems.push(lines[i].replace(/^\s+-\s+/, '').trim().replace(/^['"]|['"]$/g, ''));
+        listItems.push(
+          lines[i]
+            .replace(/^\s+-\s+/, '')
+            .trim()
+            .replace(/^['"]|['"]$/g, ''),
+        );
         i++;
       }
       if (listItems.length > 0) {
@@ -164,18 +169,14 @@ export function extractPassages(body) {
 
 function frontmatterToPrompts(fm) {
   return createStoryPrompts({
-    characters: Array.isArray(fm.characters)
-      ? fm.characters
-      : fm.characters
-      ? [fm.characters]
-      : [],
+    characters: Array.isArray(fm.characters) ? fm.characters : fm.characters ? [fm.characters] : [],
     emotion: fm.emotion || '',
     emotionalIntensity:
       typeof fm.emotional_intensity === 'number'
         ? fm.emotional_intensity
         : typeof fm.emotionalIntensity === 'number'
-        ? fm.emotionalIntensity
-        : 5,
+          ? fm.emotionalIntensity
+          : 5,
     visualMetaphor: fm.visual_metaphor || fm.visualMetaphor || '',
     beforeContext: fm.before_context || fm.beforeContext || '',
     afterContext: fm.after_context || fm.afterContext || '',
@@ -202,10 +203,10 @@ export function parseMarkdown(markdown) {
     themes: Array.isArray(fm.themes)
       ? fm.themes
       : fm.themes
-      ? [fm.themes]
-      : Array.isArray(fm.tags)
-      ? fm.tags
-      : [],
+        ? [fm.themes]
+        : Array.isArray(fm.tags)
+          ? fm.tags
+          : [],
     passages,
     prompts: frontmatterToPrompts(fm),
     rawContent: markdown,
@@ -231,9 +232,7 @@ export function parseJsonExport(jsonString) {
   const entries = Array.isArray(parsed) ? parsed : parsed.entries;
 
   if (!Array.isArray(entries)) {
-    throw new Error(
-      'Invalid export format: expected an array of entries or { entries: [...] }.'
-    );
+    throw new Error('Invalid export format: expected an array of entries or { entries: [...] }.');
   }
 
   return entries.map((raw) =>
@@ -242,7 +241,7 @@ export function parseJsonExport(jsonString) {
       prompts: createStoryPrompts(raw.prompts || {}),
       passages: Array.isArray(raw.passages) ? raw.passages : [],
       themes: Array.isArray(raw.themes) ? raw.themes : [],
-    })
+    }),
   );
 }
 

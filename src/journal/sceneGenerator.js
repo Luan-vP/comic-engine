@@ -70,7 +70,7 @@ export function intensityToZDepth(intensity) {
 export function intensityToParallaxFactor(intensity) {
   const clamped = Math.max(1, Math.min(10, intensity || 5));
   // 0.1 (far) to 1.1 (very close)
-  return Math.round(((0.1 + ((clamped - 1) / 9) * 1.0) * 10)) / 10;
+  return Math.round((0.1 + ((clamped - 1) / 9) * 1.0) * 10) / 10;
 }
 
 // ---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ export function timelineLayout(entries) {
   return entries.map((entry, i) => {
     const intensity = entry.prompts?.emotionalIntensity || 5;
     const x = count === 1 ? 0 : -spread / 2 + (i / Math.max(count - 1, 1)) * spread;
-    const y = (Math.sin((i / count) * Math.PI) * -60); // slight arc
+    const y = Math.sin((i / count) * Math.PI) * -60; // slight arc
     const z = intensityToZDepth(intensity);
     const rotation = [0, 0, (i % 2 === 0 ? 1 : -1) * (i * 2)];
     return { x: Math.round(x), y: Math.round(y), z, rotation };
@@ -111,7 +111,7 @@ export function spiralLayout(entries) {
     const x = Math.round(Math.cos(angle) * radius);
     const y = Math.round(Math.sin(angle) * radius * 0.6);
     const z = intensityToZDepth(intensity);
-    const rotation = [0, 0, (angle * 180) / Math.PI * 0.08];
+    const rotation = [0, 0, ((angle * 180) / Math.PI) * 0.08];
     return { x, y, z, rotation: [rotation[0], rotation[1], Math.round(rotation[2] * 10) / 10] };
   });
 }
@@ -125,10 +125,10 @@ export function stackLayout(entries) {
   const count = entries.length;
 
   return entries.map((entry, i) => {
-    const x = (i % 3 - 1) * 30; // slight horizontal offset
+    const x = ((i % 3) - 1) * 30; // slight horizontal offset
     const y = (i % 2 === 0 ? 1 : -1) * 20;
     const z = count === 1 ? 0 : -200 + (i / Math.max(count - 1, 1)) * 400;
-    const rotation = [0, 0, (i * 5 - ((count - 1) * 5) / 2)];
+    const rotation = [0, 0, i * 5 - ((count - 1) * 5) / 2];
     return { x: Math.round(x), y, z: Math.round(z), rotation };
   });
 }
@@ -213,7 +213,7 @@ export function groupEntriesByTheme(entries) {
     }
   }
 
-  return Array.from(themeMap.entries()).map(
-    ([theme, themeEntries]) => createThemeSequence(theme, themeEntries),
+  return Array.from(themeMap.entries()).map(([theme, themeEntries]) =>
+    createThemeSequence(theme, themeEntries),
   );
 }

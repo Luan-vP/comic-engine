@@ -156,9 +156,7 @@ describe('parseJsonExport', () => {
 
   it('parses a wrapped { entries: [...] } format', () => {
     const json = JSON.stringify({
-      entries: [
-        { title: 'Entry Two', date: '2024-02-01', themes: [], passages: [], prompts: {} },
-      ],
+      entries: [{ title: 'Entry Two', date: '2024-02-01', themes: [], passages: [], prompts: {} }],
     });
     const entries = parseJsonExport(json);
     expect(entries).toHaveLength(1);
@@ -170,7 +168,9 @@ describe('parseJsonExport', () => {
   });
 
   it('throws when entries are not an array', () => {
-    expect(() => parseJsonExport(JSON.stringify({ name: 'something' }))).toThrow('Invalid export format');
+    expect(() => parseJsonExport(JSON.stringify({ name: 'something' }))).toThrow(
+      'Invalid export format',
+    );
   });
 
   it('applies defaults for missing fields', () => {
