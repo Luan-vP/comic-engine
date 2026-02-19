@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
 import { ThemeProvider } from '../../../theme/ThemeContext';
 import { VRViewer } from '../VRViewer';
 
@@ -21,6 +21,8 @@ const testLayers = [
     content: <div>Midground</div>,
   },
 ];
+
+afterEach(cleanup);
 
 describe('VRViewer', () => {
   it('renders without crashing', () => {
