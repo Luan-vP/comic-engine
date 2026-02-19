@@ -12,7 +12,10 @@ afterEach(() => {
 
 describe('useLocalPages', () => {
   it('returns loading=true initially', () => {
-    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))); // never resolves
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise(() => {})),
+    ); // never resolves
     const { result } = renderHook(() => useLocalPages());
     expect(result.current.loading).toBe(true);
     expect(result.current.pages).toEqual([]);
