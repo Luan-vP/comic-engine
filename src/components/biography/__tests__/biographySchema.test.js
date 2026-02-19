@@ -81,9 +81,6 @@ describe('createSnapshot', () => {
 
   it('generates unique ids', () => {
     const a = createSnapshot();
-    // Small delay to ensure different timestamps aren't the same
-    const b = createSnapshot({ id: undefined });
-    // Both should have id fields (b overrides with undefined so falls back)
     expect(typeof a.id).toBe('string');
   });
 });
