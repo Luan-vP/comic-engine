@@ -74,13 +74,13 @@ position and (optionally) scroll.
 
 **Key props:**
 
-| Prop | Default | Description |
-| --- | --- | --- |
-| `perspective` | `1000` | CSS perspective in px. Lower = more dramatic. |
-| `parallaxIntensity` | `1` | Global multiplier applied to all child parallax. |
-| `mouseInfluence` | `{x:50, y:30}` | Max pixel offset per axis. |
-| `scrollEnabled` | `false` | Enables scroll-to-Z movement. |
-| `scrollDepth` | `500` | Total Z change over full page scroll. |
+| Prop                | Default        | Description                                      |
+| ------------------- | -------------- | ------------------------------------------------ |
+| `perspective`       | `1000`         | CSS perspective in px. Lower = more dramatic.    |
+| `parallaxIntensity` | `1`            | Global multiplier applied to all child parallax. |
+| `mouseInfluence`    | `{x:50, y:30}` | Max pixel offset per axis.                       |
+| `scrollEnabled`     | `false`        | Enables scroll-to-Z movement.                    |
+| `scrollDepth`       | `500`          | Total Z change over full page scroll.            |
 
 **Behaviour:** Mouse position is normalized to `[−1, 1]` within the container.
 `SceneContext` shares `mousePos`, `scrollZ`, `dimensions`, `parallaxIntensity`, and
@@ -92,29 +92,29 @@ Positions any React content in 3D space with parallax.
 
 **Key props:**
 
-| Prop | Default | Description |
-| --- | --- | --- |
-| `position` | `[0,0,0]` | `[x, y, z]` in pixels. |
-| `rotation` | `[0,0,0]` | `[rx, ry, rz]` in degrees (X=tilt, Y=turn, Z=2D rotate). |
-| `scale` | `1` | Uniform scale. |
-| `parallaxFactor` | `null` | Mouse movement multiplier. `null` auto-calculates from Z (`0.7 + z/1000`). |
-| `anchor` | `null` | Named anchor (`'center'`, `'top-left'`, etc.) or `{x, y}` CSS object. |
-| `interactive` | `true` | Whether pointer events pass through. |
+| Prop             | Default   | Description                                                                  |
+| ---------------- | --------- | ---------------------------------------------------------------------------- |
+| `position`       | `[0,0,0]` | `[x, y, z]` in pixels.                                                      |
+| `rotation`       | `[0,0,0]` | `[rx, ry, rz]` in degrees (X=tilt, Y=turn, Z=2D rotate).                   |
+| `scale`          | `1`       | Uniform scale.                                                               |
+| `parallaxFactor` | `null`    | Mouse movement multiplier. `null` auto-calculates from Z (`0.7 + z/1000`). |
+| `anchor`         | `null`    | Named anchor (`'center'`, `'top-left'`, etc.) or `{x, y}` CSS object.      |
+| `interactive`    | `true`    | Whether pointer events pass through.                                         |
 
 **`ObjectPresets`** is a named map of common placements ready to spread onto a
 `SceneObject`:
 
-| Preset | Z | parallaxFactor |
-| --- | --- | --- |
-| `farBackground` | −400 | 0.1 |
-| `background` | −200 | 0.3 |
-| `midground` | 0 | 0.6 |
-| `foreground` | +150 | 0.9 |
-| `nearForeground` | +300 | 1.2 |
-| `leftWall` | −300, Y-rotated 45° | 0.5 |
-| `rightWall` | +300, Y-rotated −45° | 0.5 |
-| `floor` | Y+200, X-rotated 60° | 0.4 |
-| `heroShot` | Y+50, X−15° Y+5° Z−5° | 0.7 |
+| Preset           | Z                     | parallaxFactor |
+| ---------------- | --------------------- | -------------- |
+| `farBackground`  | −400                  | 0.1            |
+| `background`     | −200                  | 0.3            |
+| `midground`      | 0                     | 0.6            |
+| `foreground`     | +150                  | 0.9            |
+| `nearForeground` | +300                  | 1.2            |
+| `leftWall`       | −300, Y-rotated 45°  | 0.5            |
+| `rightWall`      | +300, Y-rotated −45° | 0.5            |
+| `floor`          | Y+200, X-rotated 60° | 0.4            |
+| `heroShot`       | Y+50, X−15° Y+5° Z−5° | 0.7            |
 
 ### `Panel` (`src/components/scene/Panel.jsx`)
 
@@ -123,22 +123,22 @@ image layers.
 
 **Key props:**
 
-| Prop | Default | Description |
-| --- | --- | --- |
-| `width` / `height` | `320` / `420` | Panel dimensions in px. |
-| `variant` | `'default'` | Frame style (see below). |
-| `title` / `subtitle` | — | Header text drawn with display / narrative fonts. |
-| `layers` | `null` | Array of `{src, style, className}` for automatic image stacking. |
+| Prop                 | Default       | Description                                                      |
+| -------------------- | ------------- | ---------------------------------------------------------------- |
+| `width` / `height`   | `320` / `420` | Panel dimensions in px.                                          |
+| `variant`            | `'default'`   | Frame style (see below).                                         |
+| `title` / `subtitle` | —             | Header text drawn with display / narrative fonts.                |
+| `layers`             | `null`        | Array of `{src, style, className}` for automatic image stacking. |
 
 **Variants:**
 
-| Variant | Description |
-| --- | --- |
-| `default` | Dark background with theme border, box shadow, and a subtle halftone dot overlay. |
-| `borderless` | Transparent, no border or shadow. |
-| `torn` | Cream paper with clipped polygon edges and a sepia filter. |
-| `polaroid` | White frame with large bottom margin. |
-| `monitor` | Dark CRT monitor with built-in scanline stripes. |
+| Variant      | Description                                                                       |
+| ------------ | --------------------------------------------------------------------------------- |
+| `default`    | Dark background with theme border, box shadow, and a subtle halftone dot overlay. |
+| `borderless` | Transparent, no border or shadow.                                                 |
+| `torn`       | Cream paper with clipped polygon edges and a sepia filter.                        |
+| `polaroid`   | White frame with large bottom margin.                                             |
+| `monitor`    | Dark CRT monitor with built-in scanline stripes.                                  |
 
 ---
 
@@ -209,13 +209,13 @@ CSS-animated floating particles. Seeds are generated once on mount and never cha
 
 **Presets:**
 
-| Preset | Motion | Notes |
-| --- | --- | --- |
-| `dust` | Gentle float | Small, low opacity |
-| `snow` | Falling | Slight blur |
-| `bokeh` | Float | Large, very transparent, glow, theme primary colour |
-| `embers` | Rising | Orange glow |
-| `rain` | Fast fall | Elongated drops |
+| Preset   | Motion       | Notes                                               |
+| -------- | ------------ | --------------------------------------------------- |
+| `dust`   | Gentle float | Small, low opacity                                  |
+| `snow`   | Falling      | Slight blur                                         |
+| `bokeh`  | Float        | Large, very transparent, glow, theme primary colour |
+| `embers` | Rising       | Orange glow                                         |
+| `rain`   | Fast fall    | Elongated drops                                     |
 
 Props: `preset`, `count` (default 50), `color` (override), `enabled`.
 
@@ -254,13 +254,13 @@ Each theme defines three namespaces:
 
 ### Available themes
 
-| Key | Name | Character |
-| --- | --- | --- |
-| `noir` | Noir | Deep purple-black, red primary. JetBrains Mono body. (default) |
-| `cyberpunk` | Cyberpunk | Electric pink + cyan. Orbitron display font. Heavy scanlines. |
-| `dreamscape` | Dreamscape | Purple-teal. Playfair Display. Soft bloom, no scanlines. |
-| `pulp` | Pulp | Warm amber paper. Alfa Slab One. Heavy film grain + vignette. |
-| `minimal` | Minimal | White background, near-black text. No effects. |
+| Key          | Name       | Character                                                      |
+| ------------ | ---------- | -------------------------------------------------------------- |
+| `noir`       | Noir       | Deep purple-black, red primary. JetBrains Mono body. (default) |
+| `cyberpunk`  | Cyberpunk  | Electric pink + cyan. Orbitron display font. Heavy scanlines.  |
+| `dreamscape` | Dreamscape | Purple-teal. Playfair Display. Soft bloom, no scanlines.       |
+| `pulp`       | Pulp       | Warm amber paper. Alfa Slab One. Heavy film grain + vignette.  |
+| `minimal`    | Minimal    | White background, near-black text. No effects.                 |
 
 ### `ThemeProvider` / `useTheme`
 
@@ -415,11 +415,11 @@ suppressed on this route (see `App.jsx`).
 
 Rendered inside `App.jsx`, visible on all pages except `/depth-segmentation`.
 
-| Control | Position | Description |
-| --- | --- | --- |
-| Theme Switcher | top-right | `<select>` to switch between all 5 themes live. |
+| Control          | Position                   | Description                                                                                                                             |
+| ---------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Theme Switcher   | top-right                  | `<select>` to switch between all 5 themes live.                                                                                         |
 | Overlay Controls | top-right (below switcher) | Toggle checkboxes for Film Grain, Vignette, Scanlines, ASCII Shader. Dropdown for Particles preset (none/dust/snow/bokeh/embers/rain). |
-| Page Navigator | bottom-left | `<Link>` buttons for all registered routes. |
+| Page Navigator   | bottom-left                | `<Link>` buttons for all registered routes.                                                                                             |
 
 ---
 
@@ -429,10 +429,10 @@ Rendered inside `App.jsx`, visible on all pages except `/depth-segmentation`.
 
 Routes are declared with `react-router-dom` v7:
 
-| Path | Component |
-| --- | --- |
-| `/` | `BeHereMeow` |
-| `/example` | `ExamplePage` |
+| Path                  | Component               |
+| --------------------- | ----------------------- |
+| `/`                   | `BeHereMeow`            |
+| `/example`            | `ExamplePage`           |
 | `/depth-segmentation` | `DepthSegmentationPage` |
 
 `ThemeProvider` wraps the entire app with initial theme `'noir'`. Overlays and dev
@@ -452,10 +452,10 @@ The Vite dev server proxies `/api/*` to `http://localhost:5666` (configurable vi
 
 ### API endpoints
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `GET` | `/api/health` | Health check — returns `{"status": "ok"}`. |
-| `POST` | `/api/depth` | Accepts `multipart/form-data` with a `file` field (PNG/JPEG). Returns a grayscale PNG depth map with headers `X-Depth-Width` and `X-Depth-Height`. |
+| Method | Path          | Description                                                                                                                                    |
+| ------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/api/health` | Health check — returns `{"status": "ok"}`.                                                                                                     |
+| `POST` | `/api/depth`  | Accepts `multipart/form-data` with a `file` field (PNG/JPEG). Returns a grayscale PNG depth map with headers `X-Depth-Width` and `X-Depth-Height`. |
 
 ### Depth model
 
@@ -510,28 +510,28 @@ backend directly on port 8000.
 
 ### Local dev tooling
 
-| Tool | Purpose |
-| --- | --- |
-| Husky (`.husky/pre-commit`) | Pre-commit hook: runs lint-staged |
-| lint-staged | On `src/**/*.{js,jsx}`: ESLint --fix + Prettier. On `*.{json,md}`: Prettier. |
-| ESLint | JavaScript linting (`eslint src/`) |
-| Prettier | Code formatting |
-| Vitest | Unit tests (`npm test`) |
-| size-limit | Bundle size guard — 250kB limit on `dist/**/*.js` |
-| knip | Dead code detection |
-| jscpd | Duplicate code detection (5% threshold) |
+| Tool                        | Purpose                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| Husky (`.husky/pre-commit`) | Pre-commit hook: runs lint-staged                                              |
+| lint-staged                 | On `src/**/*.{js,jsx}`: ESLint --fix + Prettier. On `*.{json,md}`: Prettier.  |
+| ESLint                      | JavaScript linting (`eslint src/`)                                             |
+| Prettier                    | Code formatting                                                                |
+| Vitest                      | Unit tests (`npm test`)                                                        |
+| size-limit                  | Bundle size guard — 250kB limit on `dist/**/*.js`                              |
+| knip                        | Dead code detection                                                            |
+| jscpd                       | Duplicate code detection (5% threshold)                                        |
 
 ### GitHub Actions workflows (`.github/workflows/`)
 
-| Workflow | Trigger | What it does |
-| --- | --- | --- |
-| `ci.yml` | Push/PR to main | Lint, format check, test + coverage, dead code (knip), duplicate detection (jscpd), TODO tracker in summary, build, bundle size check (non-blocking) |
-| `docs.yml` | Push/PR to main | Documentation validation |
-| `pr-lint.yml` | PR events | PR title format linting |
-| `security.yml` | Push/PR to main | CodeQL security scanning |
-| `release.yml` | Release events | Release workflow |
-| `claude.yml` | Issue/PR comments | Claude Code AI task execution |
-| `claude-code-review.yml` | PR opened/updated | Claude Code automated PR review |
+| Workflow                 | Trigger             | What it does                                                                                                                                        |
+| ------------------------ | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`                 | Push/PR to main     | Lint, format check, test + coverage, dead code (knip), duplicate detection (jscpd), TODO tracker in summary, build, bundle size check (non-blocking) |
+| `docs.yml`               | Push/PR to main     | Documentation validation                                                                                                                            |
+| `pr-lint.yml`            | PR events           | PR title format linting                                                                                                                             |
+| `security.yml`           | Push/PR to main     | CodeQL security scanning                                                                                                                            |
+| `release.yml`            | Release events      | Release workflow                                                                                                                                    |
+| `claude.yml`             | Issue/PR comments   | Claude Code AI task execution                                                                                                                       |
+| `claude-code-review.yml` | PR opened/updated   | Claude Code automated PR review                                                                                                                     |
 
 ### Other integrations
 
@@ -584,13 +584,13 @@ backend directly on port 8000.
 
 ## Open issues
 
-| # | Title | Description |
-| --- | --- | --- |
-| [#1](https://github.com/Luan-vP/comic-engine/issues/1) | Journal Integration | New feature module |
-| [#2](https://github.com/Luan-vP/comic-engine/issues/2) | Biography Snapshots | New feature module |
-| [#18](https://github.com/Luan-vP/comic-engine/issues/18) | WebVR/Cardboard stereoscopic view | Stereoscopic rendering mode |
-| [#20](https://github.com/Luan-vP/comic-engine/issues/20) | Preserve true layer depth | Depth pipeline accuracy |
-| [#21](https://github.com/Luan-vP/comic-engine/issues/21) | Multi-group SceneObject grouping | Scene system enhancement |
-| [#23](https://github.com/Luan-vP/comic-engine/issues/23) | Fix App.test.jsx | Test infrastructure |
-| [#24](https://github.com/Luan-vP/comic-engine/issues/24) | Object insertion toolbar | Scene editing UI |
+| #                                                         | Title                                   | Description                  |
+| --------------------------------------------------------- | --------------------------------------- | ---------------------------- |
+| [#1](https://github.com/Luan-vP/comic-engine/issues/1)   | Journal Integration                     | New feature module           |
+| [#2](https://github.com/Luan-vP/comic-engine/issues/2)   | Biography Snapshots                     | New feature module           |
+| [#18](https://github.com/Luan-vP/comic-engine/issues/18) | WebVR/Cardboard stereoscopic view       | Stereoscopic rendering mode  |
+| [#20](https://github.com/Luan-vP/comic-engine/issues/20) | Preserve true layer depth               | Depth pipeline accuracy      |
+| [#21](https://github.com/Luan-vP/comic-engine/issues/21) | Multi-group SceneObject grouping        | Scene system enhancement     |
+| [#23](https://github.com/Luan-vP/comic-engine/issues/23) | Fix App.test.jsx                        | Test infrastructure          |
+| [#24](https://github.com/Luan-vP/comic-engine/issues/24) | Object insertion toolbar                | Scene editing UI             |
 | [#25](https://github.com/Luan-vP/comic-engine/issues/25) | Exporting layers should append to scene | Pipeline → scene export flow |
