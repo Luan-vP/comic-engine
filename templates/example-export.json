@@ -1,0 +1,94 @@
+{
+  "exportedAt": "2024-06-01T00:00:00.000Z",
+  "version": "1.0.0",
+  "entries": [
+    {
+      "id": "entry-2024-01-15-finding-my-voice",
+      "date": "2024-01-15",
+      "title": "Finding My Voice Again",
+      "content": "It had been three months of silence. Not the comfortable kind.",
+      "passages": [
+        {
+          "text": "I stood at the edge of the stage and for the first time in years the words came without effort. Like water finding its level.",
+          "storyPrompts": {
+            "characters": ["Me"],
+            "emotion": "clear",
+            "emotionalIntensity": 7,
+            "visualMetaphor": "water finding its level",
+            "contextBefore": "Three months of creative block and silence",
+            "contextAfter": "The audience was quiet — but it was a listening quiet"
+          }
+        }
+      ],
+      "themes": ["healing", "identity"],
+      "tags": ["to-comic"],
+      "frontmatter": {}
+    },
+    {
+      "id": "entry-2024-02-20-the-reunion",
+      "date": "2024-02-20",
+      "title": "The Reunion",
+      "content": "My sister and I hadn't spoken in four years. Then there she was at the door.",
+      "passages": [
+        {
+          "text": "The moment I saw her face at the door, time collapsed. All those years folded into this single breath.",
+          "storyPrompts": {
+            "characters": ["Me", "My sister"],
+            "emotion": "nostalgic",
+            "emotionalIntensity": 8,
+            "visualMetaphor": "an open window in winter",
+            "contextBefore": "Four years of estrangement and missed calls",
+            "contextAfter": "We hugged for the first time in a decade"
+          }
+        }
+      ],
+      "themes": ["healing", "family"],
+      "tags": ["to-comic"],
+      "frontmatter": {}
+    },
+    {
+      "id": "entry-2024-04-03-the-grief",
+      "date": "2024-04-03",
+      "title": "The Grief",
+      "content": "Today the grief came back without warning. Like a tide I thought had gone out.",
+      "passages": [
+        {
+          "text": "It arrived in a supermarket aisle — the smell of the bread he used to buy. I stood there holding a basket and just let the wave break.",
+          "storyPrompts": {
+            "characters": ["Me"],
+            "emotion": "raw",
+            "emotionalIntensity": 9,
+            "visualMetaphor": "a wave breaking in a quiet aisle",
+            "contextBefore": "Six months after his passing",
+            "contextAfter": "I sat in the car for twenty minutes before driving home"
+          }
+        }
+      ],
+      "themes": ["healing", "grief"],
+      "tags": ["to-comic"],
+      "frontmatter": {}
+    },
+    {
+      "id": "entry-2024-05-18-small-joy",
+      "date": "2024-05-18",
+      "title": "Small Joy",
+      "content": "Nothing happened today. Which is why I'm writing it down.",
+      "passages": [
+        {
+          "text": "Coffee on the balcony. A bird I couldn't name. The city below going about its morning. I felt — for the first time in a long time — simply here.",
+          "storyPrompts": {
+            "characters": ["Me"],
+            "emotion": "present",
+            "emotionalIntensity": 3,
+            "visualMetaphor": "coffee cooling in morning light",
+            "contextBefore": "Weeks of heavy therapy sessions",
+            "contextAfter": "I stayed out there for an hour and didn't check my phone"
+          }
+        }
+      ],
+      "themes": ["healing"],
+      "tags": ["to-comic"],
+      "frontmatter": {}
+    }
+  ]
+}
