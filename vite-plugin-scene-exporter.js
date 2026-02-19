@@ -378,9 +378,7 @@ export default function sceneExporter() {
           const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
           const existingLayers = meta.layers || [];
           const nextIndex =
-            existingLayers.length > 0
-              ? Math.max(...existingLayers.map((l) => l.index)) + 1
-              : 0;
+            existingLayers.length > 0 ? Math.max(...existingLayers.map((l) => l.index)) + 1 : 0;
           const groupId = `export-${Date.now()}`;
 
           const savedFiles = [];
