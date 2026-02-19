@@ -7,7 +7,7 @@ import { ExamplePage } from './pages/ExamplePage';
 import { DepthSegmentationPage } from './pages/DepthSegmentationPage';
 import { BiographySnapshots } from './pages/BiographySnapshots';
 import { JournalPage } from './pages/JournalPage';
-// @scene-imports
+import { DynamicScenePage } from './pages/DynamicScenePage';
 
 /**
  * Theme Switcher UI - for development/demo purposes
@@ -182,7 +182,6 @@ function PageNavigator() {
     { path: '/depth-segmentation', label: 'Depth Segmentation' },
     { path: '/biography', label: 'Biography' },
     { path: '/journal', label: 'Journal' },
-    // @scene-pages
   ];
 
   return (
@@ -286,7 +285,7 @@ function AppContent() {
         <Route path="/depth-segmentation" element={<DepthSegmentationPage />} />
         <Route path="/biography" element={<BiographySnapshots />} />
         <Route path="/journal" element={<JournalPage />} />
-        {/* @scene-routes */}
+        <Route path="/scenes/:slug" element={<DynamicScenePage />} />
       </Routes>
     </>
   );
