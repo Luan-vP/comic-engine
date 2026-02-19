@@ -21,6 +21,14 @@ function dataUrlToBuffer(dataUrl) {
   return Buffer.from(match[2], 'base64');
 }
 
+function dataUrlExtension(dataUrl) {
+  const match = dataUrl.match(/^data:image\/([a-z]+);base64,/);
+  if (!match) return 'png';
+  const mime = match[1];
+  if (mime === 'jpeg') return 'jpg';
+  return mime;
+}
+
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
@@ -34,6 +42,112 @@ function readBody(req) {
     });
     req.on('error', reject);
   });
+}
+
+/**
+ * generatePageTemplate - Generate a React JSX page component string from scene metadata.
+ *
+ * Renders both depth layers and inserted objects (memory, iframe, text cards).
+ * Exported for testability.
+ *
+ * @param {object} meta - scene.json object (name, slug, layers, objects, sceneConfig)
+ * @returns {string} JSX source code for the page component
+ */
+export function generatePageTemplate(meta) {
+  const { slug, layers = [], objects = [], sceneConfig = {} } = meta;
+  const {
+    perspective = 1000,
+    parallaxIntensity = 1,
+    mouseInfluence = { x: 50, y: 30 },
+  } = sceneConfig;
+
+  const componentName = slug
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join('');
+
+  const needsPanel = objects.length > 0;
+
+  const layerJSX = layers
+    .map((layer) => {
+      const imgSrc = layer.hasBlurFill
+        ? `/local-scenes/${slug}/layer-${layer.index}-blur.png`
+        : `/local-scenes/${slug}/layer-${layer.index}.png`;
+      const pos = layer.position || [0, 0, 0];
+      const pf = layer.parallaxFactor ?? 0.5;
+      return `      <SceneObject
+        position={[${pos.join(', ')}]}
+        parallaxFactor={${pf}}
+        interactive={false}
+      >
+        <img src="${imgSrc}" alt="${layer.name || `Layer ${layer.index}`}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
+      </SceneObject>`;
+    })
+    .join('\n\n');
+
+  const objectJSX = objects
+    .map((obj) => {
+      const pos = obj.position || [0, 0, 0];
+      const pf = obj.parallaxFactor ?? 0.6;
+      if (obj.type === 'memory') {
+        return `      <SceneObject
+        position={[${pos.join(', ')}]}
+        parallaxFactor={${pf}}
+      >
+        <Panel variant="polaroid">
+          <img src="${obj.data.imageUrl}" alt="${obj.data.caption || 'Memory'}" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </Panel>
+      </SceneObject>`;
+      } else if (obj.type === 'iframe') {
+        return `      <SceneObject
+        position={[${pos.join(', ')}]}
+        parallaxFactor={${pf}}
+      >
+        <Panel variant="monitor">
+          <iframe src="${obj.data.url}" width={280} height={200} sandbox="allow-scripts" style={{ border: 'none' }} title="Embedded content" />
+        </Panel>
+      </SceneObject>`;
+      } else if (obj.type === 'text') {
+        return `      <SceneObject
+        position={[${pos.join(', ')}]}
+        parallaxFactor={${pf}}
+      >
+        <Panel>
+          <div style={{ padding: '20px' }}>
+            <h2>${obj.data.title || ''}</h2>
+            <p>${obj.data.body || ''}</p>
+          </div>
+        </Panel>
+      </SceneObject>`;
+      }
+      return '';
+    })
+    .filter(Boolean)
+    .join('\n\n');
+
+  const allChildren = [layerJSX, objectJSX].filter(Boolean).join('\n\n');
+
+  const imports = needsPanel
+    ? `import { Scene, SceneObject, Panel } from '../components/scene';`
+    : `import { Scene, SceneObject } from '../components/scene';`;
+
+  return `import React from 'react';
+${imports}
+
+export function ${componentName}() {
+  return (
+    <Scene
+      perspective={${perspective}}
+      parallaxIntensity={${parallaxIntensity}}
+      mouseInfluence={{ x: ${mouseInfluence.x}, y: ${mouseInfluence.y} }}
+    >
+${allChildren}
+    </Scene>
+  );
+}
+
+export default ${componentName};
+`;
 }
 
 export default function sceneExporter() {
@@ -184,6 +298,7 @@ export default function sceneExporter() {
             createdAt: new Date().toISOString(),
             sceneConfig: sceneConfig || {},
             layers: layerMeta,
+            objects: [],
           };
           fs.writeFileSync(path.join(sceneDir, 'scene.json'), JSON.stringify(sceneMeta, null, 2));
 
@@ -303,7 +418,55 @@ export default function sceneExporter() {
         }
       });
 
-      // PATCH /_dev/scenes/:slug — Update layer positions (from edit mode drag)
+      // POST /_dev/scenes/:slug/assets — Upload an image asset for a scene
+      server.middlewares.use('/_dev/scenes', async (req, res, next) => {
+        if (req.method !== 'POST') return next();
+
+        const match = req.url?.match(/^\/([a-z0-9-]+)\/assets\/?$/);
+        if (!match) return next();
+
+        const slug = match[1];
+
+        try {
+          const sceneDir = path.join(scenesDir, slug);
+          const metaPath = path.join(sceneDir, 'scene.json');
+
+          if (!fs.existsSync(metaPath)) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: `Scene "${slug}" not found` }));
+            return;
+          }
+
+          const body = await readBody(req);
+          const { imageUrl } = body;
+
+          if (!imageUrl) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'imageUrl (data URL) is required' }));
+            return;
+          }
+
+          const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+          const mimeMatch = imageUrl.match(/^data:([^;]+);base64,/);
+          if (!mimeMatch || !ALLOWED_MIME.has(mimeMatch[1])) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Only image uploads are accepted' }));
+            return;
+          }
+
+          const ext = dataUrlExtension(imageUrl);
+          const filename = `upload-${Date.now()}.${ext}`;
+          fs.writeFileSync(path.join(sceneDir, filename), dataUrlToBuffer(imageUrl));
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ path: `/local-scenes/${slug}/${filename}` }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+
+      // PATCH /_dev/scenes/:slug — Update layer positions and/or inserted objects
       server.middlewares.use('/_dev/scenes', async (req, res, next) => {
         if (req.method !== 'PATCH') return next();
 
@@ -323,11 +486,11 @@ export default function sceneExporter() {
           }
 
           const body = await readBody(req);
-          const { groupOffset, groupOffsets } = body;
+          const { groupOffset, groupOffsets, objects } = body;
 
-          if (!groupOffset && !groupOffsets) {
+          if (!groupOffset && !groupOffsets && objects === undefined) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'groupOffset or groupOffsets is required' }));
+            res.end(JSON.stringify({ error: 'groupOffset, groupOffsets, or objects is required' }));
             return;
           }
 
@@ -347,11 +510,22 @@ export default function sceneExporter() {
               layer.position[1] += groupOffset.y;
             }
           }
+
+          // Update objects array if provided
+          if (objects !== undefined) {
+            meta.objects = objects;
+          }
+
           meta.updatedAt = new Date().toISOString();
           fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ positions: meta.layers.map((l) => l.position) }));
+          res.end(
+            JSON.stringify({
+              positions: meta.layers.map((l) => l.position),
+              objectCount: (meta.objects || []).length,
+            }),
+          );
         } catch (err) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: err.message }));
