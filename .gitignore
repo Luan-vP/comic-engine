@@ -29,6 +29,9 @@ chrome-user-data
 *.swo
 /tmp
 
+# Local persistent storage (user-created scenes, not tracked by git)
+.local/
+
 # Python backend
 __pycache__/
 *.egg-info/
