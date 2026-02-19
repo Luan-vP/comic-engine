@@ -1,0 +1,84 @@
+{
+  "entries": [
+    {
+      "id": "the-frozen-lake-2024-03-10",
+      "title": "The Frozen Lake",
+      "date": "2024-03-10T00:00:00Z",
+      "themes": ["healing", "nature"],
+      "passages": [
+        {
+          "text": "I stood at the edge of the frozen lake, watching cracks spread from beneath my boots. The ice held. I didn't trust it, but I stayed.",
+          "extractionMethod": "explicit"
+        }
+      ],
+      "prompts": {
+        "characters": ["Me"],
+        "emotion": "raw",
+        "emotionalIntensity": 8,
+        "visualMetaphor": "standing at the edge of a frozen lake",
+        "beforeContext": "Months of staying still, afraid to move in any direction.",
+        "afterContext": "I walked across. The ice held the whole time."
+      }
+    },
+    {
+      "id": "mothers-kitchen-2024-06-22",
+      "title": "Mother's Kitchen",
+      "date": "2024-06-22T00:00:00Z",
+      "themes": ["healing", "family"],
+      "passages": [
+        {
+          "text": "The smell of cardamom brought back everything at once — her hands, the yellow curtains, the radio playing something I couldn't name. For a moment I was seven years old and nothing had happened yet.",
+          "extractionMethod": "explicit"
+        }
+      ],
+      "prompts": {
+        "characters": ["Me", "Memory of mother"],
+        "emotion": "nostalgic",
+        "emotionalIntensity": 6,
+        "visualMetaphor": "a kitchen suspended in amber light",
+        "beforeContext": "Making tea alone in a new apartment.",
+        "afterContext": "I called her. We talked for an hour about nothing important."
+      }
+    },
+    {
+      "id": "the-screen-at-3am-2024-09-05",
+      "title": "The Screen at 3am",
+      "date": "2024-09-05T00:00:00Z",
+      "themes": ["healing", "disconnection"],
+      "passages": [
+        {
+          "text": "The blue light was the only thing real. I had been scrolling for two hours and couldn't remember a single thing I'd seen. My reflection in the dark parts of the screen looked like someone else.",
+          "extractionMethod": "explicit"
+        }
+      ],
+      "prompts": {
+        "characters": ["Me", "Reflection"],
+        "emotion": "disconnected",
+        "emotionalIntensity": 7,
+        "visualMetaphor": "a face reflected in a dark screen",
+        "beforeContext": "Couldn't sleep. Kept reaching for the phone.",
+        "afterContext": "Put the phone face-down and lay in the dark until morning."
+      }
+    },
+    {
+      "id": "first-day-of-spring-2025-03-20",
+      "title": "First Day of Spring",
+      "date": "2025-03-20T00:00:00Z",
+      "themes": ["healing", "nature"],
+      "passages": [
+        {
+          "text": "I noticed the light was different. Not warm yet, but longer. The shadows had moved. Something in my chest unclenched that I hadn't realized was clenched.",
+          "extractionMethod": "explicit"
+        }
+      ],
+      "prompts": {
+        "characters": ["Me"],
+        "emotion": "calm",
+        "emotionalIntensity": 3,
+        "visualMetaphor": "shadows shifting as light finds new angles",
+        "beforeContext": "A long grey winter. Most days felt identical.",
+        "afterContext": "Started going outside in the afternoons again."
+      }
+    }
+  ]
+}
