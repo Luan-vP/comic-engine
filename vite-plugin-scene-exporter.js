@@ -45,6 +45,59 @@ function readBody(req) {
   });
 }
 
+function buildSceneObjectJsx(layer, fillMode, slug, indent) {
+  const i = layer.index;
+  const pos = layer.position || [0, 0, i * -100];
+  const pf = layer.parallaxFactor ?? 0.1 + i * 0.2;
+  const brightness = (0.8 + (layer.depth ?? 0) * 0.4).toFixed(2);
+
+  let imgSrc;
+  if (fillMode === 'blur') {
+    imgSrc = `layer${i}Blur`;
+  } else {
+    imgSrc = `layer${i}`;
+  }
+
+  let solidFillJsx = '';
+  if (fillMode === 'solid') {
+    solidFillJsx = `
+${indent}          <div
+${indent}            style={{
+${indent}              position: 'absolute',
+${indent}              inset: 0,
+${indent}              backgroundColor: theme.colors.background,
+${indent}              WebkitMaskImage: \`url(\${layer${i}Fill})\`,
+${indent}              maskImage: \`url(\${layer${i}Fill})\`,
+${indent}              WebkitMaskSize: '100% 100%',
+${indent}              maskSize: '100% 100%',
+${indent}              WebkitMaskRepeat: 'no-repeat',
+${indent}              maskRepeat: 'no-repeat',
+${indent}            }}
+${indent}          />`;
+  }
+
+  return `${indent}<SceneObject
+${indent}  position={[${pos.join(', ')}]}
+${indent}  parallaxFactor={${pf}}
+${indent}  interactive={false}
+${indent}>
+${indent}  <div style={{ position: 'relative', display: 'inline-block' }}>${solidFillJsx}
+${indent}    <img
+${indent}      src={${imgSrc}}
+${indent}      alt="Layer ${i}"
+${indent}      style={{
+${indent}        display: 'block',
+${indent}        maxWidth: '80vw',
+${indent}        maxHeight: '80vh',
+${indent}        objectFit: 'contain',
+${indent}        filter: 'brightness(${brightness})',
+${indent}        pointerEvents: 'none',
+${indent}      }}
+${indent}    />
+${indent}  </div>
+${indent}</SceneObject>`;
+}
+
 function generatePageTemplate(componentName, slug, layers, sceneConfig) {
   const {
     perspective = 1000,
@@ -55,7 +108,8 @@ function generatePageTemplate(componentName, slug, layers, sceneConfig) {
   const title = slugToTitle(slug);
 
   const layerImports = layers
-    .map((_, i) => {
+    .map((layer) => {
+      const i = layer.index;
       const lines = [];
       if (fillMode === 'blur') {
         lines.push(`import layer${i}Blur from '/scenes/${slug}/layer-${i}-blur.png';`);
@@ -69,61 +123,64 @@ function generatePageTemplate(componentName, slug, layers, sceneConfig) {
     })
     .join('\n');
 
-  const sceneObjects = layers
-    .map((layer, i) => {
-      const pos = layer.position || [0, 0, i * -100];
-      const pf = layer.parallaxFactor ?? 0.1 + i * 0.2;
+  // Group layers by groupId to decide whether to emit <SceneObjectGroup> wrappers.
+  // Layers without a groupId (or whose groupId is the legacy 'initial' singleton) are
+  // rendered flat.  Layers sharing a distinct groupId get wrapped together.
+  const groupMap = new Map();
+  for (const layer of layers) {
+    const gid = layer.groupId || '__ungrouped__';
+    if (!groupMap.has(gid)) groupMap.set(gid, []);
+    groupMap.get(gid).push(layer);
+  }
 
-      let imgSrc;
-      if (fillMode === 'blur') {
-        imgSrc = `layer${i}Blur`;
+  // We only wrap in <SceneObjectGroup> when there are at least 2 distinct groupIds
+  // that aren't the legacy '__ungrouped__' / 'initial' fallback, OR when a single
+  // non-initial groupId exists (i.e. depth-segmentation export appended layers).
+  const namedGroups = [...groupMap.keys()].filter(
+    (gid) => gid !== '__ungrouped__' && gid !== 'initial',
+  );
+  const useGroups = namedGroups.length > 0;
+
+  let sceneObjects = '';
+
+  if (useGroups) {
+    // Render each named group wrapped in <SceneObjectGroup>, then ungrouped/initial flat.
+    const blocks = [];
+
+    for (const [gid, gLayers] of groupMap.entries()) {
+      if (gid === '__ungrouped__' || gid === 'initial') {
+        // Render flat
+        blocks.push(gLayers.map((l) => buildSceneObjectJsx(l, fillMode, slug, '      ')).join('\n\n'));
       } else {
-        imgSrc = `layer${i}`;
-      }
+        // Compute z-range from actual layer positions
+        const zValues = gLayers.map((l) => (l.position ? l.position[2] : 0));
+        const zFar = Math.min(...zValues);
+        const zNear = Math.max(...zValues);
 
-      let solidFillJsx = '';
-      if (fillMode === 'solid') {
-        solidFillJsx = `
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundColor: theme.colors.background,
-                WebkitMaskImage: \`url(\${layer${i}Fill})\`,
-                maskImage: \`url(\${layer${i}Fill})\`,
-                WebkitMaskSize: '100% 100%',
-                maskSize: '100% 100%',
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-              }}
-            />`;
-      }
+        const innerObjects = gLayers
+          .map((l) => buildSceneObjectJsx(l, fillMode, slug, '        '))
+          .join('\n\n');
 
-      return `      <SceneObject
-        position={[${pos.join(', ')}]}
-        parallaxFactor={${pf}}
-        interactive={false}
-      >
-        <div style={{ position: 'relative', display: 'inline-block' }}>${solidFillJsx}
-          <img
-            src={${imgSrc}}
-            alt="Layer ${i}"
-            style={{
-              display: 'block',
-              maxWidth: '80vw',
-              maxHeight: '80vh',
-              objectFit: 'contain',
-              filter: 'brightness(${(0.8 + (layer.depth ?? i / layers.length) * 0.4).toFixed(2)})',
-              pointerEvents: 'none',
-            }}
-          />
-        </div>
-      </SceneObject>`;
-    })
-    .join('\n\n');
+        blocks.push(
+          `      <SceneObjectGroup groupId="${gid}" zRange={{ far: ${zFar}, near: ${zNear} }}>\n${innerObjects}\n      </SceneObjectGroup>`,
+        );
+      }
+    }
+
+    sceneObjects = blocks.join('\n\n');
+  } else {
+    // Original flat rendering — no groups
+    sceneObjects = layers
+      .map((layer) => buildSceneObjectJsx(layer, fillMode, slug, '      '))
+      .join('\n\n');
+  }
+
+  const sceneImport = useGroups
+    ? `import { Scene, SceneObject, SceneObjectGroup } from '../components/scene';`
+    : `import { Scene, SceneObject } from '../components/scene';`;
 
   return `import React, { useCallback } from 'react';
-import { Scene, SceneObject } from '../components/scene';
+${sceneImport}
 import { useTheme } from '../theme/ThemeContext';
 ${layerImports}
 
@@ -466,20 +523,26 @@ export default function sceneExporter() {
           }
 
           const body = await readBody(req);
-          const { groupOffset } = body;
+          const { groupOffset, groupOffsets } = body;
 
-          if (!groupOffset) {
+          if (!groupOffset && !groupOffsets) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'groupOffset is required' }));
+            res.end(JSON.stringify({ error: 'groupOffset or groupOffsets is required' }));
             return;
           }
 
           // Read current metadata
           const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
 
-          // Apply offset to each layer's position
+          // Apply offset to each layer's position.
+          // groupOffsets (per-group) takes precedence over the global groupOffset.
           for (const layer of meta.layers) {
-            if (layer.position) {
+            if (!layer.position) continue;
+            const perGroup = groupOffsets && layer.groupId && groupOffsets[layer.groupId];
+            if (perGroup) {
+              layer.position[0] += perGroup.x;
+              layer.position[1] += perGroup.y;
+            } else if (groupOffset) {
               layer.position[0] += groupOffset.x;
               layer.position[1] += groupOffset.y;
             }

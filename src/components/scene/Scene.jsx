@@ -53,6 +53,8 @@ export function Scene({
   const [groupOffset, setGroupOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef(null);
+  // Which SceneObjectGroup is currently selected for dragging (null = ungrouped drag)
+  const [selectedGroupId, setSelectedGroupId] = useState(null);
 
   // Track mouse position normalized to -1 to 1
   useEffect(() => {
@@ -156,6 +158,10 @@ export function Scene({
     perspective,
     editActive,
     groupOffset: editActive ? groupOffset : { x: 0, y: 0 },
+    // Group selection — used by SceneObjectGroup for visual highlight and
+    // by Scene to ensure the scene-level drag only fires for ungrouped objects.
+    selectedGroupId,
+    setSelectedGroupId,
   };
 
   return (
@@ -220,7 +226,10 @@ export function Scene({
                 checked={editActive}
                 onChange={(e) => {
                   setEditActive(e.target.checked);
-                  if (!e.target.checked) handleReset();
+                  if (!e.target.checked) {
+                    handleReset();
+                    setSelectedGroupId(null);
+                  }
                 }}
                 style={{ accentColor: theme.colors.primary }}
               />
