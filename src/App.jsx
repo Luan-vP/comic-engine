@@ -5,6 +5,7 @@ import { OverlayStack } from './components/overlays';
 import { BeHereMeow } from './pages/BeHereMeow';
 import { ExamplePage } from './pages/ExamplePage';
 import { DepthSegmentationPage } from './pages/DepthSegmentationPage';
+import { BiographySnapshots } from './pages/BiographySnapshots';
 // @scene-imports
 
 /**
@@ -178,6 +179,7 @@ function PageNavigator() {
     { path: '/', label: 'BeHereMeow' },
     { path: '/example', label: 'Example' },
     { path: '/depth-segmentation', label: 'Depth Segmentation' },
+    { path: '/biography', label: 'Biography' },
     // @scene-pages
   ];
 
@@ -280,6 +282,7 @@ function AppContent() {
         <Route path="/" element={<BeHereMeow />} />
         <Route path="/example" element={<ExamplePage />} />
         <Route path="/depth-segmentation" element={<DepthSegmentationPage />} />
+        <Route path="/biography" element={<BiographySnapshots />} />
         {/* @scene-routes */}
       </Routes>
     </>
