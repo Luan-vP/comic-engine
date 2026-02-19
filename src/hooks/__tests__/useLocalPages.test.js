@@ -25,12 +25,7 @@ describe('useLocalPages', () => {
     ];
     vi.stubGlobal(
       'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockScenes),
-        }),
-      ),
+      vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(mockScenes) })),
     );
 
     const { result } = renderHook(() => useLocalPages());
@@ -42,12 +37,7 @@ describe('useLocalPages', () => {
   it('returns empty array when no scenes exist (server returns [])', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve([]),
-        }),
-      ),
+      vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve([]) })),
     );
 
     const { result } = renderHook(() => useLocalPages());
@@ -57,10 +47,7 @@ describe('useLocalPages', () => {
   });
 
   it('returns empty array and logs warning on fetch error', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() => Promise.reject(new Error('network error'))),
-    );
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('network error'))));
 
     const { result } = renderHook(() => useLocalPages());
 
@@ -94,12 +81,7 @@ describe('useLocalPages', () => {
   it('handles non-array response gracefully', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(null),
-        }),
-      ),
+      vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(null) })),
     );
 
     const { result } = renderHook(() => useLocalPages());
