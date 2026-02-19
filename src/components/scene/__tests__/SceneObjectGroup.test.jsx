@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { describe, it, expect, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
 import React from 'react';
 import { ThemeProvider } from '../../../theme/ThemeContext';
 import { Scene } from '../Scene';
@@ -10,19 +10,6 @@ afterEach(cleanup);
 
 function renderWithProviders(ui) {
   return render(<ThemeProvider>{ui}</ThemeProvider>);
-}
-
-/**
- * Minimal scene wrapper that enables edit mode so drag handlers are active.
- */
-function EditScene({ children }) {
-  return (
-    <ThemeProvider>
-      <Scene editable>
-        {children}
-      </Scene>
-    </ThemeProvider>
-  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -143,7 +130,7 @@ describe('useGroup', () => {
 
 describe('group selection in edit mode', () => {
   it('group wrapper is present in the DOM', () => {
-    const { container } = render(
+    render(
       <ThemeProvider>
         <Scene editable>
           <SceneObjectGroup groupId="g1">

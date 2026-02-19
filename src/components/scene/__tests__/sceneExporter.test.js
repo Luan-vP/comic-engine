@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-// Import the helper by reaching into the plugin file.
-// We test the generated template string directly.
-import sceneExporter from '../../../../vite-plugin-scene-exporter.js';
-
-// generatePageTemplate is not exported, so we reconstruct its logic by
+// generatePageTemplate is not exported from the plugin, so we reconstruct its logic by
 // verifying the output of the full plugin's POST handler is hard to do in
 // a unit test.  Instead, we test the grouping logic inline here by calling
 // the factory and inspecting the string output.
