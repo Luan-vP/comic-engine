@@ -105,23 +105,18 @@ function extractStoryPrompts(frontmatter) {
 
   if (frontmatter.emotion) prompts.emotion = String(frontmatter.emotion);
 
-  const intensity =
-    frontmatter['emotional-intensity'] ??
-    frontmatter['emotional_intensity'];
+  const intensity = frontmatter['emotional-intensity'] ?? frontmatter['emotional_intensity'];
   if (intensity != null) {
     prompts.emotionalIntensity = Number(intensity) || 5;
   }
 
-  const metaphor =
-    frontmatter['visual-metaphor'] ?? frontmatter['visual_metaphor'];
+  const metaphor = frontmatter['visual-metaphor'] ?? frontmatter['visual_metaphor'];
   if (metaphor) prompts.visualMetaphor = String(metaphor);
 
-  const ctxBefore =
-    frontmatter['context-before'] ?? frontmatter['context_before'];
+  const ctxBefore = frontmatter['context-before'] ?? frontmatter['context_before'];
   if (ctxBefore) prompts.contextBefore = String(ctxBefore);
 
-  const ctxAfter =
-    frontmatter['context-after'] ?? frontmatter['context_after'];
+  const ctxAfter = frontmatter['context-after'] ?? frontmatter['context_after'];
   if (ctxAfter) prompts.contextAfter = String(ctxAfter);
 
   return prompts;

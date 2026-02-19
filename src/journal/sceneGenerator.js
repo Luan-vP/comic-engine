@@ -175,8 +175,7 @@ export function generateSceneConfig(entries, options = {}) {
 export function groupByTheme(entries) {
   const map = new Map();
   for (const entry of entries) {
-    const themes =
-      entry.themes && entry.themes.length > 0 ? entry.themes : ['(unthemed)'];
+    const themes = entry.themes && entry.themes.length > 0 ? entry.themes : ['(unthemed)'];
     for (const theme of themes) {
       if (!map.has(theme)) map.set(theme, []);
       map.get(theme).push(entry);

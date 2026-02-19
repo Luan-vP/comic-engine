@@ -3,25 +3,37 @@ import { generateSceneConfig, generatePassageConfig, groupByTheme } from '../sce
 
 describe('generatePassageConfig', () => {
   it('maps nostalgic emotion to polaroid variant', () => {
-    const passage = { text: 'A memory', storyPrompts: { emotion: 'nostalgic', emotionalIntensity: 5 } };
+    const passage = {
+      text: 'A memory',
+      storyPrompts: { emotion: 'nostalgic', emotionalIntensity: 5 },
+    };
     const config = generatePassageConfig(passage);
     expect(config.panelVariant).toBe('polaroid');
   });
 
   it('maps raw emotion to torn variant', () => {
-    const passage = { text: 'A memory', storyPrompts: { emotion: 'raw', emotionalIntensity: 8 } };
+    const passage = {
+      text: 'A memory',
+      storyPrompts: { emotion: 'raw', emotionalIntensity: 8 },
+    };
     const config = generatePassageConfig(passage);
     expect(config.panelVariant).toBe('torn');
   });
 
   it('maps calm emotion to borderless variant', () => {
-    const passage = { text: 'A memory', storyPrompts: { emotion: 'calm', emotionalIntensity: 3 } };
+    const passage = {
+      text: 'A memory',
+      storyPrompts: { emotion: 'calm', emotionalIntensity: 3 },
+    };
     const config = generatePassageConfig(passage);
     expect(config.panelVariant).toBe('borderless');
   });
 
   it('defaults to default variant for unknown emotion', () => {
-    const passage = { text: 'A memory', storyPrompts: { emotion: 'puzzled', emotionalIntensity: 5 } };
+    const passage = {
+      text: 'A memory',
+      storyPrompts: { emotion: 'puzzled', emotionalIntensity: 5 },
+    };
     const config = generatePassageConfig(passage);
     expect(config.panelVariant).toBe('default');
   });
@@ -80,8 +92,20 @@ describe('generateSceneConfig', () => {
 
   it('filters by theme', () => {
     const entries = [
-      { id: 'e1', date: '2024-01-01', title: 'A', passages: [{ text: 'p1', storyPrompts: {} }], themes: ['healing'] },
-      { id: 'e2', date: '2024-01-02', title: 'B', passages: [{ text: 'p2', storyPrompts: {} }], themes: ['work'] },
+      {
+        id: 'e1',
+        date: '2024-01-01',
+        title: 'A',
+        passages: [{ text: 'p1', storyPrompts: {} }],
+        themes: ['healing'],
+      },
+      {
+        id: 'e2',
+        date: '2024-01-02',
+        title: 'B',
+        passages: [{ text: 'p2', storyPrompts: {} }],
+        themes: ['work'],
+      },
     ];
     const result = generateSceneConfig(entries, { theme: 'healing' });
     expect(result).toHaveLength(1);
@@ -90,8 +114,20 @@ describe('generateSceneConfig', () => {
 
   it('sorts entries chronologically', () => {
     const entries = [
-      { id: 'e2', date: '2024-03-01', title: 'Later', passages: [{ text: 'later', storyPrompts: {} }], themes: [] },
-      { id: 'e1', date: '2024-01-01', title: 'Earlier', passages: [{ text: 'earlier', storyPrompts: {} }], themes: [] },
+      {
+        id: 'e2',
+        date: '2024-03-01',
+        title: 'Later',
+        passages: [{ text: 'later', storyPrompts: {} }],
+        themes: [],
+      },
+      {
+        id: 'e1',
+        date: '2024-01-01',
+        title: 'Earlier',
+        passages: [{ text: 'earlier', storyPrompts: {} }],
+        themes: [],
+      },
     ];
     const result = generateSceneConfig(entries);
     expect(result[0].entryTitle).toBe('Earlier');
@@ -100,7 +136,13 @@ describe('generateSceneConfig', () => {
 
   it('includes entry metadata on each scene object', () => {
     const entries = [
-      { id: 'e1', date: '2024-01-01', title: 'Test', passages: [{ text: 'p', storyPrompts: {} }], themes: ['healing'] },
+      {
+        id: 'e1',
+        date: '2024-01-01',
+        title: 'Test',
+        passages: [{ text: 'p', storyPrompts: {} }],
+        themes: ['healing'],
+      },
     ];
     const result = generateSceneConfig(entries);
     expect(result[0].entryId).toBe('e1');
@@ -111,8 +153,20 @@ describe('generateSceneConfig', () => {
 
   it('uses spiral layout when specified', () => {
     const entries = [
-      { id: 'e1', date: '2024-01-01', title: 'A', passages: [{ text: 'p', storyPrompts: {} }], themes: [] },
-      { id: 'e2', date: '2024-02-01', title: 'B', passages: [{ text: 'p', storyPrompts: {} }], themes: [] },
+      {
+        id: 'e1',
+        date: '2024-01-01',
+        title: 'A',
+        passages: [{ text: 'p', storyPrompts: {} }],
+        themes: [],
+      },
+      {
+        id: 'e2',
+        date: '2024-02-01',
+        title: 'B',
+        passages: [{ text: 'p', storyPrompts: {} }],
+        themes: [],
+      },
     ];
     const result = generateSceneConfig(entries, { layout: 'spiral' });
     expect(result).toHaveLength(2);

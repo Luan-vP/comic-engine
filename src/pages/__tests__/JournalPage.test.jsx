@@ -46,8 +46,6 @@ describe('JournalPage', () => {
 
   it('shows empty state message when no entries are loaded', () => {
     renderJournalPage();
-    expect(
-      screen.getByText(/Load Obsidian markdown files/)
-    ).toBeDefined();
+    expect(screen.getByText(/Load Obsidian markdown files/)).toBeDefined();
   });
 });
