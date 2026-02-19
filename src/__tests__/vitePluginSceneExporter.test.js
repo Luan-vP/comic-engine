@@ -150,6 +150,6 @@ describe('generatePageTemplate', () => {
       objects: [],
     });
     // No Panel import when there are no objects
-    expect(withoutObjects).not.toContain("import { Scene, SceneObject, Panel }");
+    expect(withoutObjects).not.toContain('import { Scene, SceneObject, Panel }');
   });
 });

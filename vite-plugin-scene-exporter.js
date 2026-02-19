@@ -55,8 +55,11 @@ function readBody(req) {
  */
 export function generatePageTemplate(meta) {
   const { slug, layers = [], objects = [], sceneConfig = {} } = meta;
-  const { perspective = 1000, parallaxIntensity = 1, mouseInfluence = { x: 50, y: 30 } } =
-    sceneConfig;
+  const {
+    perspective = 1000,
+    parallaxIntensity = 1,
+    mouseInfluence = { x: 50, y: 30 },
+  } = sceneConfig;
 
   const componentName = slug
     .split('-')
@@ -479,9 +482,7 @@ export default function sceneExporter() {
 
           if (!groupOffset && !groupOffsets && objects === undefined) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(
-              JSON.stringify({ error: 'groupOffset, groupOffsets, or objects is required' }),
-            );
+            res.end(JSON.stringify({ error: 'groupOffset, groupOffsets, or objects is required' }));
             return;
           }
 

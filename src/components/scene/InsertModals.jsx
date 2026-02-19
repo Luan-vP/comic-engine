@@ -26,7 +26,15 @@ function inputStyle(theme) {
   };
 }
 
-function ModalBase({ title, children, onConfirm, onCancel, confirmLabel = 'Add', confirmDisabled = false, theme }) {
+function ModalBase({
+  title,
+  children,
+  onConfirm,
+  onCancel,
+  confirmLabel = 'Add',
+  confirmDisabled = false,
+  theme,
+}) {
   return (
     <div style={MODAL_OVERLAY_STYLE} onMouseDown={(e) => e.stopPropagation()}>
       <div
@@ -152,14 +160,24 @@ export function MemoryCardModal({ slug, onConfirm, onCancel }) {
             type="file"
             accept="image/jpeg,image/png"
             onChange={handleFileChange}
-            style={{ display: 'block', marginTop: '4px', color: theme.colors.text, fontSize: '11px' }}
+            style={{
+              display: 'block',
+              marginTop: '4px',
+              color: theme.colors.text,
+              fontSize: '11px',
+            }}
           />
         </label>
         {imageDataUrl && (
           <img
             src={imageDataUrl}
             alt="Preview"
-            style={{ maxWidth: '100%', maxHeight: '120px', objectFit: 'cover', borderRadius: '4px' }}
+            style={{
+              maxWidth: '100%',
+              maxHeight: '120px',
+              objectFit: 'cover',
+              borderRadius: '4px',
+            }}
           />
         )}
         <label style={{ color: theme.colors.textMuted, fontSize: '11px' }}>
