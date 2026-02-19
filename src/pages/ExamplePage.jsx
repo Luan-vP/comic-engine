@@ -135,7 +135,9 @@ export function ExamplePage() {
               justifyContent: 'center',
             }}
           >
-            <span style={{ color: '#666', fontSize: '10px', fontFamily: theme.typography.fontBody }}>
+            <span
+              style={{ color: '#666', fontSize: '10px', fontFamily: theme.typography.fontBody }}
+            >
               MEMORY
             </span>
           </div>

@@ -113,7 +113,7 @@ export function VRViewer({
   const [needsPermission, setNeedsPermission] = useState(
     () =>
       typeof DeviceOrientationEvent !== 'undefined' &&
-      typeof DeviceOrientationEvent.requestPermission === 'function'
+      typeof DeviceOrientationEvent.requestPermission === 'function',
   );
   const viewerRef = useRef(null);
 
