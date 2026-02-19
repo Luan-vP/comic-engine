@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 
 // Mock canvas getContext for components that use <canvas>
@@ -16,7 +17,11 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
 
 describe('App', () => {
   it('renders without crashing', () => {
-    render(<App />);
+    render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>
+    );
     expect(screen.getByText('THEME')).toBeDefined();
   });
 });
