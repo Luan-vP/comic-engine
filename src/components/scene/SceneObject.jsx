@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useScene } from './Scene';
+import { useGroup } from './SceneObjectGroup';
 
 /**
  * SceneObject - Place any content in the 3D parallax space
@@ -58,8 +59,18 @@ export function SceneObject({
   // Anchor point relative to parent (alternative to absolute positioning)
   anchor = null, // 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | { x: '50%', y: '50%' }
 }) {
-  const { mousePos, scrollZ, parallaxIntensity, mouseInfluence, editActive, groupOffset } =
-    useScene();
+  const {
+    mousePos,
+    scrollZ,
+    parallaxIntensity,
+    mouseInfluence,
+    editActive,
+    groupOffset: sceneGroupOffset,
+  } = useScene();
+  // Prefer the nearest group's offset over the scene-level offset so each
+  // SceneObjectGroup can move its children independently.
+  const group = useGroup();
+  const groupOffset = group?.groupOffset ?? sceneGroupOffset;
 
   const [x, y, z] = position;
   const [rx, ry, rz] = rotation;

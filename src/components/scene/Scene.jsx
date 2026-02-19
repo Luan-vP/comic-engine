@@ -51,8 +51,11 @@ export function Scene({
   // Edit mode state
   const [editActive, setEditActive] = useState(false);
   const [groupOffset, setGroupOffset] = useState({ x: 0, y: 0 });
+  const [groupOffsets, setGroupOffsets] = useState({});
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef(null);
+  // Which SceneObjectGroup is currently selected for dragging (null = ungrouped drag)
+  const [selectedGroupId, setSelectedGroupId] = useState(null);
 
   // Track mouse position normalized to -1 to 1
   useEffect(() => {
@@ -137,14 +140,24 @@ export function Scene({
     };
   }, [isDragging]);
 
+  const registerGroupOffset = useCallback((gId, offset) => {
+    setGroupOffsets((prev) => ({ ...prev, [gId]: offset }));
+  }, []);
+
+  const hasAnyOffset =
+    groupOffset.x !== 0 ||
+    groupOffset.y !== 0 ||
+    Object.values(groupOffsets).some((o) => o.x !== 0 || o.y !== 0);
+
   const handleSave = useCallback(() => {
     if (onSave) {
-      onSave({ groupOffset });
+      onSave({ groupOffset, groupOffsets });
     }
-  }, [onSave, groupOffset]);
+  }, [onSave, groupOffset, groupOffsets]);
 
   const handleReset = useCallback(() => {
     setGroupOffset({ x: 0, y: 0 });
+    setGroupOffsets({});
   }, []);
 
   const contextValue = {
@@ -156,6 +169,13 @@ export function Scene({
     perspective,
     editActive,
     groupOffset: editActive ? groupOffset : { x: 0, y: 0 },
+    // Group selection — used by SceneObjectGroup for visual highlight and
+    // by Scene to ensure the scene-level drag only fires for ungrouped objects.
+    selectedGroupId,
+    setSelectedGroupId,
+    // Called by each SceneObjectGroup to report its current drag offset upward
+    // so Scene can include per-group offsets in handleSave.
+    registerGroupOffset,
   };
 
   return (
@@ -220,7 +240,10 @@ export function Scene({
                 checked={editActive}
                 onChange={(e) => {
                   setEditActive(e.target.checked);
-                  if (!e.target.checked) handleReset();
+                  if (!e.target.checked) {
+                    handleReset();
+                    setSelectedGroupId(null);
+                  }
                 }}
                 style={{ accentColor: theme.colors.primary }}
               />
@@ -242,18 +265,14 @@ export function Scene({
                   {onSave && (
                     <button
                       onClick={handleSave}
-                      disabled={groupOffset.x === 0 && groupOffset.y === 0}
+                      disabled={!hasAnyOffset}
                       style={{
-                        background:
-                          groupOffset.x === 0 && groupOffset.y === 0
-                            ? '#555'
-                            : theme.colors.primary,
-                        color: groupOffset.x === 0 && groupOffset.y === 0 ? '#999' : '#000',
+                        background: hasAnyOffset ? theme.colors.primary : '#555',
+                        color: hasAnyOffset ? '#000' : '#999',
                         border: 'none',
                         borderRadius: '4px',
                         padding: '6px 12px',
-                        cursor:
-                          groupOffset.x === 0 && groupOffset.y === 0 ? 'not-allowed' : 'pointer',
+                        cursor: hasAnyOffset ? 'pointer' : 'not-allowed',
                         fontWeight: 'bold',
                         fontSize: '11px',
                         fontFamily: theme.typography.fontBody,

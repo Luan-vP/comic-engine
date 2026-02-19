@@ -273,19 +273,27 @@ export default function sceneExporter() {
           meta.updatedAt = new Date().toISOString();
           fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
 
-          // Generate a code snippet for the user to paste
-          const codeSnippet = layers
-            .map((_, i) => {
+          // Generate a code snippet for the user to paste.
+          // All new layers share the same groupId, so wrap them in <SceneObjectGroup>.
+          const zValues = layerMeta.map((l) => (l.position ? l.position[2] : 0));
+          const zFar = Math.min(...zValues);
+          const zNear = Math.max(...zValues);
+          const innerSnippet = layerMeta
+            .map((lm, i) => {
               const layerIndex = nextIndex + i;
-              return `<SceneObject
-  position={[${(layerMeta[i].position || [0, 0, 0]).join(', ')}]}
-  parallaxFactor={${layerMeta[i].parallaxFactor}}
-  interactive={false}
->
-  <img src="/local-scenes/${slug}/layer-${layerIndex}.png" alt="Layer ${layerIndex}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
-</SceneObject>`;
+              return `  <SceneObject
+    position={[${(lm.position || [0, 0, 0]).join(', ')}]}
+    parallaxFactor={${lm.parallaxFactor}}
+    interactive={false}
+  >
+    <img src="/local-scenes/${slug}/layer-${layerIndex}.png" alt="Layer ${layerIndex}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
+  </SceneObject>`;
             })
             .join('\n\n');
+          const codeSnippet =
+            `<SceneObjectGroup groupId="${groupId}" zRange={{ far: ${zFar}, near: ${zNear} }}>` +
+            `\n${innerSnippet}\n` +
+            `</SceneObjectGroup>`;
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ savedFiles, codeSnippet }));
@@ -315,20 +323,26 @@ export default function sceneExporter() {
           }
 
           const body = await readBody(req);
-          const { groupOffset } = body;
+          const { groupOffset, groupOffsets } = body;
 
-          if (!groupOffset) {
+          if (!groupOffset && !groupOffsets) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'groupOffset is required' }));
+            res.end(JSON.stringify({ error: 'groupOffset or groupOffsets is required' }));
             return;
           }
 
           // Read current metadata
           const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
 
-          // Apply offset to each layer's position
+          // Apply offset to each layer's position.
+          // groupOffsets (per-group) takes precedence over the global groupOffset.
           for (const layer of meta.layers) {
-            if (layer.position) {
+            if (!layer.position) continue;
+            const perGroup = groupOffsets && layer.groupId && groupOffsets[layer.groupId];
+            if (perGroup) {
+              layer.position[0] += perGroup.x;
+              layer.position[1] += perGroup.y;
+            } else if (groupOffset) {
               layer.position[0] += groupOffset.x;
               layer.position[1] += groupOffset.y;
             }
