@@ -12,4 +12,5 @@ export {
   getSceneLayers,
   fixedStepArrangement,
   fillRangeArrangement,
+  depthProportionalArrangement,
 } from './pipeline.js';
