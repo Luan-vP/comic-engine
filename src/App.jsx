@@ -8,6 +8,7 @@ import { DepthSegmentationPage } from './pages/DepthSegmentationPage';
 import { BiographySnapshots } from './pages/BiographySnapshots';
 import { JournalPage } from './pages/JournalPage';
 import { DynamicScenePage } from './pages/DynamicScenePage';
+import { useLocalPages } from './hooks/useLocalPages';
 
 /**
  * Theme Switcher UI - for development/demo purposes
@@ -175,14 +176,28 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
 function PageNavigator() {
   const { theme } = useTheme();
   const location = useLocation();
+  const { pages: localPages } = useLocalPages();
 
-  const pages = [
+  const tools = [
     { path: '/', label: 'BeHereMeow' },
     { path: '/example', label: 'Example' },
     { path: '/depth-segmentation', label: 'Depth Segmentation' },
     { path: '/biography', label: 'Biography' },
     { path: '/journal', label: 'Journal' },
   ];
+
+  const linkStyle = (isActive) => ({
+    background: isActive ? theme.colors.primary : 'rgba(255,255,255,0.1)',
+    color: isActive ? '#000' : theme.colors.text,
+    border: `1px solid ${isActive ? theme.colors.primary : theme.colors.border}`,
+    borderRadius: '4px',
+    padding: '6px 12px',
+    fontSize: '11px',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    fontWeight: isActive ? 'bold' : 'normal',
+    textDecoration: 'none',
+  });
 
   return (
     <div
@@ -207,33 +222,44 @@ function PageNavigator() {
           letterSpacing: '1px',
         }}
       >
-        PAGES
+        TOOLS
       </div>
       <div style={{ display: 'flex', gap: '8px' }}>
-        {pages.map(({ path, label }) => {
+        {tools.map(({ path, label }) => {
           const isActive = location.pathname === path;
           return (
-            <Link
-              key={path}
-              to={path}
-              style={{
-                background: isActive ? theme.colors.primary : 'rgba(255,255,255,0.1)',
-                color: isActive ? '#000' : theme.colors.text,
-                border: `1px solid ${isActive ? theme.colors.primary : theme.colors.border}`,
-                borderRadius: '4px',
-                padding: '6px 12px',
-                fontSize: '11px',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                fontWeight: isActive ? 'bold' : 'normal',
-                textDecoration: 'none',
-              }}
-            >
+            <Link key={path} to={path} style={linkStyle(isActive)}>
               {label}
             </Link>
           );
         })}
       </div>
+      {localPages.length > 0 && (
+        <>
+          <div
+            style={{
+              color: theme.colors.textMuted,
+              fontSize: '10px',
+              marginTop: '12px',
+              marginBottom: '8px',
+              letterSpacing: '1px',
+            }}
+          >
+            PAGES
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {localPages.map(({ slug, name }) => {
+              const path = `/scenes/${slug}`;
+              const isActive = location.pathname === path;
+              return (
+                <Link key={slug} to={path} style={linkStyle(isActive)}>
+                  {name}
+                </Link>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
