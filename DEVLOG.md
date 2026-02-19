@@ -89,11 +89,11 @@ content at arbitrary positions in 3D space with mouse-driven parallax.
 
 ### Coordinate system
 
-| Axis | Direction |
-| ---- | --------- |
-| X    | Left (−) → Right (+) |
+| Axis | Direction                          |
+| ---- | ---------------------------------- |
+| X    | Left (−) → Right (+)               |
 | Y    | Up (−) → Down (+) — CSS convention |
-| Z    | Far (−) → Near (+) |
+| Z    | Far (−) → Near (+)                 |
 
 Objects at a more negative Z appear smaller (further away) and move less with the mouse. Objects
 at a more positive Z appear larger and move more.
@@ -107,16 +107,16 @@ The root container. Sets up a CSS `perspective` div, tracks mouse position norma
 
 **Props:**
 
-| Prop | Default | Description |
-| ---- | ------- | ----------- |
-| `perspective` | `1000` | CSS perspective distance in px. Lower = more dramatic foreshortening. |
-| `parallaxIntensity` | `1` | Global multiplier applied to all child parallax movement. |
-| `mouseInfluence` | `{ x: 50, y: 30 }` | Maximum pixel offset caused by mouse movement. |
-| `scrollEnabled` | `false` | If true, scroll position drives Z offset for all objects. |
-| `scrollDepth` | `500` | Total Z range swept over a full scroll. |
-| `editable` | `false` | Renders an "Edit Layout" overlay with drag and save/reset controls. |
-| `onSave` | `null` | Callback `({ groupOffset: { x, y } })` called when the Save button is clicked in edit mode. |
-| `className` / `style` | — | Passed to the outer div. |
+| Prop                  | Default            | Description                                                                                 |
+| --------------------- | ------------------ | ------------------------------------------------------------------------------------------- |
+| `perspective`         | `1000`             | CSS perspective distance in px. Lower = more dramatic foreshortening.                       |
+| `parallaxIntensity`   | `1`                | Global multiplier applied to all child parallax movement.                                   |
+| `mouseInfluence`      | `{ x: 50, y: 30 }` | Maximum pixel offset caused by mouse movement.                                              |
+| `scrollEnabled`       | `false`            | If true, scroll position drives Z offset for all objects.                                   |
+| `scrollDepth`         | `500`              | Total Z range swept over a full scroll.                                                     |
+| `editable`            | `false`            | Renders an "Edit Layout" overlay with drag and save/reset controls.                         |
+| `onSave`              | `null`             | Callback `({ groupOffset: { x, y } })` called when the Save button is clicked in edit mode. |
+| `className` / `style` | —                  | Passed to the outer div.                                                                    |
 
 **Edit mode:** When `editable` is true a checkbox appears in the top-left corner. Checking it
 pauses parallax and allows the user to click-drag all scene objects as a group. The accumulated
@@ -135,31 +135,31 @@ Places any React content at a position in 3D space and applies mouse-driven para
 
 **Props:**
 
-| Prop | Default | Description |
-| ---- | ------- | ----------- |
-| `position` | `[0, 0, 0]` | `[x, y, z]` in pixels. |
-| `rotation` | `[0, 0, 0]` | `[rx, ry, rz]` in degrees. rx tilts top away/toward, ry turns left/right, rz is 2D spin. |
-| `scale` | `1` | Uniform scale factor. |
-| `parallaxFactor` | `null` (auto) | Amount of mouse-driven movement. Auto-computed from Z as `0.7 + z / 1000` when `null`. |
-| `origin` | `'center'` | CSS `transform-origin`. |
-| `interactive` | `true` | Whether the element receives pointer events. |
-| `anchor` | `null` | Named anchor (`'center'`, `'top-left'`, `'bottom-right'`, …) or `{ x, y }` object for absolute positioning relative to parent. Defaults to centred. |
-| `onClick` / `onHover` | — | Event handlers. |
-| `className` / `style` | — | Passed to the wrapper div. |
+| Prop                  | Default       | Description                                                                                                                                         |
+| --------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `position`            | `[0, 0, 0]`   | `[x, y, z]` in pixels.                                                                                                                              |
+| `rotation`            | `[0, 0, 0]`   | `[rx, ry, rz]` in degrees. rx tilts top away/toward, ry turns left/right, rz is 2D spin.                                                            |
+| `scale`               | `1`           | Uniform scale factor.                                                                                                                               |
+| `parallaxFactor`      | `null` (auto) | Amount of mouse-driven movement. Auto-computed from Z as `0.7 + z / 1000` when `null`.                                                              |
+| `origin`              | `'center'`    | CSS `transform-origin`.                                                                                                                             |
+| `interactive`         | `true`        | Whether the element receives pointer events.                                                                                                        |
+| `anchor`              | `null`        | Named anchor (`'center'`, `'top-left'`, `'bottom-right'`, …) or `{ x, y }` object for absolute positioning relative to parent. Defaults to centred. |
+| `onClick` / `onHover` | —             | Event handlers.                                                                                                                                     |
+| `className` / `style` | —             | Passed to the wrapper div.                                                                                                                          |
 
 **`ObjectPresets`** — a set of pre-configured position/parallaxFactor combinations:
 
-| Preset | Z | parallaxFactor |
-| ------ | - | -------------- |
-| `farBackground` | −400 | 0.1 |
-| `background` | −200 | 0.3 |
-| `midground` | 0 | 0.6 |
-| `foreground` | 150 | 0.9 |
-| `nearForeground` | 300 | 1.2 |
-| `leftWall` | 0, rotY 45° | 0.5 |
-| `rightWall` | 0, rotY −45° | 0.5 |
-| `floor` | rotX 60° | 0.4 |
-| `heroShot` | rotX −15°, rotY 5°, rotZ −5° | 0.7 |
+| Preset           | Z                            | parallaxFactor |
+| ---------------- | ---------------------------- | -------------- |
+| `farBackground`  | −400                         | 0.1            |
+| `background`     | −200                         | 0.3            |
+| `midground`      | 0                            | 0.6            |
+| `foreground`     | 150                          | 0.9            |
+| `nearForeground` | 300                          | 1.2            |
+| `leftWall`       | 0, rotY 45°                  | 0.5            |
+| `rightWall`      | 0, rotY −45°                 | 0.5            |
+| `floor`          | rotX 60°                     | 0.4            |
+| `heroShot`       | rotX −15°, rotY 5°, rotZ −5° | 0.7            |
 
 Spread presets onto a `SceneObject`: `<SceneObject {...ObjectPresets.background}>…</SceneObject>`
 
@@ -172,24 +172,24 @@ Always used inside a `SceneObject`.
 
 **Props:**
 
-| Prop | Default | Description |
-| ---- | ------- | ----------- |
-| `width` / `height` | `320` / `420` | Pixel dimensions. |
-| `variant` | `'default'` | Panel style (see table below). |
-| `title` / `subtitle` | — | Text rendered in a header at the top of the panel. |
-| `layers` | `null` | Array of `{ src, alt, style, className }` objects stacked as absolutely-positioned `<img>` elements. |
-| `onClick` | — | Click handler. |
-| `className` / `style` | — | Passed to the outer div. |
+| Prop                  | Default       | Description                                                                                          |
+| --------------------- | ------------- | ---------------------------------------------------------------------------------------------------- |
+| `width` / `height`    | `320` / `420` | Pixel dimensions.                                                                                    |
+| `variant`             | `'default'`   | Panel style (see table below).                                                                       |
+| `title` / `subtitle`  | —             | Text rendered in a header at the top of the panel.                                                   |
+| `layers`              | `null`        | Array of `{ src, alt, style, className }` objects stacked as absolutely-positioned `<img>` elements. |
+| `onClick`             | —             | Click handler.                                                                                       |
+| `className` / `style` | —             | Passed to the outer div.                                                                             |
 
 **Variants:**
 
-| Variant | Visual style |
-| ------- | ------------ |
-| `default` | Gradient background, themed border, box-shadow glow, halftone dot overlay |
-| `borderless` | Transparent, no border or shadow |
-| `torn` | Off-white paper texture, `clipPath` polygon to simulate torn edge, sepia filter |
-| `polaroid` | White background, thick bottom padding, drop shadow |
-| `monitor` | Dark background, thick dark border, CRT scanline overlay, green glow shadow |
+| Variant      | Visual style                                                                    |
+| ------------ | ------------------------------------------------------------------------------- |
+| `default`    | Gradient background, themed border, box-shadow glow, halftone dot overlay       |
+| `borderless` | Transparent, no border or shadow                                                |
+| `torn`       | Off-white paper texture, `clipPath` polygon to simulate torn edge, sepia filter |
+| `polaroid`   | White background, thick bottom padding, drop shadow                             |
+| `monitor`    | Dark background, thick dark border, CRT scanline overlay, green glow shadow     |
 
 ---
 
@@ -212,7 +212,7 @@ Master controller. Drop once at app level. Each effect can be toggled and indivi
   filmGrain={true}
   vignette={true}
   scanlines={true}
-  particles="dust"   // preset name, or config object, or null to disable
+  particles="dust" // preset name, or config object, or null to disable
   ascii={false}
   filmGrainProps={{}}
   vignetteProps={{}}
@@ -231,12 +231,12 @@ Individual components are also re-exported for granular use.
 Animated per-frame random noise rendered to a `<canvas>` at half resolution for performance.
 Blended over the scene with CSS `mix-blend-mode`.
 
-| Prop | Default | Description |
-| ---- | ------- | ----------- |
-| `intensity` | theme | Opacity of the grain layer (0 = off). |
-| `speed` | `60` | Target fps for grain animation. |
-| `monochrome` | `true` | If false, RGB channels are randomised independently. |
-| `blendMode` | `'overlay'` | CSS `mix-blend-mode` value. |
+| Prop         | Default     | Description                                          |
+| ------------ | ----------- | ---------------------------------------------------- |
+| `intensity`  | theme       | Opacity of the grain layer (0 = off).                |
+| `speed`      | `60`        | Target fps for grain animation.                      |
+| `monochrome` | `true`      | If false, RGB channels are randomised independently. |
+| `blendMode`  | `'overlay'` | CSS `mix-blend-mode` value.                          |
 
 ---
 
@@ -244,12 +244,12 @@ Blended over the scene with CSS `mix-blend-mode`.
 
 Edge darkening via a CSS radial or rectangular gradient.
 
-| Prop | Default | Description |
-| ---- | ------- | ----------- |
-| `intensity` | theme | Opacity (0 = off). |
-| `color` | `'black'` | Vignette colour. |
-| `shape` | `'ellipse'` | `'ellipse'` or `'rectangle'`. |
-| `spread` | `50` | How far (%) the dark edge extends inward. |
+| Prop        | Default     | Description                               |
+| ----------- | ----------- | ----------------------------------------- |
+| `intensity` | theme       | Opacity (0 = off).                        |
+| `color`     | `'black'`   | Vignette colour.                          |
+| `shape`     | `'ellipse'` | `'ellipse'` or `'rectangle'`.             |
+| `spread`    | `50`        | How far (%) the dark edge extends inward. |
 
 ---
 
@@ -257,13 +257,13 @@ Edge darkening via a CSS radial or rectangular gradient.
 
 CRT-style horizontal lines via `repeating-linear-gradient`.
 
-| Prop | Default | Description |
-| ---- | ------- | ----------- |
-| `intensity` | theme | Opacity (0 = off). |
-| `spacing` | `4` | Pixels between scanline bands. |
-| `color` | `'rgba(0,0,0,0.8)'` | Line colour. |
-| `animate` | `false` | Scrolls the scanlines downward when true. |
-| `speed` | `30` | Animation duration in seconds. |
+| Prop        | Default             | Description                               |
+| ----------- | ------------------- | ----------------------------------------- |
+| `intensity` | theme               | Opacity (0 = off).                        |
+| `spacing`   | `4`                 | Pixels between scanline bands.            |
+| `color`     | `'rgba(0,0,0,0.8)'` | Line colour.                              |
+| `animate`   | `false`             | Scrolls the scanlines downward when true. |
+| `speed`     | `30`                | Animation duration in seconds.            |
 
 ---
 
@@ -273,15 +273,15 @@ Generates an animated ASCII-character grid driven by a sine-wave noise field on 
 Characters are mapped from a dense (dark) to sparse (light) character set based on noise
 brightness.
 
-| Prop | Default | Description |
-| ---- | ------- | ----------- |
-| `intensity` | theme | Opacity (0 = off). |
-| `charset` | `'standard'` | `'standard'` (`@%#*+=-:. `), `'simple'` (`@#*-. `), `'blocks'` (`█▓▒░ `), `'matrix'` (katakana + `01`). Or any custom string. |
-| `cellWidth` / `cellHeight` | `8` / `16` | Grid cell size in px. |
-| `fontSize` | `12` | Font size in px. |
-| `color` | theme text | Character colour. |
-| `blendMode` | `'overlay'` | CSS `mix-blend-mode`. |
-| `refreshRate` | `20` | Target fps. |
+| Prop                       | Default      | Description                                                                                                                   |
+| -------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `intensity`                | theme        | Opacity (0 = off).                                                                                                            |
+| `charset`                  | `'standard'` | `'standard'` (`@%#*+=-:. `), `'simple'` (`@#*-. `), `'blocks'` (`█▓▒░ `), `'matrix'` (katakana + `01`). Or any custom string. |
+| `cellWidth` / `cellHeight` | `8` / `16`   | Grid cell size in px.                                                                                                         |
+| `fontSize`                 | `12`         | Font size in px.                                                                                                              |
+| `color`                    | theme text   | Character colour.                                                                                                             |
+| `blendMode`                | `'overlay'`  | CSS `mix-blend-mode`.                                                                                                         |
+| `refreshRate`              | `20`         | Target fps.                                                                                                                   |
 
 ---
 
@@ -289,22 +289,22 @@ brightness.
 
 Floating CSS-animated particles. Particle positions are seeded on mount.
 
-| Prop | Default | Description |
-| ---- | ------- | ----------- |
-| `preset` | `'dust'` | Particle behaviour preset (see table below). |
-| `count` | `50` | Number of particles. |
-| `color` | preset | Override particle colour. |
-| `enabled` | `true` | Toggle without unmounting. |
+| Prop      | Default  | Description                                  |
+| --------- | -------- | -------------------------------------------- |
+| `preset`  | `'dust'` | Particle behaviour preset (see table below). |
+| `count`   | `50`     | Number of particles.                         |
+| `color`   | preset   | Override particle colour.                    |
+| `enabled` | `true`   | Toggle without unmounting.                   |
 
 **Presets:**
 
-| Preset | Motion | Notes |
-| ------ | ------ | ----- |
-| `dust` | Float (gentle random) | 1–3 px, low opacity, no glow |
-| `snow` | Fall | 2–6 px, soft blur, high opacity |
-| `bokeh` | Float | 20–60 px, heavy blur, glow, primary colour |
-| `embers` | Rise | 2–5 px, orange glow, fades as it rises |
-| `rain` | Fall fast | 1–2 px, elongated 8× vertically |
+| Preset   | Motion                | Notes                                      |
+| -------- | --------------------- | ------------------------------------------ |
+| `dust`   | Float (gentle random) | 1–3 px, low opacity, no glow               |
+| `snow`   | Fall                  | 2–6 px, soft blur, high opacity            |
+| `bokeh`  | Float                 | 20–60 px, heavy blur, glow, primary colour |
+| `embers` | Rise                  | 2–5 px, orange glow, fades as it rises     |
+| `rain`   | Fall fast             | 1–2 px, elongated 8× vertically            |
 
 ---
 
@@ -348,13 +348,13 @@ Each theme exports a plain object with three sections:
 
 **Available themes:**
 
-| Key | Name | Primary | Feel |
-| --- | ---- | ------- | ---- |
-| `noir` | Noir | `#e94560` | Deep purple/navy, heavy grain and vignette |
-| `cyberpunk` | Cyberpunk | `#ff2a6d` | Dark violet, cyan accents, strong scanlines |
-| `dreamscape` | Dreamscape | `#a855f7` | Cool purple/teal, soft grain, no scanlines |
-| `pulp` | Pulp | `#d4a04a` | Warm sepia tones, maximum grain and vignette |
-| `minimal` | Minimal | `#171717` | Light background, all effects off |
+| Key          | Name       | Primary   | Feel                                         |
+| ------------ | ---------- | --------- | -------------------------------------------- |
+| `noir`       | Noir       | `#e94560` | Deep purple/navy, heavy grain and vignette   |
+| `cyberpunk`  | Cyberpunk  | `#ff2a6d` | Dark violet, cyan accents, strong scanlines  |
+| `dreamscape` | Dreamscape | `#a855f7` | Cool purple/teal, soft grain, no scanlines   |
+| `pulp`       | Pulp       | `#d4a04a` | Warm sepia tones, maximum grain and vignette |
+| `minimal`    | Minimal    | `#171717` | Light background, all effects off            |
 
 Default theme: `noir`.
 
@@ -369,15 +369,15 @@ Props: `initialTheme` (default `'noir'`).
 
 **`useTheme()`** returns:
 
-| Key | Description |
-| --- | ----------- |
-| `theme` | Active theme object (merged with any overrides). |
-| `themeName` | Active theme key string. |
-| `availableThemes` | Array of all theme key strings. |
-| `setTheme(name)` | Switch to a named theme. Warns if name not found. |
+| Key                        | Description                                                                      |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| `theme`                    | Active theme object (merged with any overrides).                                 |
+| `themeName`                | Active theme key string.                                                         |
+| `availableThemes`          | Array of all theme key strings.                                                  |
+| `setTheme(name)`           | Switch to a named theme. Warns if name not found.                                |
 | `overrideTheme(overrides)` | Deep-merge partial overrides into the active theme without changing `themeName`. |
-| `resetOverrides()` | Clear all overrides. |
-| `cssVariables` | The CSS custom property object injected by the provider. |
+| `resetOverrides()`         | Clear all overrides.                                                             |
+| `cssVariables`             | The CSS custom property object injected by the provider.                         |
 
 ---
 
@@ -394,12 +394,12 @@ mask, ready to be placed in a `Scene` as stacked `SceneObject`s.
 import { processPhotoToLayers } from './src/utils/depth/pipeline.js';
 
 const result = await processPhotoToLayers(imageOrDataUrl, {
-  granularity: 0.3,       // 0.05 (many fine layers) – 0.9 (few coarse layers)
+  granularity: 0.3, // 0.05 (many fine layers) – 0.9 (few coarse layers)
   depthModel: 'depth-anything-v2',
-  minObjectSize: 100,     // Minimum connected-component area in px²
-  blurFill: 20,           // Blur radius for fill pixels; 0 = transparent cutouts
+  minObjectSize: 100, // Minimum connected-component area in px²
+  blurFill: 20, // Blur radius for fill pixels; 0 = transparent cutouts
   layerArrangement: null, // Custom Z-placement function(count) → number[]
-  onProgress: (step, value) => {},  // 'depth-estimation' | 'quantization' | 'segmentation' | 'export' | 'complete'
+  onProgress: (step, value) => {}, // 'depth-estimation' | 'quantization' | 'segmentation' | 'export' | 'complete'
 });
 
 // result.layers[i].sceneObjectProps = { position: [0, 0, z], parallaxFactor }
@@ -478,11 +478,11 @@ parallaxFactor }`.
 
 ### Fill modes summary
 
-| Mode | How cutout areas are filled | Set via |
-| ---- | --------------------------- | ------- |
-| None (default) | Transparent | `blurFill: 0` |
-| Blur fill | Blurred copy of source image (only under nearer layers) | `blurFill: <radius>` |
-| Solid colour | Theme background colour via CSS mask | Generated page uses `fillMaskUrl` |
+| Mode           | How cutout areas are filled                             | Set via                           |
+| -------------- | ------------------------------------------------------- | --------------------------------- |
+| None (default) | Transparent                                             | `blurFill: 0`                     |
+| Blur fill      | Blurred copy of source image (only under nearer layers) | `blurFill: <radius>`              |
+| Solid colour   | Theme background colour via CSS mask                    | Generated page uses `fillMaskUrl` |
 
 ---
 
@@ -499,22 +499,22 @@ automatically via marker comments (see [App Routing](#app-routing--marker-commen
 
 ### Endpoints
 
-| Method | Path | Description |
-| ------ | ---- | ----------- |
-| `GET` | `/_dev/scenes` | List all scenes that have a `scene.json`. Returns `{ slug, name, layerCount, hasPage }[]`. |
-| `POST` | `/_dev/scenes` | Create a new scene. Body: `{ name, layers[], sceneConfig }`. Saves PNG assets, writes `scene.json`, generates a page component, and updates `App.jsx`. |
-| `POST` | `/_dev/scenes/:slug/layers` | Replace layer assets in an existing scene. Body: `{ layers[] }`. Returns saved file list and a JSX code snippet. |
-| `PATCH` | `/_dev/scenes/:slug` | Apply a group drag offset from edit mode. Body: `{ groupOffset: { x, y } }`. Updates `scene.json` positions and regenerates the page component. |
+| Method  | Path                        | Description                                                                                                                                            |
+| ------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET`   | `/_dev/scenes`              | List all scenes that have a `scene.json`. Returns `{ slug, name, layerCount, hasPage }[]`.                                                             |
+| `POST`  | `/_dev/scenes`              | Create a new scene. Body: `{ name, layers[], sceneConfig }`. Saves PNG assets, writes `scene.json`, generates a page component, and updates `App.jsx`. |
+| `POST`  | `/_dev/scenes/:slug/layers` | Replace layer assets in an existing scene. Body: `{ layers[] }`. Returns saved file list and a JSX code snippet.                                       |
+| `PATCH` | `/_dev/scenes/:slug`        | Apply a group drag offset from edit mode. Body: `{ groupOffset: { x, y } }`. Updates `scene.json` positions and regenerates the page component.        |
 
 ### Layer asset files per scene
 
 For each layer index `i`, up to three files may be written:
 
-| File | Content |
-| ---- | ------- |
-| `layer-<i>.png` | Sharp cutout (transparent background) |
+| File                 | Content                               |
+| -------------------- | ------------------------------------- |
+| `layer-<i>.png`      | Sharp cutout (transparent background) |
 | `layer-<i>-fill.png` | Fill mask (white = solid fill region) |
-| `layer-<i>-blur.png` | Blur-filled version |
+| `layer-<i>-blur.png` | Blur-filled version                   |
 
 ### Generated page template
 
@@ -541,23 +541,23 @@ brightens the third eye, and animates the floating mantras.
 
 Layer stack (back → front):
 
-| Layer | Z | parallaxFactor | Content |
-| ----- | - | -------------- | ------- |
-| Mountain glow | −450 | 0.05 | Blurred gradient ellipse |
-| Clouds ×5 | −400 → −420 | 0.08 | Small radial gradient blobs |
-| Lotus (far left) | −250 | 0.20 | CSS lotus, primary colour |
-| Lotus (far right) | −220 | 0.25 | CSS lotus, secondary colour |
-| Lotus (mid) | −280 | 0.18 | CSS lotus, accent, 60% opacity |
-| Cat Buddha | 0 | 0.5 | Central placeholder shape with emoji cat face, halo rings, paws |
-| Smoke wisp left | 100 | 0.70 | Animated rising smoke |
-| Smoke wisp right | 120 | 0.75 | Animated rising smoke |
-| Mantra: OM | 180 | 0.85 | Floating text |
-| Mantra: MANI | 200 | 0.90 | Floating text |
-| Mantra: PADME | 220 | 0.95 | Floating text |
-| Mantra: HUM | 250 | 1.00 | Floating text |
-| Title | 150 | 0.80 | "BE HERE MEOW" |
-| Close lotus left | 280 | 1.10 | Blurred lotus, 30% opacity |
-| Close lotus right | 300 | 1.15 | Blurred lotus, 25% opacity |
+| Layer             | Z           | parallaxFactor | Content                                                         |
+| ----------------- | ----------- | -------------- | --------------------------------------------------------------- |
+| Mountain glow     | −450        | 0.05           | Blurred gradient ellipse                                        |
+| Clouds ×5         | −400 → −420 | 0.08           | Small radial gradient blobs                                     |
+| Lotus (far left)  | −250        | 0.20           | CSS lotus, primary colour                                       |
+| Lotus (far right) | −220        | 0.25           | CSS lotus, secondary colour                                     |
+| Lotus (mid)       | −280        | 0.18           | CSS lotus, accent, 60% opacity                                  |
+| Cat Buddha        | 0           | 0.5            | Central placeholder shape with emoji cat face, halo rings, paws |
+| Smoke wisp left   | 100         | 0.70           | Animated rising smoke                                           |
+| Smoke wisp right  | 120         | 0.75           | Animated rising smoke                                           |
+| Mantra: OM        | 180         | 0.85           | Floating text                                                   |
+| Mantra: MANI      | 200         | 0.90           | Floating text                                                   |
+| Mantra: PADME     | 220         | 0.95           | Floating text                                                   |
+| Mantra: HUM       | 250         | 1.00           | Floating text                                                   |
+| Title             | 150         | 0.80           | "BE HERE MEOW"                                                  |
+| Close lotus left  | 280         | 1.10           | Blurred lotus, 30% opacity                                      |
+| Close lotus right | 300         | 1.15           | Blurred lotus, 25% opacity                                      |
 
 ---
 
@@ -591,7 +591,7 @@ Thin wrapper around `DepthSegmentationDemo`. The demo provides:
 - Export buttons once processing is complete:
   - **Export to New Scene** — enter a name, calls `POST /_dev/scenes`, navigates to the new route
   - **Export to Existing Scene** — select from a list fetched via `GET /_dev/scenes`, calls `POST
-    /_dev/scenes/:slug/layers`, shows a JSX code snippet
+/_dev/scenes/:slug/layers`, shows a JSX code snippet
 
 ---
 
@@ -613,11 +613,11 @@ No generated pages exist on `main` yet.
 All three controls live in `src/App.jsx` as internal components, rendered globally by `AppContent`
 (hidden on `/depth-segmentation` which has its own UI).
 
-| Control | Position | Function |
-| ------- | -------- | -------- |
-| **ThemeSwitcher** | Top-right | `<select>` over all available themes; calls `setTheme()`. |
+| Control             | Position                        | Function                                                                                                                                  |
+| ------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **ThemeSwitcher**   | Top-right                       | `<select>` over all available themes; calls `setTheme()`.                                                                                 |
 | **OverlayControls** | Top-right (below ThemeSwitcher) | Checkboxes for filmGrain, vignette, scanlines, ASCII shader; `<select>` for particle preset (none / dust / snow / bokeh / embers / rain). |
-| **PageNavigator** | Bottom-left | Link buttons to each registered route. Active route is highlighted. |
+| **PageNavigator**   | Bottom-left                     | Link buttons to each registered route. Active route is highlighted.                                                                       |
 
 ---
 
@@ -630,10 +630,10 @@ in `AppContent` inside `<Routes>`.
 
 **Hardcoded routes:**
 
-| Path | Component |
-| ---- | --------- |
-| `/` | `BeHereMeow` |
-| `/example` | `ExamplePage` |
+| Path                  | Component               |
+| --------------------- | ----------------------- |
+| `/`                   | `BeHereMeow`            |
+| `/example`            | `ExamplePage`           |
 | `/depth-segmentation` | `DepthSegmentationPage` |
 
 **Marker comments for automated route registration:**
@@ -641,11 +641,11 @@ in `AppContent` inside `<Routes>`.
 The scene exporter plugin inserts new entries by searching for these exact comment strings in
 `App.jsx`:
 
-| Marker | Location | Inserted content |
-| ------ | -------- | ---------------- |
-| `// @scene-imports` | Top-level import block | `import { ComponentName } from './pages/ComponentName';` |
-| `// @scene-pages` | `pages` array in `PageNavigator` | `{ path: '/<slug>', label: '<Title>' }` |
-| `{/* @scene-routes */}` | `<Routes>` block | `<Route path="/<slug>" element={<ComponentName />} />` |
+| Marker                  | Location                         | Inserted content                                         |
+| ----------------------- | -------------------------------- | -------------------------------------------------------- |
+| `// @scene-imports`     | Top-level import block           | `import { ComponentName } from './pages/ComponentName';` |
+| `// @scene-pages`       | `pages` array in `PageNavigator` | `{ path: '/<slug>', label: '<Title>' }`                  |
+| `{/* @scene-routes */}` | `<Routes>` block                 | `<Route path="/<slug>" element={<ComponentName />} />`   |
 
 Do not remove these comments — they are required for the automated export flow to work.
 
@@ -663,10 +663,10 @@ the Docker Compose stack; not required for basic frontend development.
 
 ### API
 
-| Method | Path | Description |
-| ------ | ---- | ----------- |
-| `GET` | `/api/health` | Returns `{ "status": "ok" }`. |
-| `POST` | `/api/depth` | Accepts a multipart image upload (`file`). Returns a grayscale PNG with `X-Depth-Width` and `X-Depth-Height` response headers. |
+| Method | Path          | Description                                                                                                                    |
+| ------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `GET`  | `/api/health` | Returns `{ "status": "ok" }`.                                                                                                  |
+| `POST` | `/api/depth`  | Accepts a multipart image upload (`file`). Returns a grayscale PNG with `X-Depth-Width` and `X-Depth-Height` response headers. |
 
 ### Model
 
@@ -713,28 +713,28 @@ docker compose up
 
 ### Local tooling
 
-| Tool | Purpose |
-| ---- | ------- |
+| Tool                | Purpose                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------- |
 | Husky + lint-staged | Pre-commit: ESLint --fix + Prettier on `src/**/*.{js,jsx}`; Prettier on `*.{json,md}` |
-| ESLint 9 | Linting (`npm run lint`) |
-| Prettier 3 | Formatting (`npm run format` / `format:check`). Print width 100. |
-| Vitest | Unit tests (`npm test`) |
-| size-limit | Bundle size gate: 250 kB across all JS output (`npm run size:check`) |
-| jscpd | Copy-paste detection (configured in devDependencies) |
-| knip | Dead code / unused exports detection (configured in devDependencies) |
-| Tilt | Local dev orchestration for Docker Compose frontend + backend |
+| ESLint 9            | Linting (`npm run lint`)                                                              |
+| Prettier 3          | Formatting (`npm run format` / `format:check`). Print width 100.                      |
+| Vitest              | Unit tests (`npm test`)                                                               |
+| size-limit          | Bundle size gate: 250 kB across all JS output (`npm run size:check`)                  |
+| jscpd               | Copy-paste detection (configured in devDependencies)                                  |
+| knip                | Dead code / unused exports detection (configured in devDependencies)                  |
+| Tilt                | Local dev orchestration for Docker Compose frontend + backend                         |
 
 ### GitHub Actions workflows
 
-| File | Trigger | Purpose |
-| ---- | ------- | ------- |
-| `ci.yml` | Push / PR | Build, lint, test, size check |
-| `security.yml` | Push / PR / schedule | CodeQL static analysis |
-| `pr-lint.yml` | PR | Validates PR title format |
-| `docs.yml` | PR | Validates documentation changes |
-| `release.yml` | Tag push | Release automation |
-| `claude.yml` | Issue / PR comment | Claude Code GitHub Actions integration |
-| `claude-code-review.yml` | PR | Claude automated code review |
+| File                     | Trigger              | Purpose                                |
+| ------------------------ | -------------------- | -------------------------------------- |
+| `ci.yml`                 | Push / PR            | Build, lint, test, size check          |
+| `security.yml`           | Push / PR / schedule | CodeQL static analysis                 |
+| `pr-lint.yml`            | PR                   | Validates PR title format              |
+| `docs.yml`               | PR                   | Validates documentation changes        |
+| `release.yml`            | Tag push             | Release automation                     |
+| `claude.yml`             | Issue / PR comment   | Claude Code GitHub Actions integration |
+| `claude-code-review.yml` | PR                   | Claude automated code review           |
 
 ### Error tracking
 
@@ -773,7 +773,7 @@ Configured to keep npm and GitHub Actions dependencies up to date (`.github/depe
 - **`chromaticAberration` and `bloom` effects**: defined in theme `effects` objects and exposed as
   CSS custom properties, but no overlay component renders them yet.
 - **`ExamplePage` panels**: all content areas are labelled placeholder divs (`"[ Background
-  artwork ]"`, `"[ Main panel artwork ]"`, etc.).
+artwork ]"`, `"[ Main panel artwork ]"`, etc.).
 
 ### Not yet implemented (see open issues)
 
@@ -788,13 +788,13 @@ Configured to keep npm and GitHub Actions dependencies up to date (`.github/depe
 
 ## Open Issues
 
-| # | Title | Area |
-| - | ----- | ---- |
-| [#1](https://github.com/Luan-vP/comic-engine/issues/1) | Journal Integration | New feature |
-| [#2](https://github.com/Luan-vP/comic-engine/issues/2) | Biography Snapshots | New feature |
-| [#18](https://github.com/Luan-vP/comic-engine/issues/18) | WebVR/Cardboard stereoscopic view | Scene system |
-| [#20](https://github.com/Luan-vP/comic-engine/issues/20) | Preserve true layer depth | Depth pipeline / export |
-| [#21](https://github.com/Luan-vP/comic-engine/issues/21) | Multi-group SceneObject grouping | Scene edit mode |
-| [#23](https://github.com/Luan-vP/comic-engine/issues/23) | Fix App.test.jsx | Testing |
-| [#24](https://github.com/Luan-vP/comic-engine/issues/24) | Object insertion toolbar | Dev UX |
-| [#25](https://github.com/Luan-vP/comic-engine/issues/25) | Exporting layers should append | Scene exporter |
+| #                                                        | Title                             | Area                    |
+| -------------------------------------------------------- | --------------------------------- | ----------------------- |
+| [#1](https://github.com/Luan-vP/comic-engine/issues/1)   | Journal Integration               | New feature             |
+| [#2](https://github.com/Luan-vP/comic-engine/issues/2)   | Biography Snapshots               | New feature             |
+| [#18](https://github.com/Luan-vP/comic-engine/issues/18) | WebVR/Cardboard stereoscopic view | Scene system            |
+| [#20](https://github.com/Luan-vP/comic-engine/issues/20) | Preserve true layer depth         | Depth pipeline / export |
+| [#21](https://github.com/Luan-vP/comic-engine/issues/21) | Multi-group SceneObject grouping  | Scene edit mode         |
+| [#23](https://github.com/Luan-vP/comic-engine/issues/23) | Fix App.test.jsx                  | Testing                 |
+| [#24](https://github.com/Luan-vP/comic-engine/issues/24) | Object insertion toolbar          | Dev UX                  |
+| [#25](https://github.com/Luan-vP/comic-engine/issues/25) | Exporting layers should append    | Scene exporter          |
