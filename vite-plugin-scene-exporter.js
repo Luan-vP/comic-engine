@@ -8,15 +8,6 @@ function toSlug(name) {
     .replace(/^-|-$/g, '');
 }
 
-function toPascalCase(name) {
-  return name
-    .replace(/[^a-zA-Z0-9]+/g, ' ')
-    .trim()
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join('');
-}
-
 function slugToTitle(slug) {
   return slug
     .split('-')
@@ -45,148 +36,38 @@ function readBody(req) {
   });
 }
 
-function generatePageTemplate(componentName, slug, layers, sceneConfig) {
-  const {
-    perspective = 1000,
-    parallaxIntensity = 1.2,
-    mouseInfluence = { x: 60, y: 40 },
-    fillMode = 'blur',
-  } = sceneConfig || {};
-  const title = slugToTitle(slug);
-
-  const layerImports = layers
-    .map((_, i) => {
-      const lines = [];
-      if (fillMode === 'blur') {
-        lines.push(`import layer${i}Blur from '/scenes/${slug}/layer-${i}-blur.png';`);
-      } else {
-        lines.push(`import layer${i} from '/scenes/${slug}/layer-${i}.png';`);
-      }
-      if (fillMode === 'solid') {
-        lines.push(`import layer${i}Fill from '/scenes/${slug}/layer-${i}-fill.png';`);
-      }
-      return lines.join('\n');
-    })
-    .join('\n');
-
-  const sceneObjects = layers
-    .map((layer, i) => {
-      const pos = layer.position || [0, 0, i * -100];
-      const pf = layer.parallaxFactor ?? 0.1 + i * 0.2;
-
-      let imgSrc;
-      if (fillMode === 'blur') {
-        imgSrc = `layer${i}Blur`;
-      } else {
-        imgSrc = `layer${i}`;
-      }
-
-      let solidFillJsx = '';
-      if (fillMode === 'solid') {
-        solidFillJsx = `
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundColor: theme.colors.background,
-                WebkitMaskImage: \`url(\${layer${i}Fill})\`,
-                maskImage: \`url(\${layer${i}Fill})\`,
-                WebkitMaskSize: '100% 100%',
-                maskSize: '100% 100%',
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-              }}
-            />`;
-      }
-
-      return `      <SceneObject
-        position={[${pos.join(', ')}]}
-        parallaxFactor={${pf}}
-        interactive={false}
-      >
-        <div style={{ position: 'relative', display: 'inline-block' }}>${solidFillJsx}
-          <img
-            src={${imgSrc}}
-            alt="Layer ${i}"
-            style={{
-              display: 'block',
-              maxWidth: '80vw',
-              maxHeight: '80vh',
-              objectFit: 'contain',
-              filter: 'brightness(${(0.8 + (layer.depth ?? i / layers.length) * 0.4).toFixed(2)})',
-              pointerEvents: 'none',
-            }}
-          />
-        </div>
-      </SceneObject>`;
-    })
-    .join('\n\n');
-
-  return `import React, { useCallback } from 'react';
-import { Scene, SceneObject } from '../components/scene';
-import { useTheme } from '../theme/ThemeContext';
-${layerImports}
-
-export function ${componentName}() {
-  const { theme } = useTheme();
-
-  const handleSave = useCallback(async ({ groupOffset }) => {
-    try {
-      const res = await fetch('/_dev/scenes/${slug}', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupOffset }),
-      });
-      if (!res.ok) throw new Error('Save failed');
-      window.location.reload();
-    } catch (err) {
-      console.error('Failed to save positions:', err);
-    }
-  }, []);
-
-  return (
-    <Scene perspective={${perspective}} parallaxIntensity={${parallaxIntensity}} mouseInfluence={{ x: ${mouseInfluence.x}, y: ${mouseInfluence.y} }} editable onSave={handleSave}>
-${sceneObjects}
-
-      {/* Title */}
-      <SceneObject
-        position={[0, -200, 150]}
-        parallaxFactor={0.8}
-        interactive={false}
-      >
-        <h1
-          style={{
-            fontFamily: theme.typography.fontHeading || 'Georgia, serif',
-            fontSize: '48px',
-            fontWeight: 'normal',
-            color: theme.colors.text,
-            textAlign: 'center',
-            textShadow: \`0 0 40px \${theme.colors.shadow}\`,
-            letterSpacing: '8px',
-            margin: 0,
-            textTransform: 'uppercase',
-          }}
-        >
-          ${title}
-        </h1>
-      </SceneObject>
-    </Scene>
-  );
-}
-
-export default ${componentName};
-`;
-}
-
 export default function sceneExporter() {
   return {
     name: 'scene-exporter',
     configureServer(server) {
       const root = server.config.root || process.cwd();
-      const publicDir = path.join(root, 'public');
-      const scenesDir = path.join(publicDir, 'scenes');
-      const pagesDir = path.join(root, 'src', 'pages');
-      const appFile = path.join(root, 'src', 'App.jsx');
+      const scenesDir = path.join(root, '.local', 'scenes');
+
+      // Serve static files from .local/scenes/* at /local-scenes/*
+      server.middlewares.use('/local-scenes', (req, res, next) => {
+        const filePath = path.join(scenesDir, req.url || '');
+        // Prevent path traversal
+        if (!filePath.startsWith(scenesDir)) {
+          res.writeHead(403);
+          res.end('Forbidden');
+          return;
+        }
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+          const ext = path.extname(filePath).toLowerCase();
+          const contentType =
+            ext === '.png'
+              ? 'image/png'
+              : ext === '.jpg' || ext === '.jpeg'
+                ? 'image/jpeg'
+                : ext === '.json'
+                  ? 'application/json'
+                  : 'application/octet-stream';
+          res.writeHead(200, { 'Content-Type': contentType });
+          res.end(fs.readFileSync(filePath));
+        } else {
+          next();
+        }
+      });
 
       // GET /_dev/scenes — List scenes
       server.middlewares.use('/_dev/scenes', (req, res, next) => {
@@ -210,14 +91,11 @@ export default function sceneExporter() {
             if (!fs.existsSync(metaPath)) continue;
 
             const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
-            const componentName = toPascalCase(entry.name);
-            const pagePath = path.join(pagesDir, `${componentName}.jsx`);
 
             scenes.push({
               slug: entry.name,
               name: meta.name || slugToTitle(entry.name),
               layerCount: meta.layers?.length || 0,
-              hasPage: fs.existsSync(pagePath),
             });
           }
 
@@ -246,7 +124,6 @@ export default function sceneExporter() {
           }
 
           const slug = toSlug(name);
-          const componentName = toPascalCase(name);
           const sceneDir = path.join(scenesDir, slug);
 
           if (fs.existsSync(sceneDir)) {
@@ -255,9 +132,8 @@ export default function sceneExporter() {
             return;
           }
 
-          // Create directories
+          // Create directory
           fs.mkdirSync(sceneDir, { recursive: true });
-          fs.mkdirSync(pagesDir, { recursive: true });
 
           // Save layer images
           const layerMeta = [];
@@ -311,35 +187,8 @@ export default function sceneExporter() {
           };
           fs.writeFileSync(path.join(sceneDir, 'scene.json'), JSON.stringify(sceneMeta, null, 2));
 
-          // Generate page component
-          const pageContent = generatePageTemplate(componentName, slug, layerMeta, sceneConfig);
-          fs.writeFileSync(path.join(pagesDir, `${componentName}.jsx`), pageContent);
-
-          // Update App.jsx
-          let appContent = fs.readFileSync(appFile, 'utf-8');
-
-          // Insert import
-          const importLine = `import { ${componentName} } from './pages/${componentName}';`;
-          appContent = appContent.replace('// @scene-imports', `${importLine}\n// @scene-imports`);
-
-          // Insert page nav entry
-          const pageEntry = `    { path: '/${slug}', label: '${slugToTitle(slug)}' },`;
-          appContent = appContent.replace(
-            '    // @scene-pages',
-            `${pageEntry}\n    // @scene-pages`,
-          );
-
-          // Insert route
-          const routeEntry = `        <Route path="/${slug}" element={<${componentName} />} />`;
-          appContent = appContent.replace(
-            '        {/* @scene-routes */}',
-            `${routeEntry}\n        {/* @scene-routes */}`,
-          );
-
-          fs.writeFileSync(appFile, appContent);
-
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ routePath: `/${slug}` }));
+          res.end(JSON.stringify({ routePath: `/scenes/${slug}` }));
         } catch (err) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: err.message }));
@@ -433,7 +282,7 @@ export default function sceneExporter() {
   parallaxFactor={${layerMeta[i].parallaxFactor}}
   interactive={false}
 >
-  <img src="/scenes/${slug}/layer-${layerIndex}.png" alt="Layer ${layerIndex}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
+  <img src="/local-scenes/${slug}/layer-${layerIndex}.png" alt="Layer ${layerIndex}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
 </SceneObject>`;
             })
             .join('\n\n');
@@ -486,19 +335,6 @@ export default function sceneExporter() {
           }
           meta.updatedAt = new Date().toISOString();
           fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
-
-          // Regenerate the page component with updated positions
-          const componentName = toPascalCase(slug);
-          const pagePath = path.join(pagesDir, `${componentName}.jsx`);
-          if (fs.existsSync(pagePath)) {
-            const pageContent = generatePageTemplate(
-              componentName,
-              slug,
-              meta.layers,
-              meta.sceneConfig,
-            );
-            fs.writeFileSync(pagePath, pageContent);
-          }
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ positions: meta.layers.map((l) => l.position) }));
