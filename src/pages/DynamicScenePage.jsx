@@ -14,13 +14,12 @@ export function DynamicScenePage() {
   const { slug } = useParams();
   const { theme } = useTheme();
   const [config, setConfig] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loadedSlug, setLoadedSlug] = useState(null);
+  const loading = loadedSlug !== slug;
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    setConfig(null);
+    let cancelled = false;
 
     fetch(`/local-scenes/${slug}/scene.json`)
       .then((res) => {
@@ -28,13 +27,23 @@ export function DynamicScenePage() {
         return res.json();
       })
       .then((data) => {
-        setConfig(data);
-        setLoading(false);
+        if (!cancelled) {
+          setConfig(data);
+          setError(null);
+          setLoadedSlug(slug);
+        }
       })
       .catch((err) => {
-        setError(err.message);
-        setLoading(false);
+        if (!cancelled) {
+          setConfig(null);
+          setError(err.message);
+          setLoadedSlug(slug);
+        }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   const handleSave = useCallback(
