@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from '../../../theme/ThemeContext';
 import { BiographySnapshots } from '../../../pages/BiographySnapshots';
@@ -29,6 +29,8 @@ function renderPage() {
   );
 }
 
+afterEach(cleanup);
+
 describe('BiographySnapshots page', () => {
   beforeEach(() => {
     localStorageMock.clear();
@@ -41,9 +43,9 @@ describe('BiographySnapshots page', () => {
 
   it('shows memory and character stats', () => {
     renderPage();
-    // Stats should show 0 initially
-    expect(screen.getByText('MEMORIES')).toBeDefined();
-    expect(screen.getByText('CHARACTERS')).toBeDefined();
+    // Stats should show 0 initially — text may appear in both tabs and stats
+    expect(screen.getAllByText('MEMORIES').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('CHARACTERS').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows the Timeline tab by default', () => {
