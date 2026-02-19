@@ -70,7 +70,8 @@ export async function processPhotoToLayers(image, options = {}) {
     // Step 4: Export format conversion
     if (onProgress) onProgress('export', 0);
     const arrange = layerArrangement || fixedStepArrangement;
-    const zPositions = arrange(layerObjects.length);
+    const depths = layerObjects.map((obj) => obj.depth);
+    const zPositions = arrange(layerObjects.length, { depths });
 
     result.layers = layerObjects.map((obj, index) => {
       const zPosition = zPositions[index];
@@ -132,6 +133,31 @@ export function fillRangeArrangement(count, { far = -400, near = 200 } = {}) {
   if (count <= 1) return [far];
   const step = (near - far) / (count - 1);
   return Array.from({ length: count }, (_, i) => far + i * step);
+}
+
+/**
+ * Arrange layers proportionally to their actual depth values.
+ * Layers that are far apart in depth space will be far apart in z-space.
+ *
+ * depth=0 maps to `far`, depth=1 maps to `near`.
+ * Formula: z = far + depth × (near − far)
+ *
+ * Falls back to even spacing (fillRangeArrangement) if `depths` is not provided
+ * or has the wrong length.
+ *
+ * @param {number} count - Number of layers
+ * @param {Object} opts
+ * @param {number[]} opts.depths - Normalized depth values [0, 1], one per layer
+ * @param {number} opts.far  - Z of the farthest layer (default -400)
+ * @param {number} opts.near - Z of the nearest layer (default 200)
+ * @returns {number[]} Z positions, one per layer
+ */
+export function depthProportionalArrangement(count, { depths, far = -400, near = 200 } = {}) {
+  if (count === 0) return [];
+  if (!depths || depths.length !== count) {
+    return fillRangeArrangement(count, { far, near });
+  }
+  return depths.map((depth) => far + depth * (near - far));
 }
 
 /**
