@@ -290,6 +290,7 @@ export default function sceneExporter() {
 
             layerMeta.push({
               index: i,
+              groupId: 'initial',
               depth: layer.depth ?? 0,
               name: layer.name || `Layer ${i}`,
               position: layer.position || [0, 0, i * -100],
@@ -373,57 +374,66 @@ export default function sceneExporter() {
             return;
           }
 
+          // Read existing metadata to find next index
+          const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+          const existingLayers = meta.layers || [];
+          const nextIndex =
+            existingLayers.length > 0 ? Math.max(...existingLayers.map((l) => l.index)) + 1 : 0;
+          const groupId = `export-${Date.now()}`;
+
           const savedFiles = [];
           const layerMeta = [];
 
           for (let i = 0; i < layers.length; i++) {
+            const layerIndex = nextIndex + i;
             const layer = layers[i];
 
             if (layer.imageUrl) {
-              const fname = `layer-${i}.png`;
+              const fname = `layer-${layerIndex}.png`;
               fs.writeFileSync(path.join(sceneDir, fname), dataUrlToBuffer(layer.imageUrl));
               savedFiles.push(fname);
             }
 
             if (layer.fillMaskUrl) {
-              const fname = `layer-${i}-fill.png`;
+              const fname = `layer-${layerIndex}-fill.png`;
               fs.writeFileSync(path.join(sceneDir, fname), dataUrlToBuffer(layer.fillMaskUrl));
               savedFiles.push(fname);
             }
 
             if (layer.blurFillUrl) {
-              const fname = `layer-${i}-blur.png`;
+              const fname = `layer-${layerIndex}-blur.png`;
               fs.writeFileSync(path.join(sceneDir, fname), dataUrlToBuffer(layer.blurFillUrl));
               savedFiles.push(fname);
             }
 
             layerMeta.push({
-              index: i,
+              index: layerIndex,
+              groupId,
               depth: layer.depth ?? 0,
-              name: layer.name || `Layer ${i}`,
-              position: layer.position || [0, 0, i * -100],
-              parallaxFactor: layer.parallaxFactor ?? 0.1 + i * 0.2,
+              name: layer.name || `Layer ${layerIndex}`,
+              position: layer.position || [0, 0, layerIndex * -100],
+              parallaxFactor: layer.parallaxFactor ?? 0.1 + layerIndex * 0.2,
               hasImage: !!layer.imageUrl,
               hasFillMask: !!layer.fillMaskUrl,
               hasBlurFill: !!layer.blurFillUrl,
             });
           }
 
-          // Update scene.json
-          const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
-          meta.layers = layerMeta;
+          // Update scene.json — append new layers, do not replace existing ones
+          meta.layers = [...existingLayers, ...layerMeta];
           meta.updatedAt = new Date().toISOString();
           fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
 
           // Generate a code snippet for the user to paste
           const codeSnippet = layers
             .map((_, i) => {
+              const layerIndex = nextIndex + i;
               return `<SceneObject
   position={[${(layerMeta[i].position || [0, 0, 0]).join(', ')}]}
   parallaxFactor={${layerMeta[i].parallaxFactor}}
   interactive={false}
 >
-  <img src="/scenes/${slug}/layer-${i}.png" alt="Layer ${i}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
+  <img src="/scenes/${slug}/layer-${layerIndex}.png" alt="Layer ${layerIndex}" style={{ maxWidth: '80vw', maxHeight: '80vh' }} />
 </SceneObject>`;
             })
             .join('\n\n');
