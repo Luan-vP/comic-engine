@@ -110,18 +110,12 @@ export function VRViewer({
   const { theme } = useTheme();
   const [lookPos, setLookPos] = useState({ x: 0, y: 0 });
   const [hasOrientation, setHasOrientation] = useState(false);
-  const [needsPermission, setNeedsPermission] = useState(false);
-  const viewerRef = useRef(null);
-
-  // Detect whether iOS requires an explicit permission request
-  useEffect(() => {
-    if (
+  const [needsPermission, setNeedsPermission] = useState(
+    () =>
       typeof DeviceOrientationEvent !== 'undefined' &&
       typeof DeviceOrientationEvent.requestPermission === 'function'
-    ) {
-      setNeedsPermission(true);
-    }
-  }, []);
+  );
+  const viewerRef = useRef(null);
 
   // Subscribe to device orientation events and return the unsubscribe function
   const subscribeOrientation = useCallback(() => {
@@ -166,7 +160,7 @@ export function VRViewer({
         setNeedsPermission(false);
         subscribeOrientation();
       }
-    } catch (_e) {
+    } catch {
       // Permission denied or API unsupported — mouse fallback takes over
       setNeedsPermission(false);
     }
