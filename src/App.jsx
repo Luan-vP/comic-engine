@@ -5,6 +5,8 @@ import { OverlayStack } from './components/overlays';
 import { BeHereMeow } from './pages/BeHereMeow';
 import { ExamplePage } from './pages/ExamplePage';
 import { DepthSegmentationPage } from './pages/DepthSegmentationPage';
+import { Desk } from './pages/Desk';
+// @scene-imports
 
 /**
  * Theme Switcher UI - for development/demo purposes
@@ -27,7 +29,14 @@ function ThemeSwitcher() {
         fontFamily: theme.typography.fontBody,
       }}
     >
-      <div style={{ color: theme.colors.textMuted, fontSize: '10px', marginBottom: '8px', letterSpacing: '1px' }}>
+      <div
+        style={{
+          color: theme.colors.textMuted,
+          fontSize: '10px',
+          marginBottom: '8px',
+          letterSpacing: '1px',
+        }}
+      >
         THEME
       </div>
       <select
@@ -84,10 +93,17 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
         fontFamily: theme.typography.fontBody,
       }}
     >
-      <div style={{ color: theme.colors.textMuted, fontSize: '10px', marginBottom: '12px', letterSpacing: '1px' }}>
+      <div
+        style={{
+          color: theme.colors.textMuted,
+          fontSize: '10px',
+          marginBottom: '12px',
+          letterSpacing: '1px',
+        }}
+      >
         OVERLAYS
       </div>
-      
+
       {toggles.map(({ key, label }) => (
         <label
           key={key}
@@ -111,16 +127,24 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
         </label>
       ))}
 
-      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${theme.colors.border}` }}>
+      <div
+        style={{
+          marginTop: '12px',
+          paddingTop: '12px',
+          borderTop: `1px solid ${theme.colors.border}`,
+        }}
+      >
         <div style={{ color: theme.colors.textMuted, fontSize: '10px', marginBottom: '8px' }}>
           PARTICLES
         </div>
         <select
           value={overlayConfig.particles || 'none'}
-          onChange={(e) => setOverlayConfig({ 
-            ...overlayConfig, 
-            particles: e.target.value === 'none' ? null : e.target.value 
-          })}
+          onChange={(e) =>
+            setOverlayConfig({
+              ...overlayConfig,
+              particles: e.target.value === 'none' ? null : e.target.value,
+            })
+          }
           style={{
             background: 'rgba(255,255,255,0.1)',
             border: `1px solid ${theme.colors.border}`,
@@ -155,6 +179,8 @@ function PageNavigator() {
     { path: '/', label: 'BeHereMeow' },
     { path: '/example', label: 'Example' },
     { path: '/depth-segmentation', label: 'Depth Segmentation' },
+    { path: '/desk', label: 'Desk' },
+    // @scene-pages
   ];
 
   return (
@@ -172,7 +198,14 @@ function PageNavigator() {
         fontFamily: theme.typography.fontBody,
       }}
     >
-      <div style={{ color: theme.colors.textMuted, fontSize: '10px', marginBottom: '8px', letterSpacing: '1px' }}>
+      <div
+        style={{
+          color: theme.colors.textMuted,
+          fontSize: '10px',
+          marginBottom: '8px',
+          letterSpacing: '1px',
+        }}
+      >
         PAGES
       </div>
       <div style={{ display: 'flex', gap: '8px' }}>
@@ -249,6 +282,8 @@ function AppContent() {
         <Route path="/" element={<BeHereMeow />} />
         <Route path="/example" element={<ExamplePage />} />
         <Route path="/depth-segmentation" element={<DepthSegmentationPage />} />
+        <Route path="/desk" element={<Desk />} />
+        {/* @scene-routes */}
       </Routes>
     </>
   );
