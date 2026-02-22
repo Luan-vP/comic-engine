@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { useTheme } from '../../theme/ThemeContext';
 import { InsertToolbar } from './InsertToolbar';
+import { CARD_TYPE_REGISTRY } from './cardTypes';
 
 /**
  * Scene Context - shares camera/mouse state with all scene objects
@@ -37,83 +38,8 @@ function InsertedObjectRenderer({ object }) {
     `translate3d(${x + mouseOffsetX + gx}px, ${y + mouseOffsetY + gy}px, ${z + scrollZ}px)`,
   ].join(' ');
 
-  let content = null;
-  if (object.type === 'memory') {
-    content = (
-      <div
-        style={{
-          background: '#fff',
-          padding: '12px 12px 48px 12px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-          borderRadius: '2px',
-          display: 'inline-block',
-        }}
-      >
-        <img
-          src={object.data.imageUrl}
-          alt={object.data.caption || 'Memory'}
-          style={{ display: 'block', width: '200px', height: '200px', objectFit: 'cover' }}
-        />
-        {object.data.caption && (
-          <div
-            style={{
-              textAlign: 'center',
-              marginTop: '6px',
-              fontSize: '11px',
-              color: '#333',
-              fontFamily: 'Georgia, serif',
-            }}
-          >
-            {object.data.caption}
-          </div>
-        )}
-      </div>
-    );
-  } else if (object.type === 'iframe') {
-    content = (
-      <div
-        style={{
-          background: '#111',
-          border: '8px solid #222',
-          borderRadius: '4px',
-          boxShadow: '0 0 30px rgba(0,255,0,0.2)',
-          display: 'inline-block',
-        }}
-      >
-        <iframe
-          src={object.data.url}
-          width={280}
-          height={200}
-          sandbox="allow-scripts"
-          style={{ display: 'block', border: 'none' }}
-          title="Embedded content"
-        />
-      </div>
-    );
-  } else if (object.type === 'text') {
-    content = (
-      <div
-        style={{
-          padding: '20px',
-          background: 'rgba(0,0,0,0.8)',
-          border: '2px solid rgba(255,255,255,0.2)',
-          borderRadius: '8px',
-          maxWidth: '280px',
-        }}
-      >
-        {object.data.title && (
-          <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#fff' }}>
-            {object.data.title}
-          </h2>
-        )}
-        {object.data.body && (
-          <p style={{ margin: 0, fontSize: '13px', color: '#aaa', lineHeight: 1.5 }}>
-            {object.data.body}
-          </p>
-        )}
-      </div>
-    );
-  }
+  const cardType = CARD_TYPE_REGISTRY.find((ct) => ct.id === object.type);
+  const content = cardType ? cardType.renderContent(object) : null;
 
   if (!content) return null;
 

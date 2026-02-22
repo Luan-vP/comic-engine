@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 /**
  * Fetches the scene manifest from the Vite dev server.
  *
- * @returns {{ pages: Array<{ slug: string, name: string, layerCount: number }>, loading: boolean }}
+ * @returns {{ pages: Array<{ slug: string, name: string, layerCount: number }>, loading: boolean, refetch: () => void }}
  */
 export function useLocalPages() {
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,7 +32,9 @@ export function useLocalPages() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshTick]);
 
-  return { pages, loading };
+  const refetch = useCallback(() => setRefreshTick((t) => t + 1), []);
+
+  return { pages, loading, refetch };
 }
