@@ -63,8 +63,7 @@ export function CodeCard({
 
   const textColor = color ?? theme.colors.primary;
   const shadowColor = theme.colors.shadow ?? `${textColor}55`;
-  const fontFamily =
-    theme.typography.fontBody ?? '"JetBrains Mono", "Courier New", monospace';
+  const fontFamily = theme.typography.fontBody ?? '"JetBrains Mono", "Courier New", monospace';
 
   const lines = code.split('\n');
 
@@ -96,7 +95,7 @@ export function CodeCard({
     if (charIdx < targetLine.length) {
       // Reveal next character on the current line
       timerRef.current = setTimeout(() => {
-        setRevealed(prev => {
+        setRevealed((prev) => {
           const next = [...prev];
           next[lineIdx] = charIdx + 1;
           return next;
@@ -106,13 +105,15 @@ export function CodeCard({
       // Line complete — advance to the next
       const nextLineIdx = lineIdx + 1;
       if (nextLineIdx >= lines.length) {
-        setPhase('done');
-        if (loop) {
-          timerRef.current = setTimeout(start, 2000);
-        }
+        timerRef.current = setTimeout(() => {
+          setPhase('done');
+          if (loop) {
+            timerRef.current = setTimeout(start, 2000);
+          }
+        }, 0);
       } else {
         timerRef.current = setTimeout(() => {
-          setRevealed(prev => [...prev, 0]);
+          setRevealed((prev) => [...prev, 0]);
         }, lineDelay);
       }
     }
@@ -123,7 +124,7 @@ export function CodeCard({
   // Build the full list of revealed (possibly partial) lines
   const displayLines = lines
     .map((line, i) => (i < revealed.length ? line.slice(0, revealed[i]) : null))
-    .filter(l => l !== null);
+    .filter((l) => l !== null);
 
   // Sliding window — only show the most recent maxVisibleLines
   const visible = displayLines.slice(-maxVisibleLines);
