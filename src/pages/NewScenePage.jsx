@@ -156,9 +156,7 @@ export function NewScenePage({ onCreated }) {
             style={inputStyle(theme)}
           />
           {name.trim() && (
-            <div
-              style={{ color: theme.colors.textMuted, fontSize: '10px', marginTop: '4px' }}
-            >
+            <div style={{ color: theme.colors.textMuted, fontSize: '10px', marginTop: '4px' }}>
               /scenes/{slug}
             </div>
           )}
