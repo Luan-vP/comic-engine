@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { Scene, SceneObject, Panel } from '../components/scene';
+import { Scene, SceneObject } from '../components/scene';
+import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
 import { useTheme } from '../theme/ThemeContext';
 
 /**
@@ -164,57 +165,8 @@ function SavedObjectRenderer({ object }) {
   const position = object.position || [0, 0, 0];
   const parallaxFactor = object.parallaxFactor ?? 0.6;
 
-  let content = null;
-  if (object.type === 'memory') {
-    content = (
-      <Panel variant="polaroid" width={224} height={272}>
-        <img
-          src={object.data.imageUrl}
-          alt={object.data.caption || 'Memory'}
-          style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }}
-        />
-        {object.data.caption && (
-          <div
-            style={{
-              textAlign: 'center',
-              marginTop: '6px',
-              fontSize: '11px',
-              color: '#333',
-              fontFamily: 'Georgia, serif',
-            }}
-          >
-            {object.data.caption}
-          </div>
-        )}
-      </Panel>
-    );
-  } else if (object.type === 'iframe') {
-    content = (
-      <Panel variant="monitor" width={296} height={216}>
-        <iframe
-          src={object.data.url}
-          width={280}
-          height={200}
-          sandbox="allow-scripts"
-          style={{ display: 'block', border: 'none' }}
-          title="Embedded content"
-        />
-      </Panel>
-    );
-  } else if (object.type === 'text') {
-    content = (
-      <Panel variant={object.panelVariant || 'default'} width={320} height={200}>
-        <div style={{ padding: '20px' }}>
-          {object.data.title && (
-            <h2 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{object.data.title}</h2>
-          )}
-          {object.data.body && (
-            <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5 }}>{object.data.body}</p>
-          )}
-        </div>
-      </Panel>
-    );
-  }
+  const cardType = CARD_TYPE_REGISTRY.find((ct) => ct.id === object.type);
+  const content = cardType ? cardType.renderContent(object) : null;
 
   if (!content) return null;
 

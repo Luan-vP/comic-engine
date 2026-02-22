@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { CARD_TYPE_REGISTRY } from './src/components/scene/cardTypesData.js';
 
 function toSlug(name) {
   return name
@@ -87,40 +88,8 @@ export function generatePageTemplate(meta) {
 
   const objectJSX = objects
     .map((obj) => {
-      const pos = obj.position || [0, 0, 0];
-      const pf = obj.parallaxFactor ?? 0.6;
-      if (obj.type === 'memory') {
-        return `      <SceneObject
-        position={[${pos.join(', ')}]}
-        parallaxFactor={${pf}}
-      >
-        <Panel variant="polaroid">
-          <img src="${obj.data.imageUrl}" alt="${obj.data.caption || 'Memory'}" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </Panel>
-      </SceneObject>`;
-      } else if (obj.type === 'iframe') {
-        return `      <SceneObject
-        position={[${pos.join(', ')}]}
-        parallaxFactor={${pf}}
-      >
-        <Panel variant="monitor">
-          <iframe src="${obj.data.url}" width={280} height={200} sandbox="allow-scripts" style={{ border: 'none' }} title="Embedded content" />
-        </Panel>
-      </SceneObject>`;
-      } else if (obj.type === 'text') {
-        return `      <SceneObject
-        position={[${pos.join(', ')}]}
-        parallaxFactor={${pf}}
-      >
-        <Panel>
-          <div style={{ padding: '20px' }}>
-            <h2>${obj.data.title || ''}</h2>
-            <p>${obj.data.body || ''}</p>
-          </div>
-        </Panel>
-      </SceneObject>`;
-      }
-      return '';
+      const cardType = CARD_TYPE_REGISTRY.find((ct) => ct.id === obj.type);
+      return cardType ? cardType.generateJSX(obj) : '';
     })
     .filter(Boolean)
     .join('\n\n');

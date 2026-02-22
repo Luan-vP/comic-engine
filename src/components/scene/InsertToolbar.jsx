@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../theme/ThemeContext';
-import { MemoryCardModal, IframeCardModal, TextCardModal } from './InsertModals';
-
-const CARD_TYPES = [
-  { id: 'memory', label: 'Memory Card', description: 'Upload an image (polaroid style)' },
-  { id: 'iframe', label: 'Iframe Card', description: 'Embed a URL (monitor style)' },
-  { id: 'text', label: 'Text Card', description: 'Add title + body text' },
-];
+import { CARD_TYPE_REGISTRY } from './cardTypes';
 
 export function InsertToolbar({ slug, onInsert }) {
   const { theme } = useTheme();
@@ -27,6 +21,12 @@ export function InsertToolbar({ slug, onInsert }) {
   const handleModalCancel = () => {
     setActiveModal(null);
   };
+
+  const activeCardType = activeModal
+    ? CARD_TYPE_REGISTRY.find((ct) => ct.id === activeModal)
+    : null;
+  // Capitalized so JSX treats it as a component (not a DOM element)
+  const ActiveModal = activeCardType?.Modal ?? null;
 
   return (
     <>
@@ -63,7 +63,7 @@ export function InsertToolbar({ slug, onInsert }) {
               minWidth: '180px',
             }}
           >
-            {CARD_TYPES.map((ct) => (
+            {CARD_TYPE_REGISTRY.map((ct) => (
               <button
                 key={ct.id}
                 onClick={() => handlePickType(ct.id)}
@@ -91,14 +91,8 @@ export function InsertToolbar({ slug, onInsert }) {
         )}
       </div>
 
-      {activeModal === 'memory' && (
-        <MemoryCardModal slug={slug} onConfirm={handleModalConfirm} onCancel={handleModalCancel} />
-      )}
-      {activeModal === 'iframe' && (
-        <IframeCardModal onConfirm={handleModalConfirm} onCancel={handleModalCancel} />
-      )}
-      {activeModal === 'text' && (
-        <TextCardModal onConfirm={handleModalConfirm} onCancel={handleModalCancel} />
+      {ActiveModal && (
+        <ActiveModal slug={slug} onConfirm={handleModalConfirm} onCancel={handleModalCancel} />
       )}
     </>
   );

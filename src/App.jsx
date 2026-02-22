@@ -8,6 +8,7 @@ import { DepthSegmentationPage } from './pages/DepthSegmentationPage';
 import { BiographySnapshots } from './pages/BiographySnapshots';
 import { JournalPage } from './pages/JournalPage';
 import { DynamicScenePage } from './pages/DynamicScenePage';
+import { NewScenePage } from './pages/NewScenePage';
 import { useLocalPages } from './hooks/useLocalPages';
 
 /**
@@ -173,10 +174,9 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
 /**
  * Page Navigator - for switching between demo pages
  */
-function PageNavigator() {
+function PageNavigator({ localPages }) {
   const { theme } = useTheme();
   const location = useLocation();
-  const { pages: localPages } = useLocalPages();
 
   const tools = [
     { path: '/', label: 'BeHereMeow' },
@@ -198,6 +198,8 @@ function PageNavigator() {
     fontWeight: isActive ? 'bold' : 'normal',
     textDecoration: 'none',
   });
+
+  const newPageActive = location.pathname === '/scenes/new';
 
   return (
     <div
@@ -234,32 +236,33 @@ function PageNavigator() {
           );
         })}
       </div>
-      {localPages.length > 0 && (
-        <>
-          <div
-            style={{
-              color: theme.colors.textMuted,
-              fontSize: '10px',
-              marginTop: '12px',
-              marginBottom: '8px',
-              letterSpacing: '1px',
-            }}
-          >
-            PAGES
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {localPages.map(({ slug, name }) => {
-              const path = `/scenes/${slug}`;
-              const isActive = location.pathname === path;
-              return (
-                <Link key={slug} to={path} style={linkStyle(isActive)}>
-                  {name}
-                </Link>
-              );
-            })}
-          </div>
-        </>
-      )}
+      <>
+        <div
+          style={{
+            color: theme.colors.textMuted,
+            fontSize: '10px',
+            marginTop: '12px',
+            marginBottom: '8px',
+            letterSpacing: '1px',
+          }}
+        >
+          PAGES
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {localPages.map(({ slug, name }) => {
+            const path = `/scenes/${slug}`;
+            const isActive = location.pathname === path;
+            return (
+              <Link key={slug} to={path} style={linkStyle(isActive)}>
+                {name}
+              </Link>
+            );
+          })}
+          <Link to="/scenes/new" style={linkStyle(newPageActive)}>
+            + New Page
+          </Link>
+        </div>
+      </>
     </div>
   );
 }
@@ -276,6 +279,9 @@ function AppContent() {
     particles: 'dust',
     ascii: true,
   });
+
+  // Lift scene list here so PageNavigator and NewScenePage share the same state
+  const { pages: localPages, refetch: refetchPages } = useLocalPages();
 
   // Don't show overlays on depth segmentation page (has its own controls)
   const showOverlays = location.pathname !== '/depth-segmentation';
@@ -302,7 +308,7 @@ function AppContent() {
       )}
 
       {/* Page navigation */}
-      <PageNavigator />
+      <PageNavigator localPages={localPages} />
 
       {/* Main content */}
       <Routes>
@@ -311,6 +317,8 @@ function AppContent() {
         <Route path="/depth-segmentation" element={<DepthSegmentationPage />} />
         <Route path="/biography" element={<BiographySnapshots />} />
         <Route path="/journal" element={<JournalPage />} />
+        {/* /scenes/new must come before /scenes/:slug to avoid slug matching "new" */}
+        <Route path="/scenes/new" element={<NewScenePage onCreated={refetchPages} />} />
         <Route path="/scenes/:slug" element={<DynamicScenePage />} />
       </Routes>
     </>
