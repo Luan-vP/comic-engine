@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Scene, SceneObject, Panel } from '../components/scene';
 import { VRButton, VRViewer } from '../components/vr';
 import { useTheme } from '../theme/ThemeContext';
+import { useZScroll } from '../hooks/useZScroll';
+import { ScrollMinimap } from '../components/minimap';
 
 /**
  * ExamplePage - Demonstrates how to compose a scene
@@ -13,10 +15,25 @@ import { useTheme } from '../theme/ThemeContext';
  * On mobile, tilt your phone to look around. Drop it into a Cardboard headset
  * for full immersive viewing.
  */
+// Slides define camera stop positions (scrollZ values) for the minimap.
+// scrollDepth=400 lets you scroll the background panel (z=-200) into focus.
+const EXAMPLE_SLIDES = [
+  { id: 'bg', label: 'BACKGROUND', zCenter: 0 },
+  { id: 'mid', label: 'MIDGROUND', zCenter: 200 },
+  { id: 'fg', label: 'FOREGROUND', zCenter: 400 },
+];
+
 export function ExamplePage() {
   const { theme } = useTheme();
   const [, setActivePanel] = useState(null);
   const [isVR, setIsVR] = useState(false);
+
+  const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll(
+    {
+      slides: EXAMPLE_SLIDES,
+      scrollDepth: 400,
+    },
+  );
 
   // VR layers mirror the scene's visual elements as structured layer data.
   // content can be any JSX — keep it lightweight (no extra dependencies).
@@ -231,7 +248,13 @@ export function ExamplePage() {
 
   return (
     <>
-      <Scene perspective={1000} parallaxIntensity={1} mouseInfluence={{ x: 50, y: 30 }}>
+      <Scene
+        perspective={1000}
+        parallaxIntensity={1}
+        mouseInfluence={{ x: 50, y: 30 }}
+        controlledScrollZ={scrollZ}
+        containerRef={containerRef}
+      >
         {/* ===== FAR BACKGROUND LAYER ===== */}
         {/* Decorative shapes that barely move */}
         <SceneObject
@@ -500,6 +523,13 @@ export function ExamplePage() {
 
       {/* VR viewer — fullscreen overlay, only mounted when active */}
       {isVR && <VRViewer layers={vrLayers} />}
+
+      {/* Scroll minimap — fixed right side, outside the 3D scene */}
+      <ScrollMinimap
+        slides={slidesWithProgress}
+        currentSlideIndex={currentSlideIndex}
+        onSlideClick={jumpToSlide}
+      />
     </>
   );
 }

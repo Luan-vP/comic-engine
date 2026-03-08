@@ -88,12 +88,16 @@ export function Scene({
   slug = null, // Scene slug, used by InsertToolbar for asset uploads
   className = '',
   style = {},
+  controlledScrollZ = null, // When provided, overrides internal scroll state (for useZScroll)
+  containerRef: externalContainerRef = null, // External ref for container div (for useZScroll)
 }) {
-  const containerRef = useRef(null);
+  const internalContainerRef = useRef(null);
+  const containerRef = externalContainerRef || internalContainerRef;
   const { theme } = useTheme();
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [scrollZ, setScrollZ] = useState(0);
+  const [internalScrollZ, setInternalScrollZ] = useState(0);
+  const scrollZ = controlledScrollZ !== null ? controlledScrollZ : internalScrollZ;
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   // Edit mode state
@@ -138,20 +142,20 @@ export function Scene({
     };
   }, []);
 
-  // Track scroll for Z movement
+  // Track scroll for Z movement (only when not externally controlled)
   useEffect(() => {
-    if (!scrollEnabled) return;
+    if (!scrollEnabled || controlledScrollZ !== null) return;
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
       const maxScroll = document.body.scrollHeight - window.innerHeight;
       const scrollProgress = maxScroll > 0 ? scrollY / maxScroll : 0;
-      setScrollZ(scrollProgress * scrollDepth);
+      setInternalScrollZ(scrollProgress * scrollDepth);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [scrollEnabled, scrollDepth]);
+  }, [scrollEnabled, scrollDepth, controlledScrollZ]);
 
   // Drag handlers for edit mode
   const handleDragStart = useCallback(
