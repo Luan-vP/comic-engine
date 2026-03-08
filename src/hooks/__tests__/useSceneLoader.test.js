@@ -37,7 +37,10 @@ afterEach(() => {
 
 describe('useSceneLoader — local source', () => {
   it('returns loading=true initially', () => {
-    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise(() => {})),
+    );
 
     const { result } = renderHook(() => useSceneLoader('test-scene', 'local'));
     expect(result.current.loading).toBe(true);
@@ -46,7 +49,10 @@ describe('useSceneLoader — local source', () => {
   });
 
   it('loads scene from local path and resolves layer URLs', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => makeSuccessResponse(MOCK_SCENE)));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => makeSuccessResponse(MOCK_SCENE)),
+    );
 
     const { result } = renderHook(() => useSceneLoader('test-scene', 'local'));
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -72,7 +78,10 @@ describe('useSceneLoader — local source', () => {
   });
 
   it('sets error when fetch fails with non-ok status', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => makeErrorResponse(404)));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => makeErrorResponse(404)),
+    );
 
     const { result } = renderHook(() => useSceneLoader('test-scene', 'local'));
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -82,7 +91,10 @@ describe('useSceneLoader — local source', () => {
   });
 
   it('sets error when fetch rejects (network error)', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('network error'))));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new Error('network error'))),
+    );
 
     const { result } = renderHook(() => useSceneLoader('test-scene', 'local'));
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -92,7 +104,10 @@ describe('useSceneLoader — local source', () => {
   });
 
   it('preserves existing layer properties when adding url', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => makeSuccessResponse(MOCK_SCENE)));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => makeSuccessResponse(MOCK_SCENE)),
+    );
 
     const { result } = renderHook(() => useSceneLoader('test-scene', 'local'));
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -156,7 +171,10 @@ describe('useSceneLoader — gcs source', () => {
   });
 
   it('sets error when GCS scene fetch fails', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => makeErrorResponse(404)));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => makeErrorResponse(404)),
+    );
 
     const { result } = renderHook(() =>
       useSceneLoader('test-scene', 'gcs', { comicBookSlug: 'my-comic' }),
