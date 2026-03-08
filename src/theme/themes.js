@@ -110,8 +110,8 @@ export const themes = {
     },
     typography: {
       fontDisplay: '"Alfa Slab One", cursive',
-      fontBody: '"Courier Prime", monospace',
-      fontNarrative: '"Merriweather", serif',
+      fontBody: '"Courier New", "Courier", monospace',
+      fontNarrative: '"Special Elite", "Courier New", monospace',
     },
     effects: {
       filmGrain: 0.12,
@@ -153,4 +153,4 @@ export const themes = {
   },
 };
 
-export const defaultTheme = 'noir';
+export const defaultTheme = 'pulp';
