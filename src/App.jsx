@@ -9,6 +9,7 @@ import { BiographySnapshots } from './pages/BiographySnapshots';
 import { JournalPage } from './pages/JournalPage';
 import { DynamicScenePage } from './pages/DynamicScenePage';
 import { NewScenePage } from './pages/NewScenePage';
+import { ComicBookReader } from './pages/ComicBookReader';
 import { useLocalPages } from './hooks/useLocalPages';
 
 /**
@@ -320,6 +321,8 @@ function AppContent() {
         {/* /scenes/new must come before /scenes/:slug to avoid slug matching "new" */}
         <Route path="/scenes/new" element={<NewScenePage onCreated={refetchPages} />} />
         <Route path="/scenes/:slug" element={<DynamicScenePage />} />
+        <Route path="/read/:comicBookSlug" element={<ComicBookReader />} />
+        <Route path="/read/:comicBookSlug/:slide" element={<ComicBookReader />} />
       </Routes>
     </>
   );
