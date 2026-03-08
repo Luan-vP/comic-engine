@@ -113,9 +113,7 @@ export function ComicBookReader() {
           {error === 'MANIFEST_NOT_FOUND' ? 'Comic book not found' : 'Failed to load'}
         </div>
         <div style={{ color: theme.colors.textMuted, fontSize: '12px' }}>
-          {error === 'MANIFEST_NOT_FOUND'
-            ? `No comic book found at "${comicBookSlug}"`
-            : error}
+          {error === 'MANIFEST_NOT_FOUND' ? `No comic book found at "${comicBookSlug}"` : error}
         </div>
       </div>
     );
