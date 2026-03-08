@@ -1,5 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useReducer } from 'react';
 import { getManifest, getScene, getLayerUrl } from '../services/gcsStorage';
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'LOAD_MANIFEST':
+      return { ...state, loading: true, error: null, manifest: null, currentScene: null };
+    case 'MANIFEST_LOADED':
+      return { ...state, manifest: action.payload };
+    case 'MANIFEST_ERROR':
+      return { ...state, loading: false, error: action.payload, manifest: null };
+    case 'LOAD_SCENE':
+      return { ...state, loading: true };
+    case 'SCENE_LOADED':
+      return { ...state, loading: false, error: null, currentScene: action.payload };
+    case 'SCENE_ERROR':
+      return { ...state, loading: false, error: action.payload, currentScene: null };
+    case 'NO_SCENES':
+      return { ...state, loading: false };
+    default:
+      return state;
+  }
+}
+
+const initialState = { manifest: null, currentScene: null, loading: true, error: null };
 
 /**
  * Loads a comic book manifest and the current scene from GCS.
@@ -10,30 +33,22 @@ import { getManifest, getScene, getLayerUrl } from '../services/gcsStorage';
  * @returns {{ manifest: object|null, currentScene: object|null, loading: boolean, error: string|null }}
  */
 export function useComicBook(comicBookSlug, slideIndex) {
-  const [manifest, setManifest] = useState(null);
-  const [currentScene, setCurrentScene] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   // Load manifest whenever the slug changes
   useEffect(() => {
     if (!comicBookSlug) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setManifest(null);
-    setCurrentScene(null);
+    dispatch({ type: 'LOAD_MANIFEST' });
 
     getManifest(comicBookSlug)
       .then((data) => {
-        if (!cancelled) setManifest(data);
+        if (!cancelled) dispatch({ type: 'MANIFEST_LOADED', payload: data });
       })
       .catch((err) => {
-        if (!cancelled) {
-          setError(err.message || 'Failed to load comic book');
-          setLoading(false);
-        }
+        if (!cancelled)
+          dispatch({ type: 'MANIFEST_ERROR', payload: err.message || 'Failed to load comic book' });
       });
 
     return () => {
@@ -43,38 +58,31 @@ export function useComicBook(comicBookSlug, slideIndex) {
 
   // Load the current scene whenever manifest or slideIndex changes
   useEffect(() => {
-    if (!manifest || !comicBookSlug) return;
+    if (!state.manifest || !comicBookSlug) return;
 
-    const scenes = manifest.scenes || [];
+    const scenes = state.manifest.scenes || [];
     if (scenes.length === 0) {
-      setLoading(false);
+      dispatch({ type: 'NO_SCENES' });
       return;
     }
 
     const clampedIndex = Math.max(0, Math.min(slideIndex, scenes.length - 1));
     const sceneSlug = scenes[clampedIndex]?.slug;
     if (!sceneSlug) {
-      setLoading(false);
+      dispatch({ type: 'NO_SCENES' });
       return;
     }
 
     let cancelled = false;
-    setLoading(true);
+    dispatch({ type: 'LOAD_SCENE' });
 
     getScene(comicBookSlug, sceneSlug)
       .then((data) => {
-        if (!cancelled) {
-          setCurrentScene(data);
-          setError(null);
-          setLoading(false);
-        }
+        if (!cancelled) dispatch({ type: 'SCENE_LOADED', payload: data });
       })
       .catch((err) => {
-        if (!cancelled) {
-          setCurrentScene(null);
-          setError(err.message || 'Failed to load scene');
-          setLoading(false);
-        }
+        if (!cancelled)
+          dispatch({ type: 'SCENE_ERROR', payload: err.message || 'Failed to load scene' });
       });
 
     // Prefetch adjacent scenes (JSON only — let the browser handle images)
@@ -103,7 +111,12 @@ export function useComicBook(comicBookSlug, slideIndex) {
     return () => {
       cancelled = true;
     };
-  }, [manifest, comicBookSlug, slideIndex]);
+  }, [state.manifest, comicBookSlug, slideIndex]);
 
-  return { manifest, currentScene, loading, error };
+  return {
+    manifest: state.manifest,
+    currentScene: state.currentScene,
+    loading: state.loading,
+    error: state.error,
+  };
 }

@@ -35,7 +35,12 @@ function makeErrorResponse(status = 404) {
 beforeEach(() => {
   vi.spyOn(console, 'warn').mockImplementation(() => {});
   // Stub Image so layer prefetch doesn't fail in jsdom
-  vi.stubGlobal('Image', class { set src(_) {} });
+  vi.stubGlobal(
+    'Image',
+    class {
+      set src(_) {}
+    },
+  );
 });
 
 afterEach(() => {
@@ -45,7 +50,10 @@ afterEach(() => {
 
 describe('useComicBook', () => {
   it('returns loading=true initially', () => {
-    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise(() => {})),
+    );
     const { result } = renderHook(() => useComicBook('my-comic', 0));
     expect(result.current.loading).toBe(true);
     expect(result.current.manifest).toBeNull();
@@ -71,7 +79,10 @@ describe('useComicBook', () => {
   });
 
   it('sets error when manifest fetch fails (404)', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => makeErrorResponse(404)));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => makeErrorResponse(404)),
+    );
 
     const { result } = renderHook(() => useComicBook('missing-comic', 0));
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -126,7 +137,7 @@ describe('useComicBook', () => {
     const { result } = renderHook(() => useComicBook('my-comic', 99));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    const fetchCalls = vi.mocked(global.fetch).mock.calls;
+    const fetchCalls = fetch.mock.calls;
     const sceneUrls = fetchCalls.filter(([url]) => url.includes('/scene.json'));
     // The first scene fetch should be for scene-3 (last scene)
     expect(sceneUrls[0][0]).toContain('scene-3');
@@ -136,11 +147,9 @@ describe('useComicBook', () => {
     const comic2Manifest = { scenes: [{ slug: 'other-scene', name: 'Other', order: 0 }] };
     const comic2Scene = { ...MOCK_SCENE, slug: 'other-scene' };
 
-    let callCount = 0;
     vi.stubGlobal(
       'fetch',
       vi.fn((url) => {
-        callCount++;
         if (url.includes('manifest.json')) {
           return url.includes('comic-2')
             ? makeSuccessResponse(comic2Manifest)

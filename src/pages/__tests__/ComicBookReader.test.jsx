@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ComicBookReader } from '../ComicBookReader.jsx';
@@ -60,7 +60,12 @@ afterEach(() => {
 
 describe('ComicBookReader', () => {
   it('shows loading state initially', () => {
-    useComicBook.mockReturnValue({ manifest: null, currentScene: null, loading: true, error: null });
+    useComicBook.mockReturnValue({
+      manifest: null,
+      currentScene: null,
+      loading: true,
+      error: null,
+    });
     renderReader();
     expect(screen.getByText('Loading…')).toBeTruthy();
   });
@@ -136,7 +141,12 @@ describe('ComicBookReader', () => {
   });
 
   it('calls useComicBook with 0-based slideIndex from URL', () => {
-    useComicBook.mockReturnValue({ manifest: null, currentScene: null, loading: true, error: null });
+    useComicBook.mockReturnValue({
+      manifest: null,
+      currentScene: null,
+      loading: true,
+      error: null,
+    });
 
     renderReader('/read/my-comic/3');
 
@@ -145,7 +155,12 @@ describe('ComicBookReader', () => {
   });
 
   it('defaults to slideIndex 0 when no slide param', () => {
-    useComicBook.mockReturnValue({ manifest: null, currentScene: null, loading: true, error: null });
+    useComicBook.mockReturnValue({
+      manifest: null,
+      currentScene: null,
+      loading: true,
+      error: null,
+    });
 
     renderReader('/read/my-comic');
 
