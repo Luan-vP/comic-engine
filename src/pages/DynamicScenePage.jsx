@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Scene, SceneObject } from '../components/scene';
 import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
 import { useTheme } from '../theme/ThemeContext';
+import { useSceneLoader } from '../hooks/useSceneLoader';
 
 /**
  * DynamicScenePage - Data-driven scene renderer
  *
- * Loads a scene config from /local-scenes/<slug>/scene.json and renders
- * it using <Scene> + <SceneObject> components. Supports edit mode drag
- * with position saving via PATCH /_dev/scenes/:slug.
+ * Loads a scene config from /local-scenes/<slug>/scene.json (dev) or GCS (prod)
+ * and renders it using <Scene> + <SceneObject> components. Supports edit mode drag
+ * with position saving via PATCH /_dev/scenes/:slug (dev only).
  *
  * Also renders inserted objects stored in scene.json's `objects` array,
  * and supports adding new objects via Scene's InsertToolbar (edit mode).
@@ -17,60 +18,7 @@ import { useTheme } from '../theme/ThemeContext';
 export function DynamicScenePage() {
   const { slug } = useParams();
   const { theme } = useTheme();
-  const [config, setConfig] = useState(null);
-  const [error, setError] = useState(null);
-  const [loadedSlug, setLoadedSlug] = useState(null);
-  const loading = loadedSlug !== slug;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch(`/local-scenes/${slug}/scene.json`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Scene "${slug}" not found (${res.status})`);
-        return res.json();
-      })
-      .then((data) => {
-        if (!cancelled) {
-          setConfig(data);
-          setError(null);
-          setLoadedSlug(slug);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setConfig(null);
-          setError(err.message);
-          setLoadedSlug(slug);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [slug]);
-
-  const handleSave = useCallback(
-    async ({ groupOffset, groupOffsets, objects: newObjects = [] }) => {
-      try {
-        // Merge newly inserted objects with any already-saved objects
-        const existingObjects = config?.objects || [];
-        const allObjects = [...existingObjects, ...newObjects];
-
-        const res = await fetch(`/_dev/scenes/${slug}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ groupOffset, groupOffsets, objects: allObjects }),
-        });
-        if (!res.ok) {
-          console.error('Failed to save scene positions:', await res.text());
-        }
-      } catch (err) {
-        console.error('Failed to save scene positions:', err);
-      }
-    },
-    [slug, config],
-  );
+  const { scene: config, loading, error, save: handleSave } = useSceneLoader(slug);
 
   const centeredBox = {
     width: '100%',
@@ -130,26 +78,20 @@ export function DynamicScenePage() {
       onSave={handleSave}
       slug={slug}
     >
-      {layers.map((layer) => {
-        const imgSrc = layer.hasBlurFill
-          ? `/local-scenes/${slug}/layer-${layer.index}-blur.png`
-          : `/local-scenes/${slug}/layer-${layer.index}.png`;
-
-        return (
-          <SceneObject
-            key={layer.index}
-            position={layer.position || [0, 0, 0]}
-            parallaxFactor={layer.parallaxFactor}
-            interactive={false}
-          >
-            <img
-              src={imgSrc}
-              alt={layer.name || `Layer ${layer.index}`}
-              style={{ maxWidth: '80vw', maxHeight: '80vh' }}
-            />
-          </SceneObject>
-        );
-      })}
+      {layers.map((layer) => (
+        <SceneObject
+          key={layer.index}
+          position={layer.position || [0, 0, 0]}
+          parallaxFactor={layer.parallaxFactor}
+          interactive={false}
+        >
+          <img
+            src={layer.url}
+            alt={layer.name || `Layer ${layer.index}`}
+            style={{ maxWidth: '80vw', maxHeight: '80vh' }}
+          />
+        </SceneObject>
+      ))}
 
       {objects.map((obj) => (
         <SavedObjectRenderer key={obj.id || `obj-${objects.indexOf(obj)}`} object={obj} />
