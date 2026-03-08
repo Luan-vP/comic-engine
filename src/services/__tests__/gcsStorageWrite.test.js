@@ -6,8 +6,11 @@ const mockFile = vi.fn(() => ({ save: mockSave, delete: mockDelete }));
 const mockGetFiles = vi.fn();
 const mockBucket = vi.fn(() => ({ file: mockFile, getFiles: mockGetFiles }));
 
+class MockStorage {
+  bucket = mockBucket;
+}
 vi.mock('@google-cloud/storage', () => ({
-  Storage: vi.fn(() => ({ bucket: mockBucket })),
+  Storage: MockStorage,
 }));
 
 // Import after mock is set up
@@ -20,20 +23,25 @@ beforeEach(() => {
 
 describe('saveScene', () => {
   it('uploads scene.json with correct path and content type', async () => {
-    const sceneData = { name: 'My Scene', slug: 'my-scene', layers: [], objects: [], sceneConfig: {} };
+    const sceneData = {
+      name: 'My Scene',
+      slug: 'my-scene',
+      layers: [],
+      objects: [],
+      sceneConfig: {},
+    };
     await saveScene('my-comic', 'my-scene', sceneData);
 
     expect(mockFile).toHaveBeenCalledWith('my-comic/my-scene/scene.json');
-    expect(mockSave).toHaveBeenCalledWith(
-      JSON.stringify(sceneData, null, 2),
-      { contentType: 'application/json' },
-    );
+    expect(mockSave).toHaveBeenCalledWith(JSON.stringify(sceneData, null, 2), {
+      contentType: 'application/json',
+    });
   });
 
   it('uploads each layer file with correct path', async () => {
     const sceneData = { name: 'S', slug: 's', layers: [], objects: [], sceneConfig: {} };
-    const buf0 = Buffer.from('img0');
-    const buf1 = Buffer.from('img1');
+    const buf0 = new Uint8Array([105, 109, 103, 48]);
+    const buf1 = new Uint8Array([105, 109, 103, 49]);
     await saveScene('my-comic', 'my-scene', sceneData, {
       'layer-0.png': buf0,
       'layer-1.png': buf1,
@@ -59,10 +67,9 @@ describe('saveManifest', () => {
     await saveManifest('my-comic', manifest);
 
     expect(mockFile).toHaveBeenCalledWith('my-comic/manifest.json');
-    expect(mockSave).toHaveBeenCalledWith(
-      JSON.stringify(manifest, null, 2),
-      { contentType: 'application/json' },
-    );
+    expect(mockSave).toHaveBeenCalledWith(JSON.stringify(manifest, null, 2), {
+      contentType: 'application/json',
+    });
   });
 });
 
