@@ -177,6 +177,31 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
 function PageNavigator({ localPages }) {
   const { theme } = useTheme();
   const location = useLocation();
+  const [publishStatus, setPublishStatus] = useState({});
+
+  async function handlePublish(slug) {
+    const comicBookSlug = window.prompt('Enter comic book slug to publish to:', '');
+    if (!comicBookSlug) return;
+
+    setPublishStatus((prev) => ({ ...prev, [slug]: 'publishing' }));
+    try {
+      const res = await fetch(`/_dev/scenes/${slug}/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comicBookSlug }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || 'Publish failed');
+      }
+      setPublishStatus((prev) => ({ ...prev, [slug]: 'ok' }));
+      setTimeout(() => setPublishStatus((prev) => ({ ...prev, [slug]: null })), 3000);
+    } catch (err) {
+      setPublishStatus((prev) => ({ ...prev, [slug]: 'error' }));
+      setTimeout(() => setPublishStatus((prev) => ({ ...prev, [slug]: null })), 4000);
+      console.error('Publish failed:', err.message);
+    }
+  }
 
   const tools = [
     { path: '/', label: 'BeHereMeow' },
@@ -252,10 +277,42 @@ function PageNavigator({ localPages }) {
           {localPages.map(({ slug, name }) => {
             const path = `/scenes/${slug}`;
             const isActive = location.pathname === path;
+            const status = publishStatus[slug];
             return (
-              <Link key={slug} to={path} style={linkStyle(isActive)}>
-                {name}
-              </Link>
+              <span key={slug} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                <Link to={path} style={linkStyle(isActive)}>
+                  {name}
+                </Link>
+                <button
+                  onClick={() => handlePublish(slug)}
+                  title="Publish to GCS"
+                  disabled={status === 'publishing'}
+                  style={{
+                    background:
+                      status === 'ok'
+                        ? '#22c55e'
+                        : status === 'error'
+                          ? '#ef4444'
+                          : 'rgba(255,255,255,0.1)',
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: '4px',
+                    color: theme.colors.text,
+                    padding: '6px 7px',
+                    fontSize: '11px',
+                    cursor: status === 'publishing' ? 'wait' : 'pointer',
+                    fontFamily: 'inherit',
+                    lineHeight: 1,
+                  }}
+                >
+                  {status === 'publishing'
+                    ? '…'
+                    : status === 'ok'
+                      ? '✓'
+                      : status === 'error'
+                        ? '✗'
+                        : '↑'}
+                </button>
+              </span>
             );
           })}
           <Link to="/scenes/new" style={linkStyle(newPageActive)}>
