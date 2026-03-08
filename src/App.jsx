@@ -304,7 +304,13 @@ function PageNavigator({ localPages }) {
                     lineHeight: 1,
                   }}
                 >
-                  {status === 'publishing' ? '…' : status === 'ok' ? '✓' : status === 'error' ? '✗' : '↑'}
+                  {status === 'publishing'
+                    ? '…'
+                    : status === 'ok'
+                      ? '✓'
+                      : status === 'error'
+                        ? '✗'
+                        : '↑'}
                 </button>
               </span>
             );
