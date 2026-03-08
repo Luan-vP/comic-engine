@@ -1,3 +1,4 @@
+/* global Buffer */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // --- Mock @google-cloud/storage ---
@@ -5,7 +6,9 @@ const mockSave = vi.fn().mockResolvedValue(undefined);
 const mockDownload = vi.fn();
 const mockFile = vi.fn(() => ({ save: mockSave, download: mockDownload }));
 const mockBucket = vi.fn(() => ({ file: mockFile }));
-const MockStorage = vi.fn(() => ({ bucket: mockBucket }));
+class MockStorage {
+  bucket = mockBucket;
+}
 
 vi.mock('@google-cloud/storage', () => ({
   Storage: MockStorage,
@@ -25,6 +28,12 @@ vi.mock('fs', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
+    default: {
+      ...actual,
+      existsSync: vi.fn(),
+      readFileSync: vi.fn(),
+      readdirSync: vi.fn(),
+    },
     existsSync: vi.fn(),
     readFileSync: vi.fn(),
     readdirSync: vi.fn(),
@@ -32,8 +41,11 @@ vi.mock('fs', async (importOriginal) => {
 });
 
 import fs from 'fs';
-import path from 'path';
-import { publishScene, reorderManifest, readGCSManifest } from '../../vite-plugin-scene-exporter.js';
+import {
+  publishScene,
+  reorderManifest,
+  readGCSManifest,
+} from '../../vite-plugin-scene-exporter.js';
 
 const SCENES_DIR = '/fake/.local/scenes';
 
@@ -79,7 +91,12 @@ describe('publishScene', () => {
       if (filePath.endsWith('scene.json')) return JSON.stringify(sceneData);
       return Buffer.from('fake-image-bytes');
     });
-    fs.readdirSync.mockReturnValue(['scene.json', 'layer-0.png', 'layer-1.png', 'layer-1-blur.png']);
+    fs.readdirSync.mockReturnValue([
+      'scene.json',
+      'layer-0.png',
+      'layer-1.png',
+      'layer-1-blur.png',
+    ]);
     // No existing manifest
     mockDownload.mockRejectedValue(new Error('Not Found'));
   });
@@ -109,7 +126,12 @@ describe('publishScene', () => {
 
   it('uploads to correct GCS paths via saveScene', async () => {
     await publishScene(SCENES_DIR, sceneSlug, comicBookSlug);
-    expect(mockSaveScene).toHaveBeenCalledWith(comicBookSlug, sceneSlug, sceneData, expect.any(Object));
+    expect(mockSaveScene).toHaveBeenCalledWith(
+      comicBookSlug,
+      sceneSlug,
+      sceneData,
+      expect.any(Object),
+    );
   });
 
   it('creates a new manifest entry when comic book is new', async () => {
