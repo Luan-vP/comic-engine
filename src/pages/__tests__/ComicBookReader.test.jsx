@@ -136,8 +136,9 @@ describe('ComicBookReader', () => {
 
     renderReader('/read/my-comic/1');
 
-    const img = screen.getByRole('img');
-    expect(img.getAttribute('src')).toContain('layer-0-blur.png');
+    const imgs = screen.getAllByRole('img');
+    const blurImg = imgs.find((img) => img.getAttribute('src')?.includes('layer-0-blur.png'));
+    expect(blurImg).toBeTruthy();
   });
 
   it('calls useComicBook with 0-based slideIndex from URL', () => {
