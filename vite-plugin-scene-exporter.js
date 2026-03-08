@@ -2,6 +2,110 @@ import fs from 'fs';
 import path from 'path';
 import { CARD_TYPE_REGISTRY } from './src/components/scene/cardTypesData.js';
 
+const GCS_BUCKET_NAME = 'comic-engine';
+
+/**
+ * Read a manifest.json for a comic book from GCS.
+ * Returns { scenes: [] } if the manifest does not yet exist.
+ *
+ * @param {string} comicBookSlug
+ * @returns {Promise<{ scenes: Array<{ slug: string, name: string, order: number }> }>}
+ */
+export async function readGCSManifest(comicBookSlug) {
+  const { Storage } = await import('@google-cloud/storage');
+  const bucket = new Storage().bucket(GCS_BUCKET_NAME);
+  const file = bucket.file(`${comicBookSlug}/manifest.json`);
+  try {
+    const [content] = await file.download();
+    return JSON.parse(content.toString('utf-8'));
+  } catch {
+    return { scenes: [] };
+  }
+}
+
+/**
+ * Upload a local scene to GCS and update the comic book manifest.
+ *
+ * @param {string} scenesDir  absolute path to .local/scenes/
+ * @param {string} sceneSlug
+ * @param {string} comicBookSlug
+ * @returns {Promise<{ published: boolean, url: string }>}
+ */
+export async function publishScene(scenesDir, sceneSlug, comicBookSlug) {
+  const sceneDir = path.join(scenesDir, sceneSlug);
+  const metaPath = path.join(sceneDir, 'scene.json');
+
+  if (!fs.existsSync(metaPath)) {
+    throw new Error(`Scene "${sceneSlug}" not found`);
+  }
+
+  const sceneData = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+
+  // Collect all PNG layer files in the scene directory
+  const dirEntries = fs.readdirSync(sceneDir);
+  const layerFiles = {};
+  for (const filename of dirEntries) {
+    if (/^layer-.*\.png$/.test(filename)) {
+      layerFiles[filename] = fs.readFileSync(path.join(sceneDir, filename));
+    }
+  }
+
+  const { saveScene, saveManifest } = await import('./src/services/gcsStorageWrite.js');
+
+  await saveScene(comicBookSlug, sceneSlug, sceneData, layerFiles);
+
+  // Read existing manifest (or start fresh), then upsert this scene
+  const manifest = await readGCSManifest(comicBookSlug);
+  const existingIndex = manifest.scenes.findIndex((s) => s.slug === sceneSlug);
+  const sceneEntry = {
+    slug: sceneSlug,
+    name: sceneData.name || slugToTitle(sceneSlug),
+    order: existingIndex >= 0 ? manifest.scenes[existingIndex].order : manifest.scenes.length,
+  };
+
+  if (existingIndex >= 0) {
+    manifest.scenes[existingIndex] = sceneEntry;
+  } else {
+    manifest.scenes.push(sceneEntry);
+  }
+
+  await saveManifest(comicBookSlug, manifest);
+
+  return {
+    published: true,
+    url: `gs://${GCS_BUCKET_NAME}/${comicBookSlug}/${sceneSlug}/`,
+  };
+}
+
+/**
+ * Reorder scenes in a comic book manifest on GCS.
+ *
+ * @param {string} comicBookSlug
+ * @param {string[]} orderedSlugs  scene slugs in desired order
+ * @returns {Promise<{ scenes: Array<{ slug: string, name: string, order: number }> }>}
+ */
+export async function reorderManifest(comicBookSlug, orderedSlugs) {
+  const { saveManifest } = await import('./src/services/gcsStorageWrite.js');
+  const manifest = await readGCSManifest(comicBookSlug);
+
+  // Build a lookup of existing scene entries
+  const bySlug = Object.fromEntries(manifest.scenes.map((s) => [s.slug, s]));
+
+  // Reorder: scenes in orderedSlugs come first, rest appended at end
+  const reordered = orderedSlugs
+    .filter((slug) => bySlug[slug])
+    .map((slug, index) => ({ ...bySlug[slug], order: index }));
+
+  const reorderedSlugsSet = new Set(orderedSlugs);
+  const rest = manifest.scenes
+    .filter((s) => !reorderedSlugsSet.has(s.slug))
+    .map((s, i) => ({ ...s, order: reordered.length + i }));
+
+  const updatedManifest = { scenes: [...reordered, ...rest] };
+  await saveManifest(comicBookSlug, updatedManifest);
+  return updatedManifest;
+}
+
 function toSlug(name) {
   return name
     .toLowerCase()
@@ -429,6 +533,63 @@ export default function sceneExporter() {
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ path: `/local-scenes/${slug}/${filename}` }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+
+      // POST /_dev/scenes/:slug/publish — Upload scene to GCS
+      server.middlewares.use('/_dev/scenes', async (req, res, next) => {
+        if (req.method !== 'POST') return next();
+
+        const match = req.url?.match(/^\/([a-z0-9-]+)\/publish\/?$/);
+        if (!match) return next();
+
+        const slug = match[1];
+
+        try {
+          const body = await readBody(req);
+          const { comicBookSlug } = body;
+
+          if (!comicBookSlug) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'comicBookSlug is required' }));
+            return;
+          }
+
+          const result = await publishScene(scenesDir, slug, comicBookSlug);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(result));
+        } catch (err) {
+          const status = err.message.includes('not found') ? 404 : 500;
+          res.writeHead(status, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+
+      // POST /_dev/publish/:comicBookSlug/reorder — Reorder scenes in a comic book manifest
+      server.middlewares.use('/_dev/publish', async (req, res, next) => {
+        if (req.method !== 'POST') return next();
+
+        const match = req.url?.match(/^\/([a-z0-9-]+)\/reorder\/?$/);
+        if (!match) return next();
+
+        const comicBookSlug = match[1];
+
+        try {
+          const body = await readBody(req);
+          const { scenes } = body;
+
+          if (!Array.isArray(scenes)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'scenes array is required' }));
+            return;
+          }
+
+          const manifest = await reorderManifest(comicBookSlug, scenes);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ manifest }));
         } catch (err) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: err.message }));
