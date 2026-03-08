@@ -28,12 +28,10 @@ export function ExamplePage() {
   const [, setActivePanel] = useState(null);
   const [isVR, setIsVR] = useState(false);
 
-  const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll(
-    {
-      slides: EXAMPLE_SLIDES,
-      scrollDepth: 400,
-    },
-  );
+  const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll({
+    slides: EXAMPLE_SLIDES,
+    scrollDepth: 400,
+  });
 
   // VR layers mirror the scene's visual elements as structured layer data.
   // content can be any JSX — keep it lightweight (no extra dependencies).

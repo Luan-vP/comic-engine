@@ -20,9 +20,7 @@ export const MinimapSlide = React.memo(function MinimapSlide({ slide, isActive, 
         width: '48px',
         height: '64px',
         padding: 0,
-        border: isActive
-          ? `2px solid ${theme.colors.primary}`
-          : `1px solid ${theme.colors.border}`,
+        border: isActive ? `2px solid ${theme.colors.primary}` : `1px solid ${theme.colors.border}`,
         borderRadius: '3px',
         cursor: 'pointer',
         overflow: 'hidden',

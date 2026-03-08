@@ -48,9 +48,10 @@ export function DynamicScenePage() {
     return Math.max(...zValues) - Math.min(...zValues) || 500;
   }, [layers]);
 
-  const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll(
-    { slides, scrollDepth },
-  );
+  const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll({
+    slides,
+    scrollDepth,
+  });
 
   const centeredBox = {
     width: '100%',
@@ -96,41 +97,41 @@ export function DynamicScenePage() {
 
   return (
     <>
-    <Scene
-      perspective={perspective}
-      parallaxIntensity={parallaxIntensity}
-      mouseInfluence={mouseInfluence}
-      editable
-      onSave={handleSave}
-      slug={slug}
-      controlledScrollZ={scrollZ}
-      containerRef={containerRef}
-    >
-      {layers.map((layer) => (
-        <SceneObject
-          key={layer.index}
-          position={layer.position || [0, 0, 0]}
-          parallaxFactor={layer.parallaxFactor}
-          interactive={false}
-        >
-          <img
-            src={layer.url}
-            alt={layer.name || `Layer ${layer.index}`}
-            style={{ maxWidth: '80vw', maxHeight: '80vh' }}
-          />
-        </SceneObject>
-      ))}
+      <Scene
+        perspective={perspective}
+        parallaxIntensity={parallaxIntensity}
+        mouseInfluence={mouseInfluence}
+        editable
+        onSave={handleSave}
+        slug={slug}
+        controlledScrollZ={scrollZ}
+        containerRef={containerRef}
+      >
+        {layers.map((layer) => (
+          <SceneObject
+            key={layer.index}
+            position={layer.position || [0, 0, 0]}
+            parallaxFactor={layer.parallaxFactor}
+            interactive={false}
+          >
+            <img
+              src={layer.url}
+              alt={layer.name || `Layer ${layer.index}`}
+              style={{ maxWidth: '80vw', maxHeight: '80vh' }}
+            />
+          </SceneObject>
+        ))}
 
-      {objects.map((obj) => (
-        <SavedObjectRenderer key={obj.id || `obj-${objects.indexOf(obj)}`} object={obj} />
-      ))}
-    </Scene>
+        {objects.map((obj) => (
+          <SavedObjectRenderer key={obj.id || `obj-${objects.indexOf(obj)}`} object={obj} />
+        ))}
+      </Scene>
 
-    <ScrollMinimap
-      slides={slidesWithProgress}
-      currentSlideIndex={currentSlideIndex}
-      onSlideClick={jumpToSlide}
-    />
+      <ScrollMinimap
+        slides={slidesWithProgress}
+        currentSlideIndex={currentSlideIndex}
+        onSlideClick={jumpToSlide}
+      />
     </>
   );
 }

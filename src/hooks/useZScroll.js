@@ -28,10 +28,7 @@ export function useZScroll({
   const rafRef = useRef(null);
   const snapTimeoutRef = useRef(null);
 
-  const clamp = useCallback(
-    (val) => Math.max(0, Math.min(scrollDepth, val)),
-    [scrollDepth],
-  );
+  const clamp = useCallback((val) => Math.max(0, Math.min(scrollDepth, val)), [scrollDepth]);
 
   const cancelRaf = useCallback(() => {
     if (rafRef.current) {

@@ -20,14 +20,15 @@ describe('ScrollMinimap', () => {
     const { container } = renderWithTheme(
       <ScrollMinimap slides={[SLIDES[0]]} currentSlideIndex={0} onSlideClick={() => {}} />,
     );
-    expect(container.firstChild).toBeNull();
+    // ThemeProvider wraps in a div, so check its child is empty
+    expect(container.querySelector('[style*="position: fixed"]')).toBeNull();
   });
 
   it('renders null when slides is empty', () => {
     const { container } = renderWithTheme(
       <ScrollMinimap slides={[]} currentSlideIndex={0} onSlideClick={() => {}} />,
     );
-    expect(container.firstChild).toBeNull();
+    expect(container.querySelector('[style*="position: fixed"]')).toBeNull();
   });
 
   it('renders minimap when slides.length >= 2', () => {
@@ -103,10 +104,10 @@ describe('ScrollMinimap', () => {
       { ...SLIDES[0], thumbnail: '/img/slide-0.png' },
       { ...SLIDES[1], thumbnail: '/img/slide-1.png' },
     ];
-    renderWithTheme(
+    const { container } = renderWithTheme(
       <ScrollMinimap slides={slidesWithThumbs} currentSlideIndex={0} onSlideClick={() => {}} />,
     );
-    const imgs = screen.getAllByRole('img', { hidden: true });
+    const imgs = container.querySelectorAll('img');
     expect(imgs).toHaveLength(2);
     expect(imgs[0].getAttribute('src')).toBe('/img/slide-0.png');
   });
