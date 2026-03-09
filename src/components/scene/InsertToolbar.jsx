@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '../../theme/ThemeContext';
 import { CARD_TYPE_REGISTRY } from './cardTypes';
 
@@ -91,9 +92,11 @@ export function InsertToolbar({ slug, onInsert }) {
         )}
       </div>
 
-      {ActiveModal && (
-        <ActiveModal slug={slug} onConfirm={handleModalConfirm} onCancel={handleModalCancel} />
-      )}
+      {ActiveModal &&
+        createPortal(
+          <ActiveModal slug={slug} onConfirm={handleModalConfirm} onCancel={handleModalCancel} />,
+          document.body,
+        )}
     </>
   );
 }
