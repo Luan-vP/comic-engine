@@ -4,6 +4,10 @@ import { Vignette } from './Vignette';
 import { Scanlines } from './Scanlines';
 import { Particles } from './Particles';
 import { AsciiShader } from './AsciiShader';
+import { InkSplatter } from './InkSplatter';
+import { GraffitiSpray } from './GraffitiSpray';
+import { Halftone } from './Halftone';
+import { SpeedLines } from './SpeedLines';
 
 /**
  * OverlayStack - Master controller for all visual overlays
@@ -15,6 +19,10 @@ export function OverlayStack({
   scanlines = true,
   particles = null, // null = disabled, or preset name / config object
   ascii = false, // ASCII shader overlay
+  inkSplatter = false,
+  graffitiSpray = false,
+  halftone = false,
+  speedLines = false,
 
   // Individual overrides
   filmGrainProps = {},
@@ -22,6 +30,10 @@ export function OverlayStack({
   scanlinesProps = {},
   particlesProps = {},
   asciiProps = {},
+  inkSplatterProps = {},
+  graffitiSprayProps = {},
+  halftoneProps = {},
+  speedLinesProps = {},
 }) {
   return (
     <>
@@ -29,6 +41,10 @@ export function OverlayStack({
       {filmGrain && <FilmGrain {...filmGrainProps} />}
       {vignette && <Vignette {...vignetteProps} />}
       {scanlines && <Scanlines {...scanlinesProps} />}
+      {inkSplatter && <InkSplatter {...inkSplatterProps} />}
+      {graffitiSpray && <GraffitiSpray {...graffitiSprayProps} />}
+      {halftone && <Halftone {...halftoneProps} />}
+      {speedLines && <SpeedLines {...speedLinesProps} />}
       {particles && (
         <Particles
           preset={typeof particles === 'string' ? particles : 'dust'}
@@ -41,6 +57,16 @@ export function OverlayStack({
 }
 
 // Re-export individual components for granular control
-export { FilmGrain, Vignette, Scanlines, Particles, AsciiShader };
+export {
+  FilmGrain,
+  Vignette,
+  Scanlines,
+  Particles,
+  AsciiShader,
+  InkSplatter,
+  GraffitiSpray,
+  Halftone,
+  SpeedLines,
+};
 
 export default OverlayStack;

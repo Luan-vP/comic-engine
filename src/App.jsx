@@ -78,6 +78,10 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
     { key: 'vignette', label: 'Vignette' },
     { key: 'scanlines', label: 'Scanlines' },
     { key: 'ascii', label: 'ASCII Shader' },
+    { key: 'inkSplatter', label: 'Ink Splatter' },
+    { key: 'graffitiSpray', label: 'Graffiti Spray' },
+    { key: 'halftone', label: 'Halftone Dots' },
+    { key: 'speedLines', label: 'Speed Lines' },
   ];
 
   const particlePresets = ['none', 'dust', 'snow', 'bokeh', 'embers', 'rain'];
@@ -336,6 +340,10 @@ function AppContent() {
     scanlines: true,
     particles: 'dust',
     ascii: true,
+    inkSplatter: false,
+    graffitiSpray: false,
+    halftone: false,
+    speedLines: false,
   });
 
   // Lift scene list here so PageNavigator and NewScenePage share the same state
@@ -354,6 +362,10 @@ function AppContent() {
           scanlines={overlayConfig.scanlines}
           particles={overlayConfig.particles}
           ascii={overlayConfig.ascii}
+          inkSplatter={overlayConfig.inkSplatter}
+          graffitiSpray={overlayConfig.graffitiSpray}
+          halftone={overlayConfig.halftone}
+          speedLines={overlayConfig.speedLines}
         />
       )}
 
