@@ -60,3 +60,13 @@ export async function getScene(comicBookSlug, sceneSlug) {
 export function getLayerUrl(comicBookSlug, sceneSlug, layerFile) {
   return `${GCS_BASE}/${comicBookSlug}/${sceneSlug}/${layerFile}`;
 }
+
+/**
+ * Construct the public URL for a shared asset in the /assets/ directory.
+ *
+ * @param {string} filename  e.g. "hero-image.png"
+ * @returns {string}
+ */
+export function getAssetUrl(filename) {
+  return `${GCS_BASE}/assets/${filename}`;
+}

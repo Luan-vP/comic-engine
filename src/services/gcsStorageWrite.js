@@ -58,3 +58,31 @@ export async function deleteScene(comicBookSlug, sceneSlug) {
   const [files] = await bucket.getFiles({ prefix });
   await Promise.all(files.map((f) => f.delete()));
 }
+
+/**
+ * Check if an asset already exists in the bucket.
+ *
+ * @param {string} filename
+ * @returns {Promise<boolean>}
+ */
+export async function assetExists(filename) {
+  const bucket = getStorage().bucket(BUCKET_NAME);
+  const [exists] = await bucket.file(`assets/${filename}`).exists();
+  return exists;
+}
+
+/**
+ * Upload an asset to gs://comic-engine/assets/{filename}.
+ * Does NOT overwrite — caller must check assetExists() first.
+ *
+ * @param {string} filename
+ * @param {Buffer} buffer
+ * @param {string} contentType
+ * @returns {Promise<string>} public URL of the uploaded asset
+ */
+export async function saveAsset(filename, buffer, contentType) {
+  const bucket = getStorage().bucket(BUCKET_NAME);
+  const file = bucket.file(`assets/${filename}`);
+  await file.save(buffer, { contentType });
+  return `https://storage.googleapis.com/${BUCKET_NAME}/assets/${filename}`;
+}

@@ -100,9 +100,10 @@ function ModalBase({
   );
 }
 
-export function MemoryCardModal({ slug, onConfirm, onCancel }) {
+export function MemoryCardModal({ onConfirm, onCancel }) {
   const { theme } = useTheme();
   const [imageDataUrl, setImageDataUrl] = useState(null);
+  const [originalFilename, setOriginalFilename] = useState(null);
   const [caption, setCaption] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
@@ -110,6 +111,7 @@ export function MemoryCardModal({ slug, onConfirm, onCancel }) {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setOriginalFilename(file.name);
     const reader = new FileReader();
     reader.onload = (ev) => setImageDataUrl(ev.target.result);
     reader.readAsDataURL(file);
@@ -120,22 +122,22 @@ export function MemoryCardModal({ slug, onConfirm, onCancel }) {
     setUploading(true);
     setError(null);
     try {
-      const res = await fetch(`/_dev/scenes/${slug}/assets`, {
+      const res = await fetch('/_dev/assets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: imageDataUrl }),
+        body: JSON.stringify({ imageUrl: imageDataUrl, filename: originalFilename }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Upload failed');
       }
-      const { path } = await res.json();
+      const { url } = await res.json();
       onConfirm({
         type: 'memory',
         position: [0, 0, 0],
         parallaxFactor: 0.6,
         panelVariant: 'polaroid',
-        data: { imageUrl: path, caption },
+        data: { imageUrl: url, caption },
       });
     } catch (err) {
       setError(err.message);

@@ -539,6 +539,56 @@ export default function sceneExporter() {
         }
       });
 
+      // POST /_dev/assets — Upload an image asset to GCS /assets/ with collision check
+      server.middlewares.use('/_dev/assets', async (req, res, next) => {
+        if (req.method !== 'POST') return next();
+
+        try {
+          const body = await readBody(req);
+          const { imageUrl, filename: requestedName } = body;
+
+          if (!imageUrl) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'imageUrl (data URL) is required' }));
+            return;
+          }
+
+          const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+          const mimeMatch = imageUrl.match(/^data:([^;]+);base64,/);
+          if (!mimeMatch || !ALLOWED_MIME.has(mimeMatch[1])) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Only image uploads are accepted' }));
+            return;
+          }
+
+          const contentType = mimeMatch[1];
+          const ext = dataUrlExtension(imageUrl);
+          const buffer = dataUrlToBuffer(imageUrl);
+
+          // Sanitize requested filename or generate one
+          const baseName = requestedName
+            ? requestedName.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/\.[^.]+$/, '')
+            : `upload-${Date.now()}`;
+
+          const { assetExists, saveAsset } = await import('./src/services/gcsStorageWrite.js');
+
+          // Find a non-colliding filename
+          let finalName = `${baseName}.${ext}`;
+          let attempt = 0;
+          while (await assetExists(finalName)) {
+            attempt++;
+            finalName = `${baseName}-${attempt}.${ext}`;
+          }
+
+          const publicUrl = await saveAsset(finalName, buffer, contentType);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ filename: finalName, url: publicUrl }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+
       // POST /_dev/scenes/:slug/publish — Upload scene to GCS
       server.middlewares.use('/_dev/scenes', async (req, res, next) => {
         if (req.method !== 'POST') return next();
