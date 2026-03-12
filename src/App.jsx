@@ -330,9 +330,22 @@ function PageNavigator({ localPages }) {
 }
 
 /**
- * Main App Content - separated so it can use theme context
+ * ReaderLayout - Clean, minimal layout for the published comic reader.
+ * No sidebar, no dev controls, no overlays (reader will own its own later).
  */
-function AppContent() {
+function ReaderLayout() {
+  return (
+    <Routes>
+      <Route path="/read/:comicBookSlug" element={<ComicBookReader />} />
+      <Route path="/read/:comicBookSlug/:slide" element={<ComicBookReader />} />
+    </Routes>
+  );
+}
+
+/**
+ * EditorLayout - Full editor with overlays, dev controls, and page navigation.
+ */
+function EditorLayout() {
   const location = useLocation();
   const [overlayConfig, setOverlayConfig] = useState({
     filmGrain: true,
@@ -390,11 +403,19 @@ function AppContent() {
         {/* /scenes/new must come before /scenes/:slug to avoid slug matching "new" */}
         <Route path="/scenes/new" element={<NewScenePage onCreated={refetchPages} />} />
         <Route path="/scenes/:slug" element={<DynamicScenePage />} />
-        <Route path="/read/:comicBookSlug" element={<ComicBookReader />} />
-        <Route path="/read/:comicBookSlug/:slide" element={<ComicBookReader />} />
       </Routes>
     </>
   );
+}
+
+/**
+ * AppContent - Routes to either the clean reader or the full editor layout.
+ */
+function AppContent() {
+  const location = useLocation();
+  const isReader = location.pathname.startsWith('/read/');
+
+  return isReader ? <ReaderLayout /> : <EditorLayout />;
 }
 
 /**

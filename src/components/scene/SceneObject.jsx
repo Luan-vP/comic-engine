@@ -64,6 +64,7 @@ export function SceneObject({
     scrollZ,
     parallaxIntensity,
     mouseInfluence,
+    perspective,
     editActive,
     groupOffset: sceneGroupOffset,
   } = useScene();
@@ -132,6 +133,14 @@ export function SceneObject({
   const gx = groupOffset?.x || 0;
   const gy = groupOffset?.y || 0;
 
+  // Z-depth culling: fade out and hide objects approaching the camera plane
+  const effectiveZ = z + scrollZ;
+  const fadeStart = perspective * 0.4; // start fading at 40% of perspective
+  const fadeEnd = perspective * 0.6; // fully hidden at 60% of perspective
+  const culled = effectiveZ >= fadeEnd;
+  const zOpacity =
+    effectiveZ <= fadeStart ? 1 : 1 - (effectiveZ - fadeStart) / (fadeEnd - fadeStart);
+
   // Build the 3D transform
   const transform = useMemo(() => {
     const parts = [
@@ -147,6 +156,8 @@ export function SceneObject({
     return parts.join(' ');
   }, [x, y, z, rx, ry, rz, scale, mouseOffset, scrollZ, gx, gy]);
 
+  if (culled) return null;
+
   return (
     <div
       className={className}
@@ -158,8 +169,9 @@ export function SceneObject({
         transform,
         transformStyle: 'preserve-3d',
         transformOrigin: origin,
+        opacity: zOpacity,
         pointerEvents: editActive ? 'none' : interactive ? 'auto' : 'none',
-        transition: editActive ? 'none' : 'transform 0.1s ease-out',
+        transition: editActive ? 'none' : 'transform 0.1s ease-out, opacity 0.2s ease-out',
         ...style,
       }}
     >

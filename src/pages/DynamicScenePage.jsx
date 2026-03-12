@@ -30,23 +30,36 @@ export function DynamicScenePage() {
     mouseInfluence = { x: 50, y: 30 },
   } = sceneConfig;
 
-  // Auto-derive slides from layers: zCenter = layer Z position, thumbnail from local-scenes path
+  // Auto-derive slides from layers.
+  // scrollZ is added to each object's Z in SceneObject, so the scrollZ value
+  // that centers a layer at Z=0 (camera plane) is -layer.z.
+  const minZ = useMemo(() => {
+    const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
+    const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
+    const allZs = [...layerZs, ...objectZs];
+    return allZs.length ? Math.min(...allZs) : 0;
+  }, [layers, objects]);
+
   const slides = useMemo(
     () =>
       layers.map((layer, n) => ({
         id: `layer-${layer.index ?? n}`,
         label: layer.name || `Layer ${layer.index ?? n}`,
-        zCenter: (layer.position || [0, 0, 0])[2],
+        zCenter: (layer.position || [0, 0, 0])[2] - minZ,
         thumbnail: `/local-scenes/${slug}/layer-${layer.index ?? n}.png`,
       })),
-    [layers, slug],
+    [layers, slug, minZ],
   );
 
   const scrollDepth = useMemo(() => {
-    if (!layers.length) return 500;
-    const zValues = layers.map((l) => (l.position || [0, 0, 0])[2]);
-    return Math.max(...zValues) - Math.min(...zValues) || 500;
-  }, [layers]);
+    const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
+    const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
+    const allZs = [...layerZs, ...objectZs];
+    if (!allZs.length) return 500;
+    const range = Math.max(...allZs) - Math.min(...allZs) || 500;
+    // Add extra depth so objects can scroll past the camera
+    return range + perspective;
+  }, [layers, objects, perspective]);
 
   const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll({
     slides,
