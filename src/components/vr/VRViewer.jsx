@@ -31,10 +31,18 @@ function clamp(value, min, max) {
 }
 
 // Renders a single layer inside one eye viewport
-function LayerObject({ layer, lookPos, mouseInfluence }) {
+function LayerObject({ layer, lookPos, mouseInfluence, scrollZ, perspective }) {
   const { position = [0, 0, 0], rotation = [0, 0, 0], parallaxFactor = null, content } = layer;
   const [x, y, z] = position;
   const [rx, ry, rz] = rotation;
+
+  // Z-depth culling — same thresholds as SceneObject
+  const effectiveZ = z + scrollZ;
+  const fadeStart = perspective * 0.4;
+  const fadeEnd = perspective * 0.6;
+  if (effectiveZ >= fadeEnd) return null;
+  const zOpacity =
+    effectiveZ <= fadeStart ? 1 : 1 - (effectiveZ - fadeStart) / (fadeEnd - fadeStart);
 
   // Auto-derive parallax factor from Z depth when not explicitly set
   // (mirrors the SceneObject auto-calculation: 0.7 + z/1000)
@@ -44,7 +52,7 @@ function LayerObject({ layer, lookPos, mouseInfluence }) {
   const offsetY = lookPos.y * mouseInfluence.y * effectiveParallax;
 
   const transform = [
-    `translate3d(${x + offsetX}px, ${y + offsetY}px, ${z}px)`,
+    `translate3d(${x + offsetX}px, ${y + offsetY}px, ${z + scrollZ}px)`,
     `rotateX(${rx}deg)`,
     `rotateY(${ry}deg)`,
     `rotateZ(${rz}deg)`,
@@ -59,6 +67,8 @@ function LayerObject({ layer, lookPos, mouseInfluence }) {
         transform,
         transformStyle: 'preserve-3d',
         transformOrigin: 'center',
+        opacity: zOpacity,
+        transition: 'opacity 0.15s ease-out',
       }}
     >
       {content}
@@ -67,7 +77,15 @@ function LayerObject({ layer, lookPos, mouseInfluence }) {
 }
 
 // One half of the stereoscopic display (left or right eye)
-function EyeViewport({ testId, layers, lookPos, perspective, perspectiveOriginX, mouseInfluence }) {
+function EyeViewport({
+  testId,
+  layers,
+  lookPos,
+  perspective,
+  perspectiveOriginX,
+  mouseInfluence,
+  scrollZ,
+}) {
   return (
     <div
       data-testid={testId}
@@ -94,6 +112,8 @@ function EyeViewport({ testId, layers, lookPos, perspective, perspectiveOriginX,
             layer={layer}
             lookPos={lookPos}
             mouseInfluence={mouseInfluence}
+            scrollZ={scrollZ}
+            perspective={perspective}
           />
         ))}
       </div>
@@ -106,9 +126,11 @@ export function VRViewer({
   perspective = 1000,
   mouseInfluence = { x: 50, y: 30 },
   stereoOffset = 7,
+  scrollDepth = 500,
 }) {
   const { theme } = useTheme();
   const [lookPos, setLookPos] = useState({ x: 0, y: 0 });
+  const [scrollZ, setScrollZ] = useState(0);
   const [hasOrientation, setHasOrientation] = useState(false);
   const [needsPermission, setNeedsPermission] = useState(
     () =>
@@ -116,6 +138,51 @@ export function VRViewer({
       typeof DeviceOrientationEvent.requestPermission === 'function',
   );
   const viewerRef = useRef(null);
+  const touchRef = useRef(null);
+
+  // Touch-based z-scrolling: swipe up = zoom in (increase scrollZ)
+  useEffect(() => {
+    const el = viewerRef.current;
+    if (!el) return;
+
+    const handleTouchStart = (e) => {
+      if (e.touches.length === 1) {
+        touchRef.current = { y: e.touches[0].clientY };
+      }
+    };
+    const handleTouchMove = (e) => {
+      if (!touchRef.current || e.touches.length !== 1) return;
+      const dy = touchRef.current.y - e.touches[0].clientY; // positive = swipe up
+      touchRef.current.y = e.touches[0].clientY;
+      // Scale: 2px of touch movement = 1px of z-scroll
+      setScrollZ((prev) => clamp(prev + dy * 0.5, 0, scrollDepth));
+      e.preventDefault();
+    };
+    const handleTouchEnd = () => {
+      touchRef.current = null;
+    };
+
+    el.addEventListener('touchstart', handleTouchStart, { passive: true });
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    el.addEventListener('touchend', handleTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchmove', handleTouchMove);
+      el.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [scrollDepth]);
+
+  // Mouse wheel fallback for desktop: scroll down = zoom in
+  useEffect(() => {
+    const el = viewerRef.current;
+    if (!el) return;
+    const handleWheel = (e) => {
+      setScrollZ((prev) => clamp(prev + e.deltaY * 0.5, 0, scrollDepth));
+      e.preventDefault();
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [scrollDepth]);
 
   // Subscribe to device orientation events and return the unsubscribe function
   const subscribeOrientation = useCallback(() => {
@@ -192,6 +259,7 @@ export function VRViewer({
         perspective={perspective}
         perspectiveOriginX={leftOriginX}
         mouseInfluence={mouseInfluence}
+        scrollZ={scrollZ}
       />
 
       {/* Centre divider — physical separator between lenses on the headset */}
@@ -216,6 +284,7 @@ export function VRViewer({
         perspective={perspective}
         perspectiveOriginX={rightOriginX}
         mouseInfluence={mouseInfluence}
+        scrollZ={scrollZ}
       />
 
       {/* iOS permission prompt */}

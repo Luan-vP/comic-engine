@@ -286,7 +286,12 @@ export function ComicBookReader() {
 
       <VRButton isVR={isVR} onToggle={() => setIsVR((v) => !v)} />
       {isVR && (
-        <VRViewer layers={vrLayers} perspective={perspective} mouseInfluence={mouseInfluence} />
+        <VRViewer
+          layers={vrLayers}
+          perspective={perspective}
+          mouseInfluence={mouseInfluence}
+          scrollDepth={scrollDepth}
+        />
       )}
     </>
   );

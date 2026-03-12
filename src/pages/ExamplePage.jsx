@@ -520,7 +520,7 @@ export function ExamplePage() {
       <VRButton isVR={isVR} onToggle={() => setIsVR((v) => !v)} />
 
       {/* VR viewer — fullscreen overlay, only mounted when active */}
-      {isVR && <VRViewer layers={vrLayers} />}
+      {isVR && <VRViewer layers={vrLayers} scrollDepth={400} />}
 
       {/* Scroll minimap — fixed right side, outside the 3D scene */}
       <ScrollMinimap
