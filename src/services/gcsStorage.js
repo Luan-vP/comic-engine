@@ -44,7 +44,7 @@ export async function getManifest(comicBookSlug) {
  */
 export async function getScene(comicBookSlug, sceneSlug) {
   const url = `${GCS_BASE}/${comicBookSlug}/${sceneSlug}/scene.json`;
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: 'no-cache' });
   if (!res.ok) throw new Error('SCENE_NOT_FOUND');
   return res.json();
 }

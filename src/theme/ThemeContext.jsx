@@ -81,7 +81,9 @@ export function ThemeProvider({ children, initialTheme = defaultTheme }) {
 
   return (
     <ThemeContext.Provider value={value}>
-      <div style={cssVariables}>{children}</div>
+      <div style={{ ...cssVariables, transition: 'background 0.8s ease, color 0.4s ease' }}>
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 }

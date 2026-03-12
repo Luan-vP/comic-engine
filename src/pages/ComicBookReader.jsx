@@ -1,10 +1,12 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Scene, SceneObject } from '../components/scene';
 import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
+import { OverlayStack } from '../components/overlays';
 import { useTheme } from '../theme/ThemeContext';
 import { useComicBook } from '../hooks/useComicBook';
 import { useZScroll } from '../hooks/useZScroll';
+import { useThemeTriggers } from '../hooks/useThemeTriggers';
 import { getLayerUrl } from '../services/gcsStorage';
 
 /**
@@ -17,7 +19,7 @@ import { getLayerUrl } from '../services/gcsStorage';
 export function ComicBookReader() {
   const { comicBookSlug, slide } = useParams();
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   // Convert 1-based URL param to 0-based index
   const slideIndex = slide ? Math.max(0, parseInt(slide, 10) - 1) : 0;
@@ -120,6 +122,28 @@ export function ComicBookReader() {
     snapEnabled: false,
   });
 
+  // Per-scene theme: read from sceneConfig.theme (stabilize references to avoid re-render loops)
+  const sceneTheme = sceneConfig.theme;
+  const baseThemeName = sceneTheme?.base || 'pulp';
+  const baseOverlays = useMemo(() => sceneTheme?.overlays || {}, [sceneTheme?.overlays]);
+  const triggers = useMemo(() => sceneTheme?.triggers || [], [sceneTheme?.triggers]);
+
+  const { activeThemeName, activeOverlays, handleObjectClick } = useThemeTriggers({
+    triggers,
+    scrollZ,
+    baseTheme: baseThemeName,
+    baseOverlays,
+  });
+
+  // Apply active theme to the global ThemeContext (use ref to avoid render loop)
+  const appliedThemeRef = useRef(null);
+  useEffect(() => {
+    if (currentScene && activeThemeName && activeThemeName !== appliedThemeRef.current) {
+      appliedThemeRef.current = activeThemeName;
+      setTheme(activeThemeName);
+    }
+  }, [activeThemeName, currentScene, setTheme]);
+
   const centeredBox = {
     width: '100%',
     height: '100vh',
@@ -172,43 +196,60 @@ export function ComicBookReader() {
   }
 
   return (
-    <Scene
-      perspective={perspective}
-      parallaxIntensity={parallaxIntensity}
-      mouseInfluence={mouseInfluence}
-      controlledScrollZ={scrollZ}
-      containerRef={containerRef}
-    >
-      {layers.map((layer) => {
-        const layerFile = layer.hasBlurFill
-          ? `layer-${layer.index}-blur.png`
-          : `layer-${layer.index}.png`;
-        const imgSrc = getLayerUrl(comicBookSlug, sceneSlug, layerFile);
+    <>
+      <OverlayStack
+        filmGrain={activeOverlays.filmGrain}
+        vignette={activeOverlays.vignette}
+        scanlines={activeOverlays.scanlines}
+        particles={activeOverlays.particles}
+        ascii={activeOverlays.ascii}
+        inkSplatter={activeOverlays.inkSplatter}
+        graffitiSpray={activeOverlays.graffitiSpray}
+        halftone={activeOverlays.halftone}
+        speedLines={activeOverlays.speedLines}
+      />
+      <Scene
+        perspective={perspective}
+        parallaxIntensity={parallaxIntensity}
+        mouseInfluence={mouseInfluence}
+        controlledScrollZ={scrollZ}
+        containerRef={containerRef}
+      >
+        {layers.map((layer) => {
+          const layerFile = layer.hasBlurFill
+            ? `layer-${layer.index}-blur.png`
+            : `layer-${layer.index}.png`;
+          const imgSrc = getLayerUrl(comicBookSlug, sceneSlug, layerFile);
 
-        return (
-          <SceneObject
-            key={layer.index}
-            position={layer.position || [0, 0, 0]}
-            parallaxFactor={layer.parallaxFactor}
-            interactive={false}
-          >
-            <img
-              src={imgSrc}
-              alt={layer.name || `Layer ${layer.index}`}
-              style={{ maxWidth: '80vw', maxHeight: '80vh' }}
-            />
-          </SceneObject>
-        );
-      })}
+          return (
+            <SceneObject
+              key={layer.index}
+              position={layer.position || [0, 0, 0]}
+              parallaxFactor={layer.parallaxFactor}
+              interactive={false}
+            >
+              <img
+                src={imgSrc}
+                alt={layer.name || `Layer ${layer.index}`}
+                style={{ maxWidth: '80vw', maxHeight: '80vh' }}
+              />
+            </SceneObject>
+          );
+        })}
 
-      {objects.map((obj, i) => (
-        <SavedObjectRenderer key={obj.id || `obj-${i}`} object={obj} />
-      ))}
-    </Scene>
+        {objects.map((obj, i) => (
+          <SavedObjectRenderer
+            key={obj.id || `obj-${i}`}
+            object={obj}
+            onObjectClick={handleObjectClick}
+          />
+        ))}
+      </Scene>
+    </>
   );
 }
 
-function SavedObjectRenderer({ object }) {
+function SavedObjectRenderer({ object, onObjectClick }) {
   const position = object.position || [0, 0, 0];
   const parallaxFactor = object.parallaxFactor ?? 0.6;
 
@@ -218,7 +259,11 @@ function SavedObjectRenderer({ object }) {
   if (!content) return null;
 
   return (
-    <SceneObject position={position} parallaxFactor={parallaxFactor}>
+    <SceneObject
+      position={position}
+      parallaxFactor={parallaxFactor}
+      onClick={onObjectClick ? () => onObjectClick(object.id) : undefined}
+    >
       {content}
     </SceneObject>
   );
