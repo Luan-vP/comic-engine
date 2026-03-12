@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Scene, SceneObject } from '../components/scene';
 import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
+import { ObjectEditPopover } from '../components/scene/InsertModals';
 import { useTheme } from '../theme/ThemeContext';
 import { useSceneLoader } from '../hooks/useSceneLoader';
 import { useZScroll } from '../hooks/useZScroll';
@@ -65,6 +66,28 @@ export function DynamicScenePage() {
     slides,
     scrollDepth,
   });
+
+  // Object editing
+  const [selectedObjectId, setSelectedObjectId] = useState(null);
+  const selectedObject = objects.find((o) => o.id === selectedObjectId) || null;
+
+  const handleObjectUpdate = useCallback(
+    (updated) => {
+      const nextObjects = objects.map((o) => (o.id === updated.id ? updated : o));
+      handleSave({ groupOffset: { x: 0, y: 0 }, groupOffsets: {}, objects: nextObjects });
+      setSelectedObjectId(null);
+    },
+    [objects, handleSave],
+  );
+
+  const handleObjectDelete = useCallback(
+    (id) => {
+      const nextObjects = objects.filter((o) => o.id !== id);
+      handleSave({ groupOffset: { x: 0, y: 0 }, groupOffsets: {}, objects: nextObjects });
+      setSelectedObjectId(null);
+    },
+    [objects, handleSave],
+  );
 
   const centeredBox = {
     width: '100%',
@@ -136,9 +159,24 @@ export function DynamicScenePage() {
         ))}
 
         {objects.map((obj) => (
-          <SavedObjectRenderer key={obj.id || `obj-${objects.indexOf(obj)}`} object={obj} />
+          <SavedObjectRenderer
+            key={obj.id || `obj-${objects.indexOf(obj)}`}
+            object={obj}
+            selected={obj.id === selectedObjectId}
+            onSelect={setSelectedObjectId}
+          />
         ))}
       </Scene>
+
+      {selectedObject && (
+        <ObjectEditPopover
+          key={selectedObject.id}
+          object={selectedObject}
+          onUpdate={handleObjectUpdate}
+          onDelete={handleObjectDelete}
+          onClose={() => setSelectedObjectId(null)}
+        />
+      )}
 
       <ScrollMinimap
         slides={slidesWithProgress}
@@ -152,7 +190,7 @@ export function DynamicScenePage() {
 /**
  * SavedObjectRenderer - renders a persisted scene object from scene.json's objects array.
  */
-function SavedObjectRenderer({ object }) {
+function SavedObjectRenderer({ object, selected, onSelect }) {
   const position = object.position || [0, 0, 0];
   const parallaxFactor = object.parallaxFactor ?? 0.6;
 
@@ -162,7 +200,16 @@ function SavedObjectRenderer({ object }) {
   if (!content) return null;
 
   return (
-    <SceneObject position={position} parallaxFactor={parallaxFactor}>
+    <SceneObject
+      position={position}
+      parallaxFactor={parallaxFactor}
+      onClick={onSelect ? () => onSelect(object.id) : undefined}
+      style={
+        selected
+          ? { outline: '2px solid var(--color-primary, #ff4081)', outlineOffset: '4px' }
+          : undefined
+      }
+    >
       {content}
     </SceneObject>
   );

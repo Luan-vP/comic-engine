@@ -162,6 +162,7 @@ export function SceneObject({
     <div
       className={className}
       onClick={onClick}
+      onMouseDown={editActive && onClick ? (e) => e.stopPropagation() : undefined}
       onMouseEnter={onHover ? () => onHover(true) : undefined}
       onMouseLeave={onHover ? () => onHover(false) : undefined}
       style={{
@@ -170,7 +171,8 @@ export function SceneObject({
         transformStyle: 'preserve-3d',
         transformOrigin: origin,
         opacity: zOpacity,
-        pointerEvents: editActive ? 'none' : interactive ? 'auto' : 'none',
+        pointerEvents: editActive ? (onClick ? 'auto' : 'none') : interactive ? 'auto' : 'none',
+        cursor: editActive && onClick ? 'pointer' : undefined,
         transition: editActive ? 'none' : 'transform 0.1s ease-out, opacity 0.2s ease-out',
         ...style,
       }}

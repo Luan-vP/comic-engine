@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { useTheme } from '../../theme/ThemeContext';
 
 const MODAL_OVERLAY_STYLE = {
@@ -287,4 +288,199 @@ export function TextCardModal({ onConfirm, onCancel }) {
       </div>
     </ModalBase>
   );
+}
+
+export function ObjectEditPopover({ object, onUpdate, onClose, onDelete }) {
+  const { theme } = useTheme();
+  const [data, setData] = useState({ ...object.data });
+  const [position, setPosition] = useState([...(object.position || [0, 0, 0])]);
+  const [parallaxFactor, setParallaxFactor] = useState(object.parallaxFactor ?? 0.6);
+
+  const handleApply = () => {
+    onUpdate({ ...object, data, position, parallaxFactor });
+  };
+
+  const setPos = (idx, val) => {
+    const next = [...position];
+    next[idx] = Number(val);
+    setPosition(next);
+  };
+
+  const iStyle = inputStyle(theme);
+  const lStyle = { color: theme.colors.textMuted, fontSize: '10px', letterSpacing: '1px' };
+
+  const popover = (
+    <div
+      style={{
+        position: 'fixed',
+        top: '80px',
+        right: '20px',
+        zIndex: 10002,
+        background: 'rgba(0,0,0,0.92)',
+        backdropFilter: 'blur(10px)',
+        border: `1px solid ${theme.colors.border}`,
+        borderRadius: '10px',
+        padding: '16px',
+        width: '280px',
+        fontFamily: theme.typography.fontBody,
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '12px',
+        }}
+      >
+        <span
+          style={{
+            color: theme.colors.text,
+            fontSize: '11px',
+            letterSpacing: '2px',
+            fontFamily: theme.typography.fontDisplay,
+          }}
+        >
+          EDIT {object.type.toUpperCase()}
+        </span>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: theme.colors.textMuted,
+            cursor: 'pointer',
+            fontSize: '16px',
+            padding: '0 4px',
+          }}
+        >
+          x
+        </button>
+      </div>
+
+      {/* Type-specific fields */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+        {object.type === 'text' && (
+          <>
+            <div>
+              <div style={lStyle}>TITLE</div>
+              <input
+                type="text"
+                value={data.title || ''}
+                onChange={(e) => setData({ ...data, title: e.target.value })}
+                style={{ ...iStyle, marginTop: '2px' }}
+              />
+            </div>
+            <div>
+              <div style={lStyle}>BODY</div>
+              <textarea
+                value={data.body || ''}
+                onChange={(e) => setData({ ...data, body: e.target.value })}
+                rows={3}
+                style={{ ...iStyle, marginTop: '2px', resize: 'vertical' }}
+              />
+            </div>
+          </>
+        )}
+        {object.type === 'memory' && (
+          <div>
+            <div style={lStyle}>CAPTION</div>
+            <input
+              type="text"
+              value={data.caption || ''}
+              onChange={(e) => setData({ ...data, caption: e.target.value })}
+              style={{ ...iStyle, marginTop: '2px' }}
+            />
+          </div>
+        )}
+        {object.type === 'iframe' && (
+          <div>
+            <div style={lStyle}>URL</div>
+            <input
+              type="url"
+              value={data.url || ''}
+              onChange={(e) => setData({ ...data, url: e.target.value })}
+              style={{ ...iStyle, marginTop: '2px' }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Position */}
+      <div style={{ marginBottom: '12px' }}>
+        <div style={lStyle}>POSITION</div>
+        <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+          {['X', 'Y', 'Z'].map((axis, i) => (
+            <div key={axis} style={{ flex: 1 }}>
+              <div style={{ color: theme.colors.textSubtle, fontSize: '9px', marginBottom: '2px' }}>
+                {axis}
+              </div>
+              <input
+                type="number"
+                value={position[i]}
+                onChange={(e) => setPos(i, e.target.value)}
+                step={10}
+                style={{ ...iStyle, padding: '4px 6px', fontSize: '11px' }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Parallax */}
+      <div style={{ marginBottom: '14px' }}>
+        <div style={lStyle}>PARALLAX FACTOR</div>
+        <input
+          type="number"
+          value={parallaxFactor}
+          onChange={(e) => setParallaxFactor(Number(e.target.value))}
+          step={0.1}
+          min={0}
+          max={2}
+          style={{ ...iStyle, marginTop: '4px', width: '80px' }}
+        />
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: '6px', justifyContent: 'space-between' }}>
+        {onDelete && (
+          <button
+            onClick={() => onDelete(object.id)}
+            style={{
+              background: 'rgba(255,80,80,0.15)',
+              color: '#f55',
+              border: '1px solid rgba(255,80,80,0.3)',
+              borderRadius: '4px',
+              padding: '5px 10px',
+              cursor: 'pointer',
+              fontSize: '11px',
+              fontFamily: theme.typography.fontBody,
+            }}
+          >
+            Delete
+          </button>
+        )}
+        <button
+          onClick={handleApply}
+          style={{
+            background: theme.colors.primary,
+            color: '#000',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '5px 14px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '11px',
+            fontFamily: theme.typography.fontBody,
+            marginLeft: 'auto',
+          }}
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  );
+
+  return ReactDOM.createPortal(popover, document.body);
 }
