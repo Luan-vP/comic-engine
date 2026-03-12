@@ -1,8 +1,9 @@
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Scene, SceneObject } from '../components/scene';
 import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
 import { OverlayStack } from '../components/overlays';
+import { VRButton, VRViewer } from '../components/vr';
 import { useTheme } from '../theme/ThemeContext';
 import { useComicBook } from '../hooks/useComicBook';
 import { useZScroll } from '../hooks/useZScroll';
@@ -144,6 +145,43 @@ export function ComicBookReader() {
     }
   }, [activeThemeName, currentScene, setTheme]);
 
+  // VR mode
+  const [isVR, setIsVR] = useState(false);
+
+  const vrLayers = useMemo(() => {
+    const vr = layers.map((layer) => {
+      const layerFile = layer.hasBlurFill
+        ? `layer-${layer.index}-blur.png`
+        : `layer-${layer.index}.png`;
+      const imgSrc = getLayerUrl(comicBookSlug, sceneSlug, layerFile);
+      return {
+        id: `layer-${layer.index}`,
+        position: layer.position || [0, 0, 0],
+        parallaxFactor: layer.parallaxFactor,
+        content: (
+          <img
+            src={imgSrc}
+            alt={layer.name || `Layer ${layer.index}`}
+            style={{ maxWidth: '80vw', maxHeight: '80vh' }}
+          />
+        ),
+      };
+    });
+    objects.forEach((obj, i) => {
+      const cardType = CARD_TYPE_REGISTRY.find((ct) => ct.id === obj.type);
+      const content = cardType ? cardType.renderContent(obj) : null;
+      if (content) {
+        vr.push({
+          id: obj.id || `obj-${i}`,
+          position: obj.position || [0, 0, 0],
+          parallaxFactor: obj.parallaxFactor ?? 0.6,
+          content,
+        });
+      }
+    });
+    return vr;
+  }, [layers, objects, comicBookSlug, sceneSlug]);
+
   const centeredBox = {
     width: '100%',
     height: '100vh',
@@ -245,6 +283,11 @@ export function ComicBookReader() {
           />
         ))}
       </Scene>
+
+      <VRButton isVR={isVR} onToggle={() => setIsVR((v) => !v)} />
+      {isVR && (
+        <VRViewer layers={vrLayers} perspective={perspective} mouseInfluence={mouseInfluence} />
+      )}
     </>
   );
 }
