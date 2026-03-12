@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Scene, SceneObject, Panel } from '../components/scene';
-import { VRButton, VRViewer } from '../components/vr';
 import { useTheme } from '../theme/ThemeContext';
 import { useZScroll } from '../hooks/useZScroll';
 import { ScrollMinimap } from '../components/minimap';
@@ -10,10 +9,6 @@ import { ScrollMinimap } from '../components/minimap';
  *
  * This shows various ways to place objects in 3D space with parallax.
  * Copy this pattern for your own pages.
- *
- * VR mode: click "VIEW IN VR" (bottom-right) to enter stereoscopic mode.
- * On mobile, tilt your phone to look around. Drop it into a Cardboard headset
- * for full immersive viewing.
  */
 // Slides define camera stop positions (scrollZ values) for the minimap.
 // scrollDepth=400 lets you scroll the background panel (z=-200) into focus.
@@ -26,223 +21,11 @@ const EXAMPLE_SLIDES = [
 export function ExamplePage() {
   const { theme } = useTheme();
   const [, setActivePanel] = useState(null);
-  const [isVR, setIsVR] = useState(false);
 
   const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll({
     slides: EXAMPLE_SLIDES,
     scrollDepth: 400,
   });
-
-  // VR layers mirror the scene's visual elements as structured layer data.
-  // content can be any JSX — keep it lightweight (no extra dependencies).
-  const vrLayers = useMemo(
-    () => [
-      {
-        id: 'far-circle',
-        position: [-200, -100, -400],
-        rotation: [0, 0, 15],
-        parallaxFactor: 0.1,
-        content: (
-          <div
-            style={{
-              width: '200px',
-              height: '200px',
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: '50%',
-              opacity: 0.3,
-            }}
-          />
-        ),
-      },
-      {
-        id: 'far-square',
-        position: [250, 150, -350],
-        rotation: [0, 0, -20],
-        parallaxFactor: 0.15,
-        content: (
-          <div
-            style={{
-              width: '150px',
-              height: '150px',
-              border: `1px solid ${theme.colors.secondary}`,
-              opacity: 0.2,
-            }}
-          />
-        ),
-      },
-      {
-        id: 'bg-panel',
-        position: [-180, 30, -200],
-        rotation: [15, -10, -3],
-        parallaxFactor: 0.3,
-        content: (
-          <div
-            style={{
-              width: '280px',
-              height: '360px',
-              background: 'rgba(0,0,0,0.6)',
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span
-              style={{
-                color: theme.colors.textMuted,
-                fontFamily: theme.typography.fontDisplay,
-                fontSize: '14px',
-                letterSpacing: '2px',
-              }}
-            >
-              CHAPTER I
-            </span>
-          </div>
-        ),
-      },
-      {
-        id: 'mid-panel',
-        position: [50, -20, 0],
-        rotation: [0, 0, 0],
-        parallaxFactor: 0.6,
-        content: (
-          <div
-            style={{
-              width: '320px',
-              height: '420px',
-              background: 'rgba(0,0,0,0.7)',
-              border: `1px solid ${theme.colors.primary}`,
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span
-              style={{
-                color: theme.colors.primary,
-                fontFamily: theme.typography.fontDisplay,
-                fontSize: '14px',
-                letterSpacing: '2px',
-              }}
-            >
-              THE PRESENT
-            </span>
-          </div>
-        ),
-      },
-      {
-        id: 'side-panel',
-        position: [320, 0, -50],
-        rotation: [0, -35, 0],
-        parallaxFactor: 0.5,
-        content: (
-          <div
-            style={{
-              width: '200px',
-              height: '300px',
-              background: '#222',
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span
-              style={{ color: '#666', fontSize: '10px', fontFamily: theme.typography.fontBody }}
-            >
-              MEMORY
-            </span>
-          </div>
-        ),
-      },
-      {
-        id: 'fg-video',
-        position: [-250, 120, 150],
-        rotation: [5, 15, -5],
-        parallaxFactor: 0.85,
-        content: (
-          <div
-            style={{
-              width: '200px',
-              height: '130px',
-              background: '#000',
-              border: '3px solid #333',
-              borderRadius: '4px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
-            }}
-          >
-            <div
-              style={{
-                width: '40px',
-                height: '40px',
-                border: `2px solid ${theme.colors.primary}`,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <div
-                style={{
-                  width: 0,
-                  height: 0,
-                  borderTop: '8px solid transparent',
-                  borderBottom: '8px solid transparent',
-                  borderLeft: `12px solid ${theme.colors.primary}`,
-                  marginLeft: '3px',
-                }}
-              />
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: 'fg-text',
-        position: [200, -150, 250],
-        rotation: [-5, -10, 8],
-        parallaxFactor: 1.1,
-        content: (
-          <div
-            style={{
-              fontFamily: theme.typography.fontDisplay,
-              fontSize: '48px',
-              color: theme.colors.primary,
-              opacity: 0.15,
-              textTransform: 'uppercase',
-              letterSpacing: '8px',
-            }}
-          >
-            2025
-          </div>
-        ),
-      },
-      {
-        id: 'floor',
-        position: [0, 280, -150],
-        rotation: [75, 0, 0],
-        parallaxFactor: 0.35,
-        content: (
-          <div
-            style={{
-              width: '600px',
-              height: '300px',
-              background: `linear-gradient(180deg, transparent 0%, ${theme.colors.background} 100%)`,
-              borderTop: `1px solid ${theme.colors.border}`,
-              opacity: 0.5,
-            }}
-          />
-        ),
-      },
-    ],
-    [theme],
-  );
 
   return (
     <>
@@ -515,12 +298,6 @@ export function ExamplePage() {
           </p>
         </div>
       </Scene>
-
-      {/* VR toggle button — floats over the scene (bottom-right) */}
-      <VRButton isVR={isVR} onToggle={() => setIsVR((v) => !v)} />
-
-      {/* VR viewer — fullscreen overlay, only mounted when active */}
-      {isVR && <VRViewer layers={vrLayers} scrollDepth={400} />}
 
       {/* Scroll minimap — fixed right side, outside the 3D scene */}
       <ScrollMinimap
