@@ -1,9 +1,10 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Scene, SceneObject } from '../components/scene';
 import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
 import { useTheme } from '../theme/ThemeContext';
 import { useComicBook } from '../hooks/useComicBook';
+import { useZScroll } from '../hooks/useZScroll';
 import { getLayerUrl } from '../services/gcsStorage';
 
 /**
@@ -78,6 +79,47 @@ export function ComicBookReader() {
     };
   }, [goNext, goPrev]);
 
+  // Extract scene data with safe defaults (hooks must run before early returns)
+  const sceneSlug = scenes[slideIndex]?.slug;
+  const { layers = [], objects = [], sceneConfig = {} } = currentScene || {};
+  const {
+    perspective = 1000,
+    parallaxIntensity = 1,
+    mouseInfluence = { x: 50, y: 30 },
+  } = sceneConfig;
+
+  const minZ = useMemo(() => {
+    const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
+    const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
+    const allZs = [...layerZs, ...objectZs];
+    return allZs.length ? Math.min(...allZs) : 0;
+  }, [layers, objects]);
+
+  const slides = useMemo(
+    () =>
+      layers.map((layer) => ({
+        id: `layer-${layer.index}`,
+        label: layer.name || `Layer ${layer.index}`,
+        zCenter: (layer.position || [0, 0, 0])[2] - minZ,
+      })),
+    [layers, minZ],
+  );
+
+  const scrollDepth = useMemo(() => {
+    const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
+    const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
+    const allZs = [...layerZs, ...objectZs];
+    if (!allZs.length) return 500;
+    const range = Math.max(...allZs) - Math.min(...allZs) || 500;
+    return range + perspective;
+  }, [layers, objects, perspective]);
+
+  const { scrollZ, containerRef } = useZScroll({
+    slides,
+    scrollDepth,
+    snapEnabled: false,
+  });
+
   const centeredBox = {
     width: '100%',
     height: '100vh',
@@ -129,19 +171,13 @@ export function ComicBookReader() {
     );
   }
 
-  const sceneSlug = scenes[slideIndex]?.slug;
-  const { layers = [], objects = [], sceneConfig = {} } = currentScene;
-  const {
-    perspective = 1000,
-    parallaxIntensity = 1,
-    mouseInfluence = { x: 50, y: 30 },
-  } = sceneConfig;
-
   return (
     <Scene
       perspective={perspective}
       parallaxIntensity={parallaxIntensity}
       mouseInfluence={mouseInfluence}
+      controlledScrollZ={scrollZ}
+      containerRef={containerRef}
     >
       {layers.map((layer) => {
         const layerFile = layer.hasBlurFill
