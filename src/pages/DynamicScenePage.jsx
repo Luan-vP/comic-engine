@@ -91,7 +91,12 @@ export function DynamicScenePage() {
   const handleObjectUpdate = useCallback(
     (updated) => {
       const nextObjects = objects.map((o) => (o.id === updated.id ? updated : o));
-      handleSave({ groupOffset: { x: 0, y: 0 }, groupOffsets: {}, objects: nextObjects });
+      handleSave({
+        groupOffset: { x: 0, y: 0 },
+        groupOffsets: {},
+        objects: nextObjects,
+        replaceObjects: true,
+      });
       handleDeselect();
     },
     [objects, handleSave, handleDeselect],
@@ -100,7 +105,12 @@ export function DynamicScenePage() {
   const handleObjectDelete = useCallback(
     (id) => {
       const nextObjects = objects.filter((o) => o.id !== id);
-      handleSave({ groupOffset: { x: 0, y: 0 }, groupOffsets: {}, objects: nextObjects });
+      handleSave({
+        groupOffset: { x: 0, y: 0 },
+        groupOffsets: {},
+        objects: nextObjects,
+        replaceObjects: true,
+      });
       handleDeselect();
     },
     [objects, handleSave, handleDeselect],

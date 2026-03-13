@@ -78,14 +78,14 @@ export function useSceneLoader(slug, source, options = {}) {
   }, [slug, resolvedSource, comicBookSlug]);
 
   const save = useCallback(
-    async ({ groupOffset, groupOffsets, objects: newObjects = [] }) => {
+    async ({ groupOffset, groupOffsets, objects: newObjects = [], replaceObjects = false }) => {
       if (resolvedSource !== 'local') {
         // GCS backend is read-only
         return;
       }
       try {
         const existingObjects = scene?.objects || [];
-        const allObjects = [...existingObjects, ...newObjects];
+        const allObjects = replaceObjects ? newObjects : [...existingObjects, ...newObjects];
 
         const res = await fetch(`/_dev/scenes/${slug}`, {
           method: 'PATCH',
@@ -94,6 +94,9 @@ export function useSceneLoader(slug, source, options = {}) {
         });
         if (!res.ok) {
           console.error('Failed to save scene positions:', await res.text());
+        } else {
+          // Update local state so UI reflects saved data immediately
+          setScene((prev) => (prev ? { ...prev, objects: allObjects } : prev));
         }
       } catch (err) {
         console.error('Failed to save scene positions:', err);
