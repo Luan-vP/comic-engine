@@ -263,6 +263,10 @@ export function Scene({
             height: '100%',
             position: 'relative',
             transformStyle: 'preserve-3d',
+            // Allow clicks to pass through to children at negative Z depths.
+            // Without this, the container plane at z=0 intercepts pointer events
+            // before they reach elements behind it in 3D space.
+            pointerEvents: 'none',
           }}
         >
           {children}
