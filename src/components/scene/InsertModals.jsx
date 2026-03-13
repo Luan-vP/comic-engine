@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -290,21 +290,57 @@ export function TextCardModal({ onConfirm, onCancel }) {
   );
 }
 
-export function ObjectEditPopover({ object, onUpdate, onClose, onDelete }) {
+/**
+ * DraggableNumberLabel - A label you can drag vertically to scrub the value.
+ * Dragging up increases, dragging down decreases.
+ */
+function DraggableNumberLabel({ children, value, onChange, sensitivity = 1, style }) {
+  const handleMouseDown = useCallback(
+    (e) => {
+      e.preventDefault();
+      const startY = e.clientY;
+      const startVal = value;
+
+      const handleMove = (moveE) => {
+        const dy = startY - moveE.clientY; // up = positive
+        onChange(Math.round(startVal + dy * sensitivity));
+      };
+
+      const handleUp = () => {
+        window.removeEventListener('mousemove', handleMove);
+        window.removeEventListener('mouseup', handleUp);
+      };
+
+      window.addEventListener('mousemove', handleMove);
+      window.addEventListener('mouseup', handleUp);
+    },
+    [value, onChange, sensitivity],
+  );
+
+  return (
+    <div onMouseDown={handleMouseDown} style={{ cursor: 'ns-resize', userSelect: 'none', ...style }}>
+      {children}
+    </div>
+  );
+}
+
+export function ObjectEditPopover({ object, position, onPositionChange, onUpdate, onClose, onDelete }) {
   const { theme } = useTheme();
   const [data, setData] = useState({ ...object.data });
-  const [position, setPosition] = useState([...(object.position || [0, 0, 0])]);
   const [parallaxFactor, setParallaxFactor] = useState(object.parallaxFactor ?? 0.6);
 
   const handleApply = () => {
     onUpdate({ ...object, data, position, parallaxFactor });
   };
 
-  const setPos = (idx, val) => {
-    const next = [...position];
-    next[idx] = Number(val);
-    setPosition(next);
-  };
+  const setPos = useCallback(
+    (idx, val) => {
+      const next = [...position];
+      next[idx] = Number(val);
+      onPositionChange(next);
+    },
+    [position, onPositionChange],
+  );
 
   const iStyle = inputStyle(theme);
   const lStyle = { color: theme.colors.textMuted, fontSize: '10px', letterSpacing: '1px' };
@@ -407,15 +443,20 @@ export function ObjectEditPopover({ object, onUpdate, onClose, onDelete }) {
         )}
       </div>
 
-      {/* Position */}
+      {/* Position — drag labels to scrub values */}
       <div style={{ marginBottom: '12px' }}>
-        <div style={lStyle}>POSITION</div>
+        <div style={lStyle}>POSITION (drag labels to scrub)</div>
         <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
           {['X', 'Y', 'Z'].map((axis, i) => (
             <div key={axis} style={{ flex: 1 }}>
-              <div style={{ color: theme.colors.textSubtle, fontSize: '9px', marginBottom: '2px' }}>
+              <DraggableNumberLabel
+                value={position[i]}
+                onChange={(v) => setPos(i, v)}
+                sensitivity={2}
+                style={{ color: theme.colors.textSubtle, fontSize: '9px', marginBottom: '2px' }}
+              >
                 {axis}
-              </div>
+              </DraggableNumberLabel>
               <input
                 type="number"
                 value={position[i]}

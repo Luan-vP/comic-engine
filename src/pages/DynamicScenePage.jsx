@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Scene, SceneObject } from '../components/scene';
 import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
@@ -67,26 +67,106 @@ export function DynamicScenePage() {
     scrollDepth,
   });
 
-  // Object editing
+  // Object editing — position is lifted so drag and popover share it
   const [selectedObjectId, setSelectedObjectId] = useState(null);
+  const [editPosition, setEditPosition] = useState(null);
   const selectedObject = objects.find((o) => o.id === selectedObjectId) || null;
+
+  const handleSelect = useCallback(
+    (id) => {
+      const obj = objects.find((o) => o.id === id);
+      if (obj) {
+        setSelectedObjectId(id);
+        setEditPosition([...(obj.position || [0, 0, 0])]);
+      }
+    },
+    [objects],
+  );
+
+  const handleDeselect = useCallback(() => {
+    setSelectedObjectId(null);
+    setEditPosition(null);
+  }, []);
 
   const handleObjectUpdate = useCallback(
     (updated) => {
       const nextObjects = objects.map((o) => (o.id === updated.id ? updated : o));
       handleSave({ groupOffset: { x: 0, y: 0 }, groupOffsets: {}, objects: nextObjects });
-      setSelectedObjectId(null);
+      handleDeselect();
     },
-    [objects, handleSave],
+    [objects, handleSave, handleDeselect],
   );
 
   const handleObjectDelete = useCallback(
     (id) => {
       const nextObjects = objects.filter((o) => o.id !== id);
       handleSave({ groupOffset: { x: 0, y: 0 }, groupOffsets: {}, objects: nextObjects });
-      setSelectedObjectId(null);
+      handleDeselect();
     },
-    [objects, handleSave],
+    [objects, handleSave, handleDeselect],
+  );
+
+  // Card dragging — perspective-compensated XY movement
+  const [isDraggingCard, setIsDraggingCard] = useState(false);
+  const cardDragRef = useRef(null);
+  const didDragRef = useRef(false);
+
+  const handleCardDragStart = useCallback(
+    (e) => {
+      if (!editPosition) return;
+      const effectiveZ = editPosition[2] + scrollZ;
+      const scale = perspective / (perspective - effectiveZ);
+      cardDragRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        startPos: [...editPosition],
+        invScale: 1 / scale,
+      };
+      didDragRef.current = false;
+      setIsDraggingCard(true);
+    },
+    [editPosition, scrollZ, perspective],
+  );
+
+  useEffect(() => {
+    if (!isDraggingCard) return;
+
+    const handleMove = (e) => {
+      const d = cardDragRef.current;
+      if (!d) return;
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didDragRef.current = true;
+      setEditPosition([
+        Math.round(d.startPos[0] + dx * d.invScale),
+        Math.round(d.startPos[1] + dy * d.invScale),
+        d.startPos[2],
+      ]);
+    };
+
+    const handleUp = () => {
+      cardDragRef.current = null;
+      setIsDraggingCard(false);
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+  }, [isDraggingCard]);
+
+  const handleCardClick = useCallback(
+    (id) => {
+      if (didDragRef.current) {
+        didDragRef.current = false;
+        return;
+      }
+      if (id === selectedObjectId) return;
+      handleSelect(id);
+    },
+    [selectedObjectId, handleSelect],
   );
 
   const centeredBox = {
@@ -163,18 +243,22 @@ export function DynamicScenePage() {
             key={obj.id || `obj-${objects.indexOf(obj)}`}
             object={obj}
             selected={obj.id === selectedObjectId}
-            onSelect={setSelectedObjectId}
+            overridePosition={obj.id === selectedObjectId ? editPosition : undefined}
+            onSelect={handleCardClick}
+            onDragStart={obj.id === selectedObjectId ? handleCardDragStart : undefined}
           />
         ))}
       </Scene>
 
-      {selectedObject && (
+      {selectedObject && editPosition && (
         <ObjectEditPopover
           key={selectedObject.id}
           object={selectedObject}
+          position={editPosition}
+          onPositionChange={setEditPosition}
           onUpdate={handleObjectUpdate}
           onDelete={handleObjectDelete}
-          onClose={() => setSelectedObjectId(null)}
+          onClose={handleDeselect}
         />
       )}
 
@@ -190,8 +274,8 @@ export function DynamicScenePage() {
 /**
  * SavedObjectRenderer - renders a persisted scene object from scene.json's objects array.
  */
-function SavedObjectRenderer({ object, selected, onSelect }) {
-  const position = object.position || [0, 0, 0];
+function SavedObjectRenderer({ object, selected, overridePosition, onSelect, onDragStart }) {
+  const position = overridePosition || object.position || [0, 0, 0];
   const parallaxFactor = object.parallaxFactor ?? 0.6;
 
   const cardType = CARD_TYPE_REGISTRY.find((ct) => ct.id === object.type);
@@ -204,9 +288,14 @@ function SavedObjectRenderer({ object, selected, onSelect }) {
       position={position}
       parallaxFactor={parallaxFactor}
       onClick={onSelect ? () => onSelect(object.id) : undefined}
+      onDragStart={onDragStart}
       style={
         selected
-          ? { outline: '2px solid var(--color-primary, #ff4081)', outlineOffset: '4px' }
+          ? {
+              outline: '2px solid var(--color-primary, #ff4081)',
+              outlineOffset: '4px',
+              cursor: 'grab',
+            }
           : undefined
       }
     >

@@ -55,6 +55,7 @@ export function SceneObject({
   style = {},
   onClick,
   onHover,
+  onDragStart, // Called with mousedown event when drag should begin (edit mode)
 
   // Anchor point relative to parent (alternative to absolute positioning)
   anchor = null, // 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | { x: '50%', y: '50%' }
@@ -162,7 +163,14 @@ export function SceneObject({
     <div
       className={className}
       onClick={onClick}
-      onMouseDown={editActive && onClick ? (e) => e.stopPropagation() : undefined}
+      onMouseDown={
+        editActive && (onClick || onDragStart)
+          ? (e) => {
+              e.stopPropagation();
+              if (onDragStart) onDragStart(e);
+            }
+          : undefined
+      }
       onMouseEnter={onHover ? () => onHover(true) : undefined}
       onMouseLeave={onHover ? () => onHover(false) : undefined}
       style={{
