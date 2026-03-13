@@ -157,6 +157,11 @@ export function DynamicScenePage() {
     const handleUp = () => {
       cardDragRef.current = null;
       setIsDraggingCard(false);
+      // Reset didDrag after a tick so the click event (which fires after mouseup)
+      // can still check it, but it doesn't linger for future clicks.
+      setTimeout(() => {
+        didDragRef.current = false;
+      }, 0);
     };
 
     window.addEventListener('mousemove', handleMove);
