@@ -311,4 +311,6 @@ export function JournalPage() {
   );
 }
 
+export const PAGE_NAV = { path: '/journal', label: 'Journal' };
+
 export default JournalPage;

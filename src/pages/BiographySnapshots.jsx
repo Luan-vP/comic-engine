@@ -382,4 +382,6 @@ export function BiographySnapshots() {
   );
 }
 
+export const PAGE_NAV = { path: '/biography', label: 'Biography' };
+
 export default BiographySnapshots;

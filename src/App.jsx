@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { ThemeProvider, useTheme, themes } from './theme/ThemeContext';
 import { OverlayStack } from './components/overlays';
-import { BeHereMeow } from './pages/BeHereMeow';
-import { ExamplePage } from './pages/ExamplePage';
-import { DepthSegmentationPage } from './pages/DepthSegmentationPage';
-import { BiographySnapshots } from './pages/BiographySnapshots';
-import { JournalPage } from './pages/JournalPage';
 import { DynamicScenePage } from './pages/DynamicScenePage';
 import { NewScenePage } from './pages/NewScenePage';
 import { ComicBookReader } from './pages/ComicBookReader';
-import { ClockworkShell } from './pages/ClockworkShell';
 import { usePages } from './hooks/usePages';
+
+// Auto-discover pages that export PAGE_NAV ({ path, label })
+const pageModules = import.meta.glob('./pages/*.jsx', { eager: true });
+const autoPages = Object.values(pageModules)
+  .filter((mod) => mod.PAGE_NAV)
+  .map((mod) => ({
+    ...mod.PAGE_NAV,
+    Component: mod.default,
+  }));
 
 /**
  * Theme Switcher UI - for development/demo purposes
@@ -209,14 +212,7 @@ function PageNavigator({ pages }) {
     }
   }
 
-  const tools = [
-    { path: '/', label: 'BeHereMeow' },
-    { path: '/example', label: 'Example' },
-    { path: '/depth-segmentation', label: 'Depth Segmentation' },
-    { path: '/biography', label: 'Biography' },
-    { path: '/journal', label: 'Journal' },
-    { path: '/clockwork-shell', label: 'Clockwork Shell' },
-  ];
+  const tools = autoPages;
 
   const linkStyle = (isActive, isGcs) => ({
     background: isActive ? theme.colors.primary : isGcs ? 'rgba(100,180,255,0.1)' : 'rgba(255,255,255,0.1)',
@@ -429,12 +425,9 @@ function EditorLayout() {
 
       {/* Main content */}
       <Routes>
-        <Route path="/" element={<BeHereMeow />} />
-        <Route path="/example" element={<ExamplePage />} />
-        <Route path="/depth-segmentation" element={<DepthSegmentationPage />} />
-        <Route path="/biography" element={<BiographySnapshots />} />
-        <Route path="/journal" element={<JournalPage />} />
-        <Route path="/clockwork-shell" element={<ClockworkShell />} />
+        {autoPages.map(({ path, Component }) => (
+          <Route key={path} path={path} element={<Component />} />
+        ))}
         {/* /scenes/new must come before /scenes/:slug to avoid slug matching "new" */}
         <Route path="/scenes/new" element={<NewScenePage onCreated={refetchPages} />} />
         <Route path="/scenes/:slug" element={<DynamicScenePage />} />
