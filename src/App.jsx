@@ -215,6 +215,7 @@ function PageNavigator({ pages }) {
     { path: '/depth-segmentation', label: 'Depth Segmentation' },
     { path: '/biography', label: 'Biography' },
     { path: '/journal', label: 'Journal' },
+    { path: '/clockwork-shell', label: 'Clockwork Shell' },
   ];
 
   const linkStyle = (isActive, isGcs) => ({
