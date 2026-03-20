@@ -10,7 +10,8 @@ import { JournalPage } from './pages/JournalPage';
 import { DynamicScenePage } from './pages/DynamicScenePage';
 import { NewScenePage } from './pages/NewScenePage';
 import { ComicBookReader } from './pages/ComicBookReader';
-import { useLocalPages } from './hooks/useLocalPages';
+import { ClockworkShell } from './pages/ClockworkShell';
+import { usePages } from './hooks/usePages';
 
 /**
  * Theme Switcher UI - for development/demo purposes
@@ -179,7 +180,7 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
 /**
  * Page Navigator - for switching between demo pages
  */
-function PageNavigator({ localPages }) {
+function PageNavigator({ pages }) {
   const { theme } = useTheme();
   const location = useLocation();
   const [publishStatus, setPublishStatus] = useState({});
@@ -216,10 +217,10 @@ function PageNavigator({ localPages }) {
     { path: '/journal', label: 'Journal' },
   ];
 
-  const linkStyle = (isActive) => ({
-    background: isActive ? theme.colors.primary : 'rgba(255,255,255,0.1)',
+  const linkStyle = (isActive, isGcs) => ({
+    background: isActive ? theme.colors.primary : isGcs ? 'rgba(100,180,255,0.1)' : 'rgba(255,255,255,0.1)',
     color: isActive ? '#000' : theme.colors.text,
-    border: `1px solid ${isActive ? theme.colors.primary : theme.colors.border}`,
+    border: `1px solid ${isActive ? theme.colors.primary : isGcs ? 'rgba(100,180,255,0.3)' : theme.colors.border}`,
     borderRadius: '4px',
     padding: '6px 12px',
     fontSize: '11px',
@@ -229,6 +230,8 @@ function PageNavigator({ localPages }) {
     textDecoration: 'none',
   });
 
+  const localPages = pages.filter((p) => p.source === 'local');
+  const gcsPages = pages.filter((p) => p.source === 'gcs');
   const newPageActive = location.pathname === '/scenes/new';
 
   return (
@@ -260,71 +263,101 @@ function PageNavigator({ localPages }) {
         {tools.map(({ path, label }) => {
           const isActive = location.pathname === path;
           return (
-            <Link key={path} to={path} style={linkStyle(isActive)}>
+            <Link key={path} to={path} style={linkStyle(isActive, false)}>
               {label}
             </Link>
           );
         })}
       </div>
-      <>
-        <div
-          style={{
-            color: theme.colors.textMuted,
-            fontSize: '10px',
-            marginTop: '12px',
-            marginBottom: '8px',
-            letterSpacing: '1px',
-          }}
-        >
-          PAGES
-        </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {localPages.map(({ slug, name }) => {
-            const path = `/scenes/${slug}`;
-            const isActive = location.pathname === path;
-            const status = publishStatus[slug];
-            return (
-              <span key={slug} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                <Link to={path} style={linkStyle(isActive)}>
+
+      {localPages.length > 0 && (
+        <>
+          <div
+            style={{
+              color: theme.colors.textMuted,
+              fontSize: '10px',
+              marginTop: '12px',
+              marginBottom: '8px',
+              letterSpacing: '1px',
+            }}
+          >
+            LOCAL
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {localPages.map(({ slug, name }) => {
+              const path = `/scenes/${slug}`;
+              const isActive = location.pathname === path;
+              const status = publishStatus[slug];
+              return (
+                <span key={slug} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                  <Link to={path} style={linkStyle(isActive, false)}>
+                    {name}
+                  </Link>
+                  <button
+                    onClick={() => handlePublish(slug)}
+                    title="Publish to GCS"
+                    disabled={status === 'publishing'}
+                    style={{
+                      background:
+                        status === 'ok'
+                          ? '#22c55e'
+                          : status === 'error'
+                            ? '#ef4444'
+                            : 'rgba(255,255,255,0.1)',
+                      border: `1px solid ${theme.colors.border}`,
+                      borderRadius: '4px',
+                      color: theme.colors.text,
+                      padding: '6px 7px',
+                      fontSize: '11px',
+                      cursor: status === 'publishing' ? 'wait' : 'pointer',
+                      fontFamily: 'inherit',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {status === 'publishing'
+                      ? '…'
+                      : status === 'ok'
+                        ? '✓'
+                        : status === 'error'
+                          ? '✗'
+                          : '↑'}
+                  </button>
+                </span>
+              );
+            })}
+            <Link to="/scenes/new" style={linkStyle(newPageActive, false)}>
+              + New Page
+            </Link>
+          </div>
+        </>
+      )}
+
+      {gcsPages.length > 0 && (
+        <>
+          <div
+            style={{
+              color: theme.colors.textMuted,
+              fontSize: '10px',
+              marginTop: '12px',
+              marginBottom: '8px',
+              letterSpacing: '1px',
+            }}
+          >
+            PUBLISHED
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {gcsPages.map(({ slug, name }) => {
+              const path = `/read/${slug}`;
+              const isActive = location.pathname.startsWith(path);
+              return (
+                <Link key={slug} to={path} style={linkStyle(isActive, true)}>
                   {name}
                 </Link>
-                <button
-                  onClick={() => handlePublish(slug)}
-                  title="Publish to GCS"
-                  disabled={status === 'publishing'}
-                  style={{
-                    background:
-                      status === 'ok'
-                        ? '#22c55e'
-                        : status === 'error'
-                          ? '#ef4444'
-                          : 'rgba(255,255,255,0.1)',
-                    border: `1px solid ${theme.colors.border}`,
-                    borderRadius: '4px',
-                    color: theme.colors.text,
-                    padding: '6px 7px',
-                    fontSize: '11px',
-                    cursor: status === 'publishing' ? 'wait' : 'pointer',
-                    fontFamily: 'inherit',
-                    lineHeight: 1,
-                  }}
-                >
-                  {status === 'publishing'
-                    ? '…'
-                    : status === 'ok'
-                      ? '✓'
-                      : status === 'error'
-                        ? '✗'
-                        : '↑'}
-                </button>
-              </span>
-            );
-          })}
-          <Link to="/scenes/new" style={linkStyle(newPageActive)}>
-            + New Page
-          </Link>
-        </div>
-      </>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -360,7 +393,7 @@ function EditorLayout() {
   });
 
   // Lift scene list here so PageNavigator and NewScenePage share the same state
-  const { pages: localPages, refetch: refetchPages } = useLocalPages();
+  const { pages: allPages, refetch: refetchPages } = usePages();
 
   // Don't show overlays on depth segmentation page (has its own controls)
   const showOverlays = location.pathname !== '/depth-segmentation';
@@ -391,7 +424,7 @@ function EditorLayout() {
       )}
 
       {/* Page navigation */}
-      <PageNavigator localPages={localPages} />
+      <PageNavigator pages={allPages} />
 
       {/* Main content */}
       <Routes>
@@ -400,6 +433,7 @@ function EditorLayout() {
         <Route path="/depth-segmentation" element={<DepthSegmentationPage />} />
         <Route path="/biography" element={<BiographySnapshots />} />
         <Route path="/journal" element={<JournalPage />} />
+        <Route path="/clockwork-shell" element={<ClockworkShell />} />
         {/* /scenes/new must come before /scenes/:slug to avoid slug matching "new" */}
         <Route path="/scenes/new" element={<NewScenePage onCreated={refetchPages} />} />
         <Route path="/scenes/:slug" element={<DynamicScenePage />} />
