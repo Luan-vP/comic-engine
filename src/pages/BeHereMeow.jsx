@@ -451,6 +451,4 @@ function FloatingText({ text, color, size = 24, delay = 0, animate = false }) {
   );
 }
 
-export const PAGE_NAV = { path: '/', label: 'BeHereMeow' };
-
 export default BeHereMeow;

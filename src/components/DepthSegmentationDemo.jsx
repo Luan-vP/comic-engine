@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Scene, SceneObject } from './scene';
-import { processPhotoToLayers } from '../utils/depth';
+import { processPhotoToLayers, downloadDepthSTL } from '../utils/depth';
 import { useTheme } from '../theme/ThemeContext';
 
 /**
@@ -29,6 +30,9 @@ export function DepthSegmentationDemo() {
   const [exportResult, setExportResult] = useState(null);
   const [exportError, setExportError] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [stlCapMin, setStlCapMin] = useState(0.05);
+  const [stlCapMax, setStlCapMax] = useState(0.95);
+  const [stlZScale, setStlZScale] = useState(50);
   const fileInputRef = useRef(null);
 
   const handleImageUpload = async (event) => {
@@ -737,45 +741,103 @@ export function DepthSegmentationDemo() {
           );
         })}
 
-        {/* Depth visualization overlay (optional) */}
-        {result.depthVisualization && (
-          <div
+      </Scene>
+    );
+  };
+
+  const renderDepthPanel = () => {
+    if (!result?.depthVisualization) return null;
+    return createPortal(
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(10px)',
+          border: `1px solid ${theme.colors.border}`,
+          borderRadius: '8px',
+          padding: '12px',
+          zIndex: 1000,
+        }}
+      >
+        <div
+          style={{
+            color: theme.colors.textMuted,
+            fontSize: '11px',
+            marginBottom: '8px',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+          }}
+        >
+          Depth Map
+        </div>
+        <img
+          src={result.depthVisualization}
+          alt="Depth visualization"
+          style={{
+            display: 'block',
+            width: '150px',
+            height: 'auto',
+            borderRadius: '4px',
+            border: `1px solid ${theme.colors.border}`,
+          }}
+        />
+        {/* STL export controls */}
+        <div style={{ marginTop: '10px', fontSize: '11px', color: theme.colors.textMuted }}>
+          <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            Cap Min: {stlCapMin.toFixed(2)}
+            <input
+              type="range" min="0" max="0.5" step="0.01"
+              value={stlCapMin}
+              onChange={(e) => setStlCapMin(parseFloat(e.target.value))}
+              style={{ width: '80px' }}
+            />
+          </label>
+          <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            Cap Max: {stlCapMax.toFixed(2)}
+            <input
+              type="range" min="0.5" max="1" step="0.01"
+              value={stlCapMax}
+              onChange={(e) => setStlCapMax(parseFloat(e.target.value))}
+              style={{ width: '80px' }}
+            />
+          </label>
+          <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+            Z Scale: {stlZScale}
+            <input
+              type="range" min="10" max="200" step="5"
+              value={stlZScale}
+              onChange={(e) => setStlZScale(parseInt(e.target.value, 10))}
+              style={{ width: '80px' }}
+            />
+          </label>
+          <button
+            onClick={() =>
+              downloadDepthSTL(result.depthMap, {
+                capMin: stlCapMin,
+                capMax: stlCapMax,
+                zScale: stlZScale,
+              })
+            }
             style={{
-              position: 'fixed',
-              bottom: '20px',
-              right: '20px',
-              background: 'rgba(0,0,0,0.85)',
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: '8px',
-              padding: '12px',
-              zIndex: 1000,
+              width: '100%',
+              background: theme.colors.primary,
+              color: '#000',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '6px 0',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '11px',
+              fontFamily: theme.typography.fontBody,
             }}
           >
-            <div
-              style={{
-                color: theme.colors.textMuted,
-                fontSize: '11px',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-              }}
-            >
-              Depth Map
-            </div>
-            <img
-              src={result.depthVisualization}
-              alt="Depth visualization"
-              style={{
-                display: 'block',
-                width: '150px',
-                height: 'auto',
-                borderRadius: '4px',
-                border: `1px solid ${theme.colors.border}`,
-              }}
-            />
-          </div>
-        )}
-      </Scene>
+            Export STL
+          </button>
+        </div>
+      </div>,
+      document.body,
     );
   };
 
@@ -783,6 +845,7 @@ export function DepthSegmentationDemo() {
     <>
       {renderControls()}
       {renderScene()}
+      {renderDepthPanel()}
     </>
   );
 }

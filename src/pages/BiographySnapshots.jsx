@@ -382,6 +382,6 @@ export function BiographySnapshots() {
   );
 }
 
-export const PAGE_NAV = { path: '/biography', label: 'Biography' };
+export const PAGE_NAV = { path: '/biography', label: 'Biography', section: 'tools' };
 
 export default BiographySnapshots;

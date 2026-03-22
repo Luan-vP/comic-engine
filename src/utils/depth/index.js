@@ -14,3 +14,4 @@ export {
   fillRangeArrangement,
   depthProportionalArrangement,
 } from './pipeline.js';
+export { depthMapToSTL, downloadDepthSTL } from './stlExport.js';

@@ -30,7 +30,7 @@ const RENDER_EXTENSIONS = {
                 textAlign: 'center',
                 marginTop: '6px',
                 fontSize: '11px',
-                color: '#333',
+                color: 'var(--color-text-muted, #333)',
                 fontFamily: 'Georgia, serif',
               }}
             >
@@ -65,7 +65,7 @@ const RENDER_EXTENSIONS = {
     renderContent(object) {
       return (
         <Panel variant="default" width={320} height={200}>
-          <div style={{ padding: '20px' }}>
+          <div style={{ padding: '20px', color: 'var(--color-text, #fff)' }}>
             {object.data.title && (
               <h2 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{object.data.title}</h2>
             )}

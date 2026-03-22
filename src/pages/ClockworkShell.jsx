@@ -294,6 +294,4 @@ export function ClockworkShell() {
   );
 }
 
-export const PAGE_NAV = { path: '/clockwork-shell', label: 'Clockwork Shell' };
-
 export default ClockworkShell;

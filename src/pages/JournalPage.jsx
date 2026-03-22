@@ -311,6 +311,6 @@ export function JournalPage() {
   );
 }
 
-export const PAGE_NAV = { path: '/journal', label: 'Journal' };
+export const PAGE_NAV = { path: '/journal', label: 'Journal', section: 'tools' };
 
 export default JournalPage;
