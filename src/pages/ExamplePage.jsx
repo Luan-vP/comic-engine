@@ -309,6 +309,6 @@ export function ExamplePage() {
   );
 }
 
-export const PAGE_NAV = { path: '/example', label: 'Example' };
+export const PAGE_NAV = { path: '/example', label: 'Example', section: 'tools' };
 
 export default ExamplePage;

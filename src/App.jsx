@@ -212,7 +212,8 @@ function PageNavigator({ pages }) {
     }
   }
 
-  const tools = autoPages;
+  const tools = autoPages.filter((p) => p.section === 'tools');
+  const srcPages = autoPages.filter((p) => p.section !== 'tools');
 
   const linkStyle = (isActive, isGcs) => ({
     background: isActive ? theme.colors.primary : isGcs ? 'rgba(100,180,255,0.1)' : 'rgba(255,255,255,0.1)',
@@ -267,7 +268,7 @@ function PageNavigator({ pages }) {
         })}
       </div>
 
-      {localPages.length > 0 && (
+      {(srcPages.length > 0 || localPages.length > 0) && (
         <>
           <div
             style={{
@@ -278,9 +279,17 @@ function PageNavigator({ pages }) {
               letterSpacing: '1px',
             }}
           >
-            LOCAL
+            PAGES
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {srcPages.map(({ path, label }) => {
+              const isActive = location.pathname === path;
+              return (
+                <Link key={path} to={path} style={linkStyle(isActive, false)}>
+                  {label}
+                </Link>
+              );
+            })}
             {localPages.map(({ slug, name }) => {
               const path = `/scenes/${slug}`;
               const isActive = location.pathname === path;

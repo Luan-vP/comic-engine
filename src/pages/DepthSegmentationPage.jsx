@@ -11,6 +11,6 @@ export function DepthSegmentationPage() {
   return <DepthSegmentationDemo />;
 }
 
-export const PAGE_NAV = { path: '/depth-segmentation', label: 'Depth Segmentation' };
+export const PAGE_NAV = { path: '/depth-segmentation', label: 'Depth Segmentation', section: 'tools' };
 
 export default DepthSegmentationPage;
