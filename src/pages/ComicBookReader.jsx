@@ -90,11 +90,11 @@ export function ComicBookReader() {
     mouseInfluence = { x: 50, y: 30 },
   } = sceneConfig;
 
-  const minZ = useMemo(() => {
+  const maxZ = useMemo(() => {
     const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
     const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
     const allZs = [...layerZs, ...objectZs];
-    return allZs.length ? Math.min(...allZs) : 0;
+    return allZs.length ? Math.max(...allZs) : 0;
   }, [layers, objects]);
 
   const slides = useMemo(
@@ -102,19 +102,14 @@ export function ComicBookReader() {
       layers.map((layer) => ({
         id: `layer-${layer.index}`,
         label: layer.name || `Layer ${layer.index}`,
-        zCenter: (layer.position || [0, 0, 0])[2] - minZ,
+        zCenter: (layer.position || [0, 0, 0])[2],
       })),
-    [layers, minZ],
+    [layers],
   );
 
   const scrollDepth = useMemo(() => {
-    const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
-    const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
-    const allZs = [...layerZs, ...objectZs];
-    if (!allZs.length) return 500;
-    const range = Math.max(...allZs) - Math.min(...allZs) || 500;
-    return range + perspective;
-  }, [layers, objects, perspective]);
+    return (maxZ || 500) + perspective;
+  }, [maxZ, perspective]);
 
   const { scrollZ, containerRef } = useZScroll({
     slides,

@@ -10,21 +10,21 @@ import { ScrollMinimap } from '../components/minimap';
  * This shows various ways to place objects in 3D space with parallax.
  * Copy this pattern for your own pages.
  */
-// Slides define camera stop positions (scrollZ values) for the minimap.
-// scrollDepth=400 lets you scroll the background panel (z=-200) into focus.
-const EXAMPLE_SLIDES = [
-  { id: 'bg', label: 'BACKGROUND', zCenter: 0 },
-  { id: 'mid', label: 'MIDGROUND', zCenter: 200 },
-  { id: 'fg', label: 'FOREGROUND', zCenter: 400 },
-];
 
 export function ExamplePage() {
   const { theme } = useTheme();
   const [, setActivePanel] = useState(null);
+  const [zGap, setZGap] = useState(500);
+
+  const slides = [
+    { id: 'fg', label: 'FOREGROUND', zCenter: 0 },
+    { id: 'mid', label: 'MIDGROUND', zCenter: zGap },
+    { id: 'bg', label: 'BACKGROUND', zCenter: zGap * 2 },
+  ];
 
   const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll({
-    slides: EXAMPLE_SLIDES,
-    scrollDepth: 400,
+    slides,
+    scrollDepth: zGap * 2,
   });
 
   return (
@@ -37,9 +37,8 @@ export function ExamplePage() {
         containerRef={containerRef}
       >
         {/* ===== FAR BACKGROUND LAYER ===== */}
-        {/* Decorative shapes that barely move */}
         <SceneObject
-          position={[-200, -100, -400]}
+          position={[-200, -100, zGap * 2.5]}
           rotation={[0, 0, 15]}
           parallaxFactor={0.1}
           interactive={false}
@@ -56,7 +55,7 @@ export function ExamplePage() {
         </SceneObject>
 
         <SceneObject
-          position={[250, 150, -350]}
+          position={[250, 150, zGap * 2.2]}
           rotation={[0, 0, -20]}
           parallaxFactor={0.15}
           interactive={false}
@@ -71,11 +70,10 @@ export function ExamplePage() {
           />
         </SceneObject>
 
-        {/* ===== BACKGROUND PANEL - TILTED BACK ===== */}
-        {/* This panel is tilted away from viewer, creating depth */}
+        {/* ===== BACKGROUND PANEL ===== */}
         <SceneObject
-          position={[-180, 30, -200]}
-          rotation={[15, -10, -3]} // Tilted back and to the left
+          position={[-180, 30, zGap * 2]}
+          rotation={[15, -10, -3]}
           parallaxFactor={0.3}
         >
           <Panel
@@ -107,11 +105,10 @@ export function ExamplePage() {
           </Panel>
         </SceneObject>
 
-        {/* ===== MIDGROUND PANEL - FACING CAMERA ===== */}
-        {/* Standard forward-facing panel */}
+        {/* ===== MIDGROUND PANEL ===== */}
         <SceneObject
-          position={[50, -20, 0]}
-          rotation={[0, 0, 0]} // Straight on
+          position={[50, -20, zGap]}
+          rotation={[0, 0, 0]}
           parallaxFactor={0.6}
         >
           <Panel
@@ -144,11 +141,10 @@ export function ExamplePage() {
           </Panel>
         </SceneObject>
 
-        {/* ===== SIDE PANEL - ANGLED LIKE A WALL ===== */}
-        {/* Rotated on Y axis so it's like a wall on the right */}
+        {/* ===== SIDE PANEL ===== */}
         <SceneObject
-          position={[320, 0, -50]}
-          rotation={[0, -35, 0]} // Rotated to face left
+          position={[320, 0, zGap * 0.5]}
+          rotation={[0, -35, 0]}
           parallaxFactor={0.5}
         >
           <Panel width={200} height={300} variant="polaroid">
@@ -167,11 +163,10 @@ export function ExamplePage() {
           </Panel>
         </SceneObject>
 
-        {/* ===== FOREGROUND ELEMENT - VIDEO PLACEHOLDER ===== */}
-        {/* Close to camera, moves a lot with parallax */}
+        {/* ===== FOREGROUND - VIDEO PLACEHOLDER ===== */}
         <SceneObject
-          position={[-250, 120, 150]}
-          rotation={[5, 15, -5]} // Slight tilt
+          position={[-250, 120, -zGap * 0.3]}
+          rotation={[5, 15, -5]}
           parallaxFactor={0.85}
         >
           <div
@@ -188,7 +183,6 @@ export function ExamplePage() {
               boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
             }}
           >
-            {/* Play button */}
             <div
               style={{
                 width: '40px',
@@ -219,9 +213,8 @@ export function ExamplePage() {
         </SceneObject>
 
         {/* ===== EXTREME FOREGROUND - FLOATING TEXT ===== */}
-        {/* Very close, dramatic parallax */}
         <SceneObject
-          position={[200, -150, 250]}
+          position={[200, -150, -zGap * 0.5]}
           rotation={[-5, -10, 8]}
           parallaxFactor={1.1}
           interactive={false}
@@ -242,10 +235,9 @@ export function ExamplePage() {
         </SceneObject>
 
         {/* ===== FLOOR ELEMENT ===== */}
-        {/* Rotated on X to appear as floor */}
         <SceneObject
-          position={[0, 280, -150]}
-          rotation={[75, 0, 0]} // Heavy X rotation = floor
+          position={[0, 280, zGap]}
+          rotation={[75, 0, 0]}
           parallaxFactor={0.35}
           interactive={false}
         >
@@ -286,15 +278,35 @@ export function ExamplePage() {
           >
             SCENE COMPOSITION
           </h3>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              color: theme.colors.textMuted,
+              fontSize: '11px',
+              margin: '0 0 12px 0',
+            }}
+          >
+            Z Gap: <strong style={{ color: theme.colors.primary }}>{zGap}</strong>
+            <input
+              type="range"
+              min={200}
+              max={1500}
+              step={50}
+              value={zGap}
+              onChange={(e) => setZGap(Number(e.target.value))}
+              style={{ flex: 1 }}
+            />
+          </label>
           <p
             style={{ color: theme.colors.textMuted, margin: 0, fontSize: '11px', lineHeight: 1.6 }}
           >
-            Objects are placed at different Z depths and rotations:
-            <br />• <strong>Background</strong>: z=-200, tilted back
-            <br />• <strong>Midground</strong>: z=0, facing camera
-            <br />• <strong>Side wall</strong>: z=-50, Y-rotated
-            <br />• <strong>Foreground</strong>: z=150, close to camera
-            <br />• <strong>Floor</strong>: z=-150, X-rotated 75°
+            • <strong>Background</strong>: z={zGap * 2}, tilted back
+            <br />• <strong>Midground</strong>: z={zGap}, facing camera
+            <br />• <strong>Side wall</strong>: z={zGap * 0.5}, Y-rotated
+            <br />• <strong>Foreground</strong>: z={Math.round(-zGap * 0.3)}
+            <br />• <strong>Text</strong>: z={Math.round(-zGap * 0.5)}
           </p>
         </div>
       </Scene>

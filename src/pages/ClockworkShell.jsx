@@ -29,7 +29,7 @@ export function ClockworkShell() {
       >
         {/* ===== DEEP ATMOSPHERE ===== */}
         <SceneObject
-          position={[0, 0, -500]}
+          position={[0, 0, 500]}
           rotation={[0, 0, 0]}
           parallaxFactor={0.05}
           interactive={false}
@@ -48,7 +48,7 @@ export function ClockworkShell() {
         {[...Array(3)].map((_, i) => (
           <SceneObject
             key={`gear-${i}`}
-            position={[-300 + i * 280, -80 + (i % 2) * 160, -420 + i * 30]}
+            position={[-300 + i * 280, -80 + (i % 2) * 160, 420 - i * 30]}
             rotation={[0, 0, i * 45]}
             parallaxFactor={0.08}
             interactive={false}
@@ -69,7 +69,7 @@ export function ClockworkShell() {
 
         {/* ===== PASSAGE 1: VALUATION ===== */}
         <SceneObject
-          position={[-120, -30, -50]}
+          position={[-120, -30, 50]}
           rotation={[3, -5, -2]}
           parallaxFactor={0.3}
         >
@@ -89,7 +89,7 @@ export function ClockworkShell() {
 
         {/* ===== PASSAGE 2: CLOCKWORK ===== */}
         <SceneObject
-          position={[100, 40, 170]}
+          position={[100, 40, -170]}
           rotation={[-2, 8, 1]}
           parallaxFactor={0.45}
         >
@@ -110,7 +110,7 @@ export function ClockworkShell() {
 
         {/* Floating "clockwork" text — atmosphere */}
         <SceneObject
-          position={[280, -120, 220]}
+          position={[280, -120, -220]}
           rotation={[0, -15, 6]}
           parallaxFactor={0.55}
           interactive={false}
@@ -129,7 +129,7 @@ export function ClockworkShell() {
 
         {/* ===== PASSAGE 3: WAKING UP ===== */}
         <SceneObject
-          position={[-80, -60, 370]}
+          position={[-80, -60, -370]}
           rotation={[0, 3, -1]}
           parallaxFactor={0.65}
         >
@@ -158,7 +158,7 @@ export function ClockworkShell() {
 
         {/* The turning point — a faint line dividing the space */}
         <SceneObject
-          position={[0, 200, 350]}
+          position={[0, 200, -350]}
           rotation={[75, 0, 0]}
           parallaxFactor={0.5}
           interactive={false}
@@ -172,7 +172,7 @@ export function ClockworkShell() {
 
         {/* ===== PASSAGE 4: FORGIVENESS ===== */}
         <SceneObject
-          position={[130, 20, 570]}
+          position={[130, 20, -570]}
           rotation={[-1, -6, 2]}
           parallaxFactor={0.78}
         >
@@ -202,7 +202,7 @@ export function ClockworkShell() {
 
         {/* ===== PASSAGE 5: ANGEL / DICKHEAD ===== */}
         <SceneObject
-          position={[-60, -40, 780]}
+          position={[-60, -40, -780]}
           rotation={[2, 4, -1]}
           parallaxFactor={0.92}
         >
@@ -244,7 +244,7 @@ export function ClockworkShell() {
 
         {/* Floating closing echo */}
         <SceneObject
-          position={[200, -180, 850]}
+          position={[200, -180, -850]}
           rotation={[-3, -10, 5]}
           parallaxFactor={1.1}
           interactive={false}
@@ -262,7 +262,7 @@ export function ClockworkShell() {
 
         {/* Floor gradient */}
         <SceneObject
-          position={[0, 280, 300]}
+          position={[0, 280, -300]}
           rotation={[75, 0, 0]}
           parallaxFactor={0.35}
           interactive={false}

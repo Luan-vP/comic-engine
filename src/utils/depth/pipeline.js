@@ -107,29 +107,29 @@ export async function processPhotoToLayers(image, options = {}) {
 
 /**
  * Arrange layers with a fixed step between each, starting from the far plane.
- * 3 layers → [-400, -350, -300], 10 layers → [-400, -350, …, 50]
+ * 3 layers → [400, 350, 300], 10 layers → [400, 350, …, -50]
  *
  * @param {number} count - Number of layers
  * @param {Object} opts
- * @param {number} opts.start - Z of the farthest layer (default -400)
- * @param {number} opts.step  - Distance between adjacent layers (default 50)
+ * @param {number} opts.start - Z of the farthest layer (default 400)
+ * @param {number} opts.step  - Distance between adjacent layers (default -50, toward camera)
  * @returns {number[]} Z positions, one per layer (far → near)
  */
-export function fixedStepArrangement(count, { start = -400, step = 50 } = {}) {
+export function fixedStepArrangement(count, { start = 400, step = -50 } = {}) {
   return Array.from({ length: count }, (_, i) => start + i * step);
 }
 
 /**
  * Arrange layers so they fill the entire z-range evenly.
- * 3 layers → [-400, -100, 200], 10 layers → [-400, -333, …, 200]
+ * 3 layers → [400, 100, -200], 10 layers → [400, 333, …, -200]
  *
  * @param {number} count - Number of layers
  * @param {Object} opts
- * @param {number} opts.far  - Z of the farthest layer (default -400)
- * @param {number} opts.near - Z of the nearest layer (default 200)
+ * @param {number} opts.far  - Z of the farthest layer (default 400)
+ * @param {number} opts.near - Z of the nearest layer (default -200)
  * @returns {number[]} Z positions, one per layer (far → near)
  */
-export function fillRangeArrangement(count, { far = -400, near = 200 } = {}) {
+export function fillRangeArrangement(count, { far = 400, near = -200 } = {}) {
   if (count <= 1) return [far];
   const step = (near - far) / (count - 1);
   return Array.from({ length: count }, (_, i) => far + i * step);
@@ -138,19 +138,19 @@ export function fillRangeArrangement(count, { far = -400, near = 200 } = {}) {
 /**
  * Arrange layers proportionally to their actual depth values.
  * Layers that are far apart in depth space are far apart in z-space.
- * depths=[0,0.5,1], far=-400, near=200 → [-400, -100, 200]
- * depths=[0.1,0.5,0.9], far=-400, near=200 → [-340, -100, 140]
+ * depths=[0,0.5,1], far=400, near=-200 → [400, 100, -200]
+ * depths=[0.1,0.5,0.9], far=400, near=-200 → [340, 100, -140]
  *
  * Falls back to fillRangeArrangement if depths is not provided or has wrong length.
  *
  * @param {number} count - Number of layers
  * @param {Object} opts
  * @param {number[]} opts.depths - Normalized depth values [0,1], one per layer
- * @param {number} opts.far  - Z mapped to depth=0 (farthest, default -400)
- * @param {number} opts.near - Z mapped to depth=1 (nearest, default 200)
+ * @param {number} opts.far  - Z mapped to depth=0 (farthest, default 400)
+ * @param {number} opts.near - Z mapped to depth=1 (nearest, default -200)
  * @returns {number[]} Z positions, one per layer
  */
-export function depthProportionalArrangement(count, { depths, far = -400, near = 200 } = {}) {
+export function depthProportionalArrangement(count, { depths, far = 400, near = -200 } = {}) {
   if (count === 0) return [];
   if (!depths || depths.length !== count) {
     return fillRangeArrangement(count, { far, near });

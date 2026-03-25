@@ -10,7 +10,7 @@ import { useGroup } from './SceneObjectGroup';
  * position: [x, y, z]
  *   - x: horizontal position (0 = center, negative = left, positive = right)
  *   - y: vertical position (0 = center, negative = up, positive = down)
- *   - z: depth (negative = background/far, 0 = mid, positive = foreground/near)
+ *   - z: depth (0 = camera plane, positive = deeper/further, negative = closer)
  *
  * rotation: [rx, ry, rz] (in degrees)
  *   - rx: Rotation around X axis (tilts top away/toward you)
@@ -78,11 +78,11 @@ export function SceneObject({
   const [rx, ry, rz] = rotation;
 
   // Auto-calculate parallax factor from Z depth if not specified
-  // Objects further back (negative Z) move less
+  // Objects further back (positive Z) move less
   const effectiveParallax = useMemo(() => {
     if (parallaxFactor !== null) return parallaxFactor;
-    // Map Z from [-500, 500] to parallax [0.2, 1.2]
-    return 0.7 + z / 1000;
+    // Map Z from [-500, 500] to parallax [1.2, 0.2]
+    return 0.7 - z / 1000;
   }, [z, parallaxFactor]);
 
   // Calculate mouse-driven offset
@@ -134,19 +134,18 @@ export function SceneObject({
   const gx = groupOffset?.x || 0;
   const gy = groupOffset?.y || 0;
 
-  // Z-depth culling: fade out and hide objects approaching the camera plane
-  const effectiveZ = z + scrollZ;
-  const fadeStart = perspective * 0.4; // start fading at 40% of perspective
-  const fadeEnd = perspective * 0.6; // fully hidden at 60% of perspective
-  const culled = effectiveZ >= fadeEnd;
-  const zOpacity =
-    effectiveZ <= fadeStart ? 1 : 1 - (effectiveZ - fadeStart) / (fadeEnd - fadeStart);
+  // Z-depth culling: fade out and hide objects that have scrolled past the camera
+  const cssZ = scrollZ - z; // positive = toward/past viewer
+  const fadeStart = perspective * 0.4;
+  const fadeEnd = perspective * 0.6;
+  const culled = cssZ >= fadeEnd;
+  const zOpacity = cssZ <= fadeStart ? 1 : 1 - (cssZ - fadeStart) / (fadeEnd - fadeStart);
 
   // Build the 3D transform
   const transform = useMemo(() => {
     const parts = [
       // First translate to position (including mouse offset and group drag offset)
-      `translate3d(${x + mouseOffset.x + gx}px, ${y + mouseOffset.y + gy}px, ${z + scrollZ}px)`,
+      `translate3d(${x + mouseOffset.x + gx}px, ${y + mouseOffset.y + gy}px, ${scrollZ - z}px)`,
       // Then apply rotations
       `rotateX(${rx}deg)`,
       `rotateY(${ry}deg)`,
@@ -196,13 +195,13 @@ export function SceneObject({
 export const ObjectPresets = {
   // Background elements - far away, minimal parallax
   farBackground: {
-    position: [0, 0, -400],
+    position: [0, 0, 400],
     parallaxFactor: 0.1,
   },
 
   // Standard background
   background: {
-    position: [0, 0, -200],
+    position: [0, 0, 200],
     parallaxFactor: 0.3,
   },
 
@@ -214,13 +213,13 @@ export const ObjectPresets = {
 
   // Foreground - close to camera
   foreground: {
-    position: [0, 0, 150],
+    position: [0, 0, -150],
     parallaxFactor: 0.9,
   },
 
   // Extreme foreground - things passing very close
   nearForeground: {
-    position: [0, 0, 300],
+    position: [0, 0, -300],
     parallaxFactor: 1.2,
   },
 
@@ -240,7 +239,7 @@ export const ObjectPresets = {
 
   // Floor element
   floor: {
-    position: [0, 200, -100],
+    position: [0, 200, 100],
     rotation: [60, 0, 0],
     parallaxFactor: 0.4,
   },

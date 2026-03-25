@@ -35,7 +35,7 @@ function InsertedObjectRenderer({ object }) {
   const gy = groupOffset?.y || 0;
 
   const transform = [
-    `translate3d(${x + mouseOffsetX + gx}px, ${y + mouseOffsetY + gy}px, ${z + scrollZ}px)`,
+    `translate3d(${x + mouseOffsetX + gx}px, ${y + mouseOffsetY + gy}px, ${scrollZ - z}px)`,
   ].join(' ');
 
   const cardType = CARD_TYPE_REGISTRY.find((ct) => ct.id === object.type);
@@ -71,10 +71,10 @@ function InsertedObjectRenderer({ object }) {
  * The coordinate system:
  * - X: left (-) to right (+)
  * - Y: up (-) to down (+) [CSS convention]
- * - Z: away from camera (-) to toward camera (+)
+ * - Z: 0 = camera plane, positive = deeper into scene (further from camera)
  *
- * Objects further from camera (negative Z) move less = background
- * Objects closer to camera (positive Z) move more = foreground
+ * Objects with higher Z are further away and move less = background
+ * Objects with lower/negative Z are closer and move more = foreground
  */
 export function Scene({
   children,

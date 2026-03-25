@@ -21,7 +21,7 @@ export function BeHereMeow() {
     <Scene perspective={1200} parallaxIntensity={0.8} mouseInfluence={{ x: 40, y: 25 }}>
       {/* ===== DISTANT BACKGROUND - MOUNTAINS/CLOUDS ===== */}
       <SceneObject
-        position={[0, 50, -450]}
+        position={[0, 50, 450]}
         rotation={[0, 0, 0]}
         parallaxFactor={0.05}
         interactive={false}
@@ -46,7 +46,7 @@ export function BeHereMeow() {
       {[...Array(5)].map((_, i) => (
         <SceneObject
           key={`cloud-${i}`}
-          position={[-300 + i * 150, -120 + (i % 3) * 40, -400 - i * 20]}
+          position={[-300 + i * 150, -120 + (i % 3) * 40, 400 + i * 20]}
           rotation={[0, 0, i * 5]}
           parallaxFactor={0.08}
           interactive={false}
@@ -65,7 +65,7 @@ export function BeHereMeow() {
 
       {/* ===== LOTUS FLOWERS - MID BACKGROUND ===== */}
       <SceneObject
-        position={[-220, 120, -250]}
+        position={[-220, 120, 250]}
         rotation={[15, 20, -5]}
         parallaxFactor={0.2}
         interactive={false}
@@ -74,7 +74,7 @@ export function BeHereMeow() {
       </SceneObject>
 
       <SceneObject
-        position={[200, 140, -220]}
+        position={[200, 140, 220]}
         rotation={[10, -15, 8]}
         parallaxFactor={0.25}
         interactive={false}
@@ -83,7 +83,7 @@ export function BeHereMeow() {
       </SceneObject>
 
       <SceneObject
-        position={[-80, 180, -280]}
+        position={[-80, 180, 280]}
         rotation={[20, 5, -3]}
         parallaxFactor={0.18}
         interactive={false}
@@ -213,7 +213,7 @@ export function BeHereMeow() {
 
       {/* ===== INCENSE SMOKE - FOREGROUND ===== */}
       <SceneObject
-        position={[-150, 80, 100]}
+        position={[-150, 80, -100]}
         rotation={[5, 15, -10]}
         parallaxFactor={0.7}
         interactive={false}
@@ -222,7 +222,7 @@ export function BeHereMeow() {
       </SceneObject>
 
       <SceneObject
-        position={[160, 100, 120]}
+        position={[160, 100, -120]}
         rotation={[-5, -10, 8]}
         parallaxFactor={0.75}
         interactive={false}
@@ -232,7 +232,7 @@ export function BeHereMeow() {
 
       {/* ===== FLOATING MANTRAS ===== */}
       <SceneObject
-        position={[-200, -80, 180]}
+        position={[-200, -80, -180]}
         rotation={[0, 15, -8]}
         parallaxFactor={0.85}
         interactive={false}
@@ -241,7 +241,7 @@ export function BeHereMeow() {
       </SceneObject>
 
       <SceneObject
-        position={[180, -60, 200]}
+        position={[180, -60, -200]}
         rotation={[0, -12, 5]}
         parallaxFactor={0.9}
         interactive={false}
@@ -256,7 +256,7 @@ export function BeHereMeow() {
       </SceneObject>
 
       <SceneObject
-        position={[50, -120, 220]}
+        position={[50, -120, -220]}
         rotation={[0, 5, -3]}
         parallaxFactor={0.95}
         interactive={false}
@@ -271,7 +271,7 @@ export function BeHereMeow() {
       </SceneObject>
 
       <SceneObject
-        position={[-100, -150, 250]}
+        position={[-100, -150, -250]}
         rotation={[0, -8, 6]}
         parallaxFactor={1.0}
         interactive={false}
@@ -287,7 +287,7 @@ export function BeHereMeow() {
 
       {/* ===== TITLE ===== */}
       <SceneObject
-        position={[0, -200, 150]}
+        position={[0, -200, -150]}
         rotation={[-5, 0, 0]}
         parallaxFactor={0.8}
         interactive={false}
@@ -323,7 +323,7 @@ export function BeHereMeow() {
 
       {/* ===== CLOSE FOREGROUND ELEMENTS ===== */}
       <SceneObject
-        position={[-280, 150, 280]}
+        position={[-280, 150, -280]}
         rotation={[10, 25, -15]}
         parallaxFactor={1.1}
         interactive={false}
@@ -332,7 +332,7 @@ export function BeHereMeow() {
       </SceneObject>
 
       <SceneObject
-        position={[260, -100, 300]}
+        position={[260, -100, -300]}
         rotation={[-5, -20, 10]}
         parallaxFactor={1.15}
         interactive={false}

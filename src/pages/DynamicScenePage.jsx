@@ -20,7 +20,7 @@ import { ScrollMinimap } from '../components/minimap';
  */
 export function DynamicScenePage() {
   const { slug } = useParams();
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { scene: config, loading, error, save: handleSave } = useSceneLoader(slug);
 
   // Derive data from config (safe-defaults so hooks can run before early returns)
@@ -32,13 +32,13 @@ export function DynamicScenePage() {
   } = sceneConfig;
 
   // Auto-derive slides from layers.
-  // scrollZ is added to each object's Z in SceneObject, so the scrollZ value
-  // that centers a layer at Z=0 (camera plane) is -layer.z.
-  const minZ = useMemo(() => {
+  // With positive-Z-deeper convention, scrollZ=Z brings object at z=Z to camera plane.
+  // So zCenter = layer.z directly, and scrollDepth covers the max Z.
+  const maxZ = useMemo(() => {
     const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
     const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
     const allZs = [...layerZs, ...objectZs];
-    return allZs.length ? Math.min(...allZs) : 0;
+    return allZs.length ? Math.max(...allZs) : 0;
   }, [layers, objects]);
 
   const slides = useMemo(
@@ -46,26 +46,51 @@ export function DynamicScenePage() {
       layers.map((layer, n) => ({
         id: `layer-${layer.index ?? n}`,
         label: layer.name || `Layer ${layer.index ?? n}`,
-        zCenter: (layer.position || [0, 0, 0])[2] - minZ,
+        zCenter: (layer.position || [0, 0, 0])[2],
         thumbnail: `/local-scenes/${slug}/layer-${layer.index ?? n}.png`,
       })),
-    [layers, slug, minZ],
+    [layers, slug],
   );
 
   const scrollDepth = useMemo(() => {
-    const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
-    const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
-    const allZs = [...layerZs, ...objectZs];
-    if (!allZs.length) return 500;
-    const range = Math.max(...allZs) - Math.min(...allZs) || 500;
-    // Add extra depth so objects can scroll past the camera
-    return range + perspective;
-  }, [layers, objects, perspective]);
+    // Add perspective so the deepest objects can scroll past the camera
+    return (maxZ || 500) + perspective;
+  }, [maxZ, perspective]);
 
   const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll({
     slides,
     scrollDepth,
   });
+
+  // Theme keyframes — switch theme as user scrolls past Z thresholds
+  const themeKeyframes = sceneConfig.themeKeyframes;
+  const prevThemeRef = useRef(null);
+
+  // Set starting theme on mount (lowest z keyframe = start of scroll)
+  useEffect(() => {
+    if (!themeKeyframes || !themeKeyframes.length) return;
+    const sorted = [...themeKeyframes].sort((a, b) => a.z - b.z);
+    setTheme(sorted[0].theme);
+    prevThemeRef.current = sorted[0].theme;
+  }, [themeKeyframes, setTheme]);
+
+  // Switch theme as user scrolls past Z thresholds.
+  // scrollZ increases as user scrolls deeper. Keyframe z values match object positions.
+  // Keyframe { z: 5000 } triggers when scrollZ >= 5000.
+  useEffect(() => {
+    if (!themeKeyframes || !themeKeyframes.length) return;
+    const sorted = [...themeKeyframes].sort((a, b) => a.z - b.z);
+    let activeTheme = sorted[0].theme;
+    for (const kf of sorted) {
+      if (scrollZ >= kf.z) {
+        activeTheme = kf.theme;
+      }
+    }
+    if (activeTheme !== prevThemeRef.current) {
+      prevThemeRef.current = activeTheme;
+      setTheme(activeTheme);
+    }
+  }, [scrollZ, themeKeyframes, setTheme]);
 
   // Object editing — position is lifted so drag and popover share it
   const [selectedObjectId, setSelectedObjectId] = useState(null);
@@ -124,8 +149,8 @@ export function DynamicScenePage() {
   const handleCardDragStart = useCallback(
     (e) => {
       if (!editPosition) return;
-      const effectiveZ = editPosition[2] + scrollZ;
-      const scale = perspective / (perspective - effectiveZ);
+      const cssZ = scrollZ - editPosition[2];
+      const scale = perspective / (perspective - cssZ);
       cardDragRef.current = {
         startX: e.clientX,
         startY: e.clientY,
@@ -314,7 +339,19 @@ function SavedObjectRenderer({ object, selected, overridePosition, onSelect, onD
           : undefined
       }
     >
-      {content}
+      <div style={{ position: 'relative' }}>
+        {content}
+        {onSelect && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 10,
+              cursor: 'pointer',
+            }}
+          />
+        )}
+      </div>
     </SceneObject>
   );
 }
