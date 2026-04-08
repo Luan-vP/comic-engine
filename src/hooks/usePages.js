@@ -29,7 +29,12 @@ export function usePages() {
           const data = await res.json();
           if (Array.isArray(data)) {
             for (const p of data) {
-              results.push({ slug: p.slug, name: p.name, source: 'local' });
+              results.push({
+              slug: p.slug,
+              name: p.name,
+              source: 'local',
+              lastPublishedSlug: p.lastPublishedSlug || null,
+            });
             }
           }
         }

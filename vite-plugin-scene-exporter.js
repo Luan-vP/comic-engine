@@ -283,6 +283,7 @@ export default function sceneExporter() {
               slug: entry.name,
               name: meta.name || slugToTitle(entry.name),
               layerCount: meta.layers?.length || 0,
+              lastPublishedSlug: meta.lastPublishedSlug || null,
             });
           }
 
@@ -609,6 +610,15 @@ export default function sceneExporter() {
           }
 
           const result = await publishScene(scenesDir, slug, comicBookSlug);
+
+          // Remember the comic book slug for next time
+          const metaPath = path.join(scenesDir, slug, 'scene.json');
+          if (fs.existsSync(metaPath)) {
+            const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+            meta.lastPublishedSlug = comicBookSlug;
+            fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
+          }
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(result));
         } catch (err) {

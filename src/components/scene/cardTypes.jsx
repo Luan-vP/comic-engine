@@ -1,7 +1,13 @@
 import React from 'react';
 import { CARD_TYPE_REGISTRY as BASE_REGISTRY } from './cardTypesData.js';
 import { Panel } from './Panel';
-import { MemoryCardModal, IframeCardModal, TextCardModal, VideoCardModal } from './InsertModals';
+import {
+  MemoryCardModal,
+  IframeCardModal,
+  TextCardModal,
+  VideoCardModal,
+  ImageCardModal,
+} from './InsertModals';
 
 /**
  * cardTypes.jsx - React-enriched card type registry.
@@ -41,6 +47,48 @@ const RENDER_EXTENSIONS = {
       );
     },
     Modal: MemoryCardModal,
+  },
+
+  image: {
+    renderContent(object) {
+      const w = object.data.width || 280;
+      const h = object.data.height || 200;
+      return (
+        <Panel variant="default" width={w} height={h}>
+          <img
+            src={object.data.imageUrl}
+            alt={object.data.caption || 'Image'}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+              position: 'relative',
+              zIndex: 1,
+            }}
+          />
+          {object.data.caption && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: '6px 10px',
+                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                color: 'var(--color-text, #fff)',
+                fontSize: '11px',
+                textAlign: 'center',
+                zIndex: 2,
+              }}
+            >
+              {object.data.caption}
+            </div>
+          )}
+        </Panel>
+      );
+    },
+    Modal: ImageCardModal,
   },
 
   iframe: {

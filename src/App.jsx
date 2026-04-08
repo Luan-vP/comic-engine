@@ -188,8 +188,11 @@ function PageNavigator({ pages }) {
   const location = useLocation();
   const [publishStatus, setPublishStatus] = useState({});
 
-  async function handlePublish(slug) {
-    const comicBookSlug = window.prompt('Enter comic book slug to publish to:', '');
+  async function handlePublish(slug, lastPublishedSlug) {
+    const comicBookSlug = window.prompt(
+      'Enter comic book slug to publish to:',
+      lastPublishedSlug || '',
+    );
     if (!comicBookSlug) return;
 
     setPublishStatus((prev) => ({ ...prev, [slug]: 'publishing' }));
@@ -290,7 +293,7 @@ function PageNavigator({ pages }) {
                 </Link>
               );
             })}
-            {localPages.map(({ slug, name }) => {
+            {localPages.map(({ slug, name, lastPublishedSlug }) => {
               const path = `/scenes/${slug}`;
               const isActive = location.pathname === path;
               const status = publishStatus[slug];
@@ -300,7 +303,7 @@ function PageNavigator({ pages }) {
                     {name}
                   </Link>
                   <button
-                    onClick={() => handlePublish(slug)}
+                    onClick={() => handlePublish(slug, lastPublishedSlug)}
                     title="Publish to GCS"
                     disabled={status === 'publishing'}
                     style={{

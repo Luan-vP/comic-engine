@@ -80,6 +80,30 @@ export const CARD_TYPE_REGISTRY = [
     },
   },
   {
+    id: 'image',
+    label: 'Image Card',
+    description: 'Upload an image (theme-styled, resizable)',
+    defaultPosition: [0, 0, 0],
+    defaultParallaxFactor: 0.6,
+    panelVariant: 'default',
+    generateJSX(obj) {
+      const pos = obj.position || [0, 0, 0];
+      const pf = obj.parallaxFactor ?? 0.6;
+      const w = obj.data.width || 280;
+      const h = obj.data.height || 200;
+      return [
+        `      <SceneObject`,
+        `        position={[${pos.join(', ')}]}`,
+        `        parallaxFactor={${pf}}`,
+        `      >`,
+        `        <Panel variant="default" width={${w}} height={${h}}>`,
+        `          <img src="${obj.data.imageUrl}" alt="${obj.data.caption || 'Image'}" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />`,
+        `        </Panel>`,
+        `      </SceneObject>`,
+      ].join('\n');
+    },
+  },
+  {
     id: 'text',
     label: 'Text Card',
     description: 'Add title + body text',
