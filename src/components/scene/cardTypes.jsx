@@ -1,7 +1,7 @@
 import React from 'react';
 import { CARD_TYPE_REGISTRY as BASE_REGISTRY } from './cardTypesData.js';
 import { Panel } from './Panel';
-import { MemoryCardModal, IframeCardModal, TextCardModal } from './InsertModals';
+import { MemoryCardModal, IframeCardModal, TextCardModal, VideoCardModal } from './InsertModals';
 
 /**
  * cardTypes.jsx - React-enriched card type registry.
@@ -59,6 +59,22 @@ const RENDER_EXTENSIONS = {
       );
     },
     Modal: IframeCardModal,
+  },
+
+  video: {
+    renderContent(object) {
+      return (
+        <video
+          src={object.data.videoUrl}
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{ maxWidth: `${object.data.width || 400}px`, display: 'block' }}
+        />
+      );
+    },
+    Modal: VideoCardModal,
   },
 
   text: {
