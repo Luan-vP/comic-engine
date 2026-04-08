@@ -60,6 +60,26 @@ export const CARD_TYPE_REGISTRY = [
     },
   },
   {
+    id: 'video',
+    label: 'Video Overlay',
+    description: 'Upload a video (transparent WebM supported)',
+    defaultPosition: [0, 0, 50],
+    defaultParallaxFactor: 0.7,
+    panelVariant: 'borderless',
+    generateJSX(obj) {
+      const pos = obj.position || [0, 0, 50];
+      const pf = obj.parallaxFactor ?? 0.7;
+      return [
+        `      <SceneObject`,
+        `        position={[${pos.join(', ')}]}`,
+        `        parallaxFactor={${pf}}`,
+        `      >`,
+        `        <video src="${obj.data.videoUrl}" autoPlay loop muted playsInline style={{ maxWidth: '${obj.data.width || 400}px' }} />`,
+        `      </SceneObject>`,
+      ].join('\n');
+    },
+  },
+  {
     id: 'text',
     label: 'Text Card',
     description: 'Add title + body text',

@@ -519,11 +519,11 @@ export default function sceneExporter() {
             return;
           }
 
-          const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+          const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/webm', 'video/mp4']);
           const mimeMatch = imageUrl.match(/^data:([^;]+);base64,/);
           if (!mimeMatch || !ALLOWED_MIME.has(mimeMatch[1])) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Only image uploads are accepted' }));
+            res.end(JSON.stringify({ error: 'Only image/video uploads are accepted' }));
             return;
           }
 
@@ -553,11 +553,11 @@ export default function sceneExporter() {
             return;
           }
 
-          const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+          const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/webm', 'video/mp4']);
           const mimeMatch = imageUrl.match(/^data:([^;]+);base64,/);
           if (!mimeMatch || !ALLOWED_MIME.has(mimeMatch[1])) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Only image uploads are accepted' }));
+            res.end(JSON.stringify({ error: 'Only image/video uploads are accepted' }));
             return;
           }
 
