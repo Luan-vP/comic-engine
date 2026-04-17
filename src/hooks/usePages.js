@@ -42,14 +42,12 @@ export function usePages() {
         // Dev server not available (prod build) — skip
       }
 
-      // Fetch GCS comic books
+      // Fetch GCS comic books (published — always shown alongside local scenes)
       try {
         const gcsBooks = await listComicBooks();
         for (const book of gcsBooks) {
           // Filter out non-comic-book folders (e.g. "assets")
           if (book.slug === 'assets') continue;
-          // Skip if already present locally (local takes precedence)
-          if (results.some((p) => p.slug === book.slug)) continue;
           results.push({ slug: book.slug, name: book.name, source: 'gcs' });
         }
       } catch (err) {

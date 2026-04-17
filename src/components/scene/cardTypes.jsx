@@ -1,13 +1,83 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CARD_TYPE_REGISTRY as BASE_REGISTRY } from './cardTypesData.js';
 import { Panel } from './Panel';
+import { useTheme } from '../../theme/ThemeContext';
 import {
   MemoryCardModal,
   IframeCardModal,
   TextCardModal,
   VideoCardModal,
   ImageCardModal,
+  CodeCardModal,
 } from './InsertModals';
+
+/**
+ * TypingText — renders text character-by-character in a loop.
+ * After typing completes, holds for `holdMs` then resets.
+ */
+function TypingText({ text, speed = 40, holdMs = 2000, cursorColor, style }) {
+  const [charIndex, setCharIndex] = useState(0);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (charIndex < text.length) {
+      timerRef.current = setTimeout(() => setCharIndex((i) => i + 1), speed);
+    } else {
+      timerRef.current = setTimeout(() => setCharIndex(0), holdMs);
+    }
+    return () => clearTimeout(timerRef.current);
+  }, [charIndex, text, speed, holdMs]);
+
+  return (
+    <pre
+      style={{
+        whiteSpace: 'pre-wrap',
+        margin: 0,
+        ...style,
+      }}
+    >
+      {text.slice(0, charIndex)}
+      <span
+        style={{
+          color: cursorColor || style?.color || '#0f0',
+          opacity: charIndex < text.length ? 1 : 0,
+          animation: 'blink 1s step-end infinite',
+        }}
+      >
+        ▌
+      </span>
+      <style>{`@keyframes blink { 50% { opacity: 0; } }`}</style>
+    </pre>
+  );
+}
+
+/** Theme-aware code card content */
+function CodeCardContent({ object }) {
+  const { theme } = useTheme();
+  const code = theme.code || {};
+  const w = object.data.width || 320;
+  const h = object.data.height || 200;
+
+  return (
+    <Panel variant="monitor" width={w} height={h}>
+      <div style={{ padding: '16px', height: '100%', boxSizing: 'border-box' }}>
+        <TypingText
+          text={object.data.body || ''}
+          speed={object.data.speed || 40}
+          holdMs={object.data.holdMs || 2000}
+          cursorColor={code.cursor}
+          style={{
+            fontFamily: code.font || "'Courier New', Courier, monospace",
+            color: code.color || '#0f0',
+            fontSize: '12px',
+            lineHeight: 1.6,
+            textShadow: code.glow && code.glow !== 'none' ? `0 0 4px ${code.glow}` : 'none',
+          }}
+        />
+      </div>
+    </Panel>
+  );
+}
 
 /**
  * cardTypes.jsx - React-enriched card type registry.
@@ -51,8 +121,11 @@ const RENDER_EXTENSIONS = {
 
   image: {
     renderContent(object) {
-      const w = object.data.width || 280;
-      const h = object.data.height || 200;
+      const scale = object.data.scale || 1;
+      const baseW = object.data.baseWidth || object.data.width || 280;
+      const baseH = object.data.baseHeight || object.data.height || 200;
+      const w = Math.round(baseW * scale);
+      const h = Math.round(baseH * scale);
       return (
         <Panel variant="default" width={w} height={h}>
           <img
@@ -123,6 +196,13 @@ const RENDER_EXTENSIONS = {
       );
     },
     Modal: VideoCardModal,
+  },
+
+  code: {
+    renderContent(object) {
+      return <CodeCardContent object={object} />;
+    },
+    Modal: CodeCardModal,
   },
 
   text: {

@@ -203,9 +203,10 @@ export function ImageCardModal({ onConfirm, onCancel }) {
   const { theme } = useTheme();
   const [imageDataUrl, setImageDataUrl] = useState(null);
   const [originalFilename, setOriginalFilename] = useState(null);
+  const [naturalWidth, setNaturalWidth] = useState(null);
+  const [naturalHeight, setNaturalHeight] = useState(null);
   const [caption, setCaption] = useState('');
-  const [width, setWidth] = useState(280);
-  const [height, setHeight] = useState(200);
+  const [scale, setScale] = useState(1);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -214,9 +215,26 @@ export function ImageCardModal({ onConfirm, onCancel }) {
     if (!file) return;
     setOriginalFilename(file.name);
     const reader = new FileReader();
-    reader.onload = (ev) => setImageDataUrl(ev.target.result);
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+      setImageDataUrl(dataUrl);
+      // Read natural dimensions to preserve aspect ratio
+      const img = new Image();
+      img.onload = () => {
+        // Cap base size so the default fits on screen
+        const maxBase = 400;
+        const ratio = Math.min(maxBase / img.naturalWidth, maxBase / img.naturalHeight, 1);
+        setNaturalWidth(Math.round(img.naturalWidth * ratio));
+        setNaturalHeight(Math.round(img.naturalHeight * ratio));
+        setScale(1);
+      };
+      img.src = dataUrl;
+    };
     reader.readAsDataURL(file);
   };
+
+  const baseW = naturalWidth || 280;
+  const baseH = naturalHeight || 200;
 
   const handleConfirm = async () => {
     if (!imageDataUrl) return;
@@ -238,7 +256,7 @@ export function ImageCardModal({ onConfirm, onCancel }) {
         position: [0, 0, 0],
         parallaxFactor: 0.6,
         panelVariant: 'default',
-        data: { imageUrl: url, caption, width, height },
+        data: { imageUrl: url, caption, baseWidth: baseW, baseHeight: baseH, scale },
       });
     } catch (err) {
       setError(err.message);
@@ -293,30 +311,25 @@ export function ImageCardModal({ onConfirm, onCancel }) {
             style={{ ...inputStyle(theme), marginTop: '4px' }}
           />
         </label>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <label style={{ color: theme.colors.textMuted, fontSize: '11px', flex: 1 }}>
-            Width
-            <input
-              type="number"
-              value={width}
-              onChange={(e) => setWidth(Number(e.target.value))}
-              min={50}
-              step={10}
-              style={{ ...inputStyle(theme), marginTop: '4px' }}
-            />
-          </label>
-          <label style={{ color: theme.colors.textMuted, fontSize: '11px', flex: 1 }}>
-            Height
-            <input
-              type="number"
-              value={height}
-              onChange={(e) => setHeight(Number(e.target.value))}
-              min={50}
-              step={10}
-              style={{ ...inputStyle(theme), marginTop: '4px' }}
-            />
-          </label>
-        </div>
+        {naturalWidth && (
+          <div>
+            <div style={{ color: theme.colors.textSubtle, fontSize: '10px', marginBottom: '4px' }}>
+              {baseW}×{baseH}px @ {scale}x = {Math.round(baseW * scale)}×{Math.round(baseH * scale)}px
+            </div>
+            <label style={{ color: theme.colors.textMuted, fontSize: '11px' }}>
+              Scale
+              <input
+                type="range"
+                min={0.2}
+                max={3}
+                step={0.1}
+                value={scale}
+                onChange={(e) => setScale(Number(e.target.value))}
+                style={{ width: '100%', marginTop: '4px' }}
+              />
+            </label>
+          </div>
+        )}
         {error && <div style={{ color: '#f55', fontSize: '11px' }}>{error}</div>}
       </div>
     </ModalBase>
@@ -409,6 +422,76 @@ export function TextCardModal({ onConfirm, onCancel }) {
             style={{ ...inputStyle(theme), marginTop: '4px', resize: 'vertical' }}
           />
         </label>
+      </div>
+    </ModalBase>
+  );
+}
+
+export function CodeCardModal({ onConfirm, onCancel }) {
+  const { theme } = useTheme();
+  const [body, setBody] = useState('');
+  const [width, setWidth] = useState(320);
+  const [height, setHeight] = useState(200);
+
+  const handleConfirm = () => {
+    onConfirm({
+      type: 'code',
+      position: [0, 0, 0],
+      parallaxFactor: 0.6,
+      panelVariant: 'monitor',
+      data: { body, width, height, speed: 40, holdMs: 2000 },
+    });
+  };
+
+  return (
+    <ModalBase
+      title="ADD CODE CARD"
+      theme={theme}
+      onConfirm={handleConfirm}
+      onCancel={onCancel}
+      confirmDisabled={!body.trim()}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <label style={{ color: theme.colors.textMuted, fontSize: '11px' }}>
+          Text (whitespace preserved)
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder={'> hello world\n> system online...'}
+            rows={5}
+            style={{
+              ...inputStyle(theme),
+              marginTop: '4px',
+              resize: 'vertical',
+              fontFamily: "'Courier New', Courier, monospace",
+              fontSize: '11px',
+            }}
+          />
+        </label>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <label style={{ color: theme.colors.textMuted, fontSize: '11px', flex: 1 }}>
+            Width
+            <input
+              type="number"
+              value={width}
+              onChange={(e) => setWidth(Number(e.target.value))}
+              min={100}
+              step={10}
+              style={{ ...inputStyle(theme), marginTop: '4px' }}
+            />
+          </label>
+          <label style={{ color: theme.colors.textMuted, fontSize: '11px', flex: 1 }}>
+            Height
+            <input
+              type="number"
+              value={height}
+              onChange={(e) => setHeight(Number(e.target.value))}
+              min={50}
+              step={10}
+              style={{ ...inputStyle(theme), marginTop: '4px' }}
+            />
+          </label>
+        </div>
       </div>
     </ModalBase>
   );
@@ -673,11 +756,53 @@ export function ObjectEditPopover({
                 style={{ ...iStyle, marginTop: '2px' }}
               />
             </div>
+            <div>
+              <div style={{ ...lStyle, marginBottom: '2px' }}>
+                SCALE ({Math.round((data.baseWidth || data.width || 280) * (data.scale || 1))}×
+                {Math.round((data.baseHeight || data.height || 200) * (data.scale || 1))}px)
+              </div>
+              <DraggableNumberLabel
+                value={Math.round((data.scale || 1) * 100)}
+                onChange={(v) => setData({ ...data, scale: Math.max(10, v) / 100 })}
+                sensitivity={1}
+                style={{ color: theme.colors.textSubtle, fontSize: '9px', marginBottom: '2px' }}
+              >
+                {Math.round((data.scale || 1) * 100)}%
+              </DraggableNumberLabel>
+              <input
+                type="range"
+                min={0.1}
+                max={3}
+                step={0.05}
+                value={data.scale || 1}
+                onChange={(e) => setData({ ...data, scale: Number(e.target.value) })}
+                style={{ width: '100%', marginTop: '2px' }}
+              />
+            </div>
+          </>
+        )}
+        {object.type === 'code' && (
+          <>
+            <div>
+              <div style={lStyle}>TEXT</div>
+              <textarea
+                value={data.body || ''}
+                onChange={(e) => setData({ ...data, body: e.target.value })}
+                rows={4}
+                style={{
+                  ...iStyle,
+                  marginTop: '2px',
+                  resize: 'vertical',
+                  fontFamily: "'Courier New', Courier, monospace",
+                  fontSize: '11px',
+                }}
+              />
+            </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               <div style={{ flex: 1 }}>
                 <DraggableNumberLabel
-                  value={data.width || 280}
-                  onChange={(v) => setData({ ...data, width: Math.max(50, v) })}
+                  value={data.width || 320}
+                  onChange={(v) => setData({ ...data, width: Math.max(100, v) })}
                   sensitivity={2}
                   style={{ color: theme.colors.textSubtle, fontSize: '9px', marginBottom: '2px' }}
                 >
@@ -685,9 +810,9 @@ export function ObjectEditPopover({
                 </DraggableNumberLabel>
                 <input
                   type="number"
-                  value={data.width || 280}
-                  onChange={(e) => setData({ ...data, width: Math.max(50, Number(e.target.value)) })}
-                  min={50}
+                  value={data.width || 320}
+                  onChange={(e) => setData({ ...data, width: Math.max(100, Number(e.target.value)) })}
+                  min={100}
                   step={10}
                   style={{ ...iStyle, padding: '4px 6px', fontSize: '11px' }}
                 />
@@ -708,6 +833,30 @@ export function ObjectEditPopover({
                   min={50}
                   step={10}
                   style={{ ...iStyle, padding: '4px 6px', fontSize: '11px' }}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={lStyle}>SPEED (ms)</div>
+                <input
+                  type="number"
+                  value={data.speed || 40}
+                  onChange={(e) => setData({ ...data, speed: Math.max(5, Number(e.target.value)) })}
+                  min={5}
+                  step={5}
+                  style={{ ...iStyle, padding: '4px 6px', fontSize: '11px', marginTop: '2px' }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={lStyle}>HOLD (ms)</div>
+                <input
+                  type="number"
+                  value={data.holdMs || 2000}
+                  onChange={(e) => setData({ ...data, holdMs: Math.max(0, Number(e.target.value)) })}
+                  min={0}
+                  step={500}
+                  style={{ ...iStyle, padding: '4px 6px', fontSize: '11px', marginTop: '2px' }}
                 />
               </div>
             </div>

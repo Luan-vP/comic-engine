@@ -89,8 +89,9 @@ export const CARD_TYPE_REGISTRY = [
     generateJSX(obj) {
       const pos = obj.position || [0, 0, 0];
       const pf = obj.parallaxFactor ?? 0.6;
-      const w = obj.data.width || 280;
-      const h = obj.data.height || 200;
+      const scale = obj.data.scale || 1;
+      const w = Math.round((obj.data.baseWidth || obj.data.width || 280) * scale);
+      const h = Math.round((obj.data.baseHeight || obj.data.height || 200) * scale);
       return [
         `      <SceneObject`,
         `        position={[${pos.join(', ')}]}`,
@@ -98,6 +99,30 @@ export const CARD_TYPE_REGISTRY = [
         `      >`,
         `        <Panel variant="default" width={${w}} height={${h}}>`,
         `          <img src="${obj.data.imageUrl}" alt="${obj.data.caption || 'Image'}" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />`,
+        `        </Panel>`,
+        `      </SceneObject>`,
+      ].join('\n');
+    },
+  },
+  {
+    id: 'code',
+    label: 'Code Card',
+    description: 'Monospace text with looping typing animation',
+    defaultPosition: [0, 0, 0],
+    defaultParallaxFactor: 0.6,
+    panelVariant: 'monitor',
+    generateJSX(obj) {
+      const pos = obj.position || [0, 0, 0];
+      const pf = obj.parallaxFactor ?? 0.6;
+      const w = obj.data.width || 320;
+      const h = obj.data.height || 200;
+      return [
+        `      <SceneObject`,
+        `        position={[${pos.join(', ')}]}`,
+        `        parallaxFactor={${pf}}`,
+        `      >`,
+        `        <Panel variant="monitor" width={${w}} height={${h}}>`,
+        `          <pre style={{ fontFamily: 'monospace', whiteSpace: 'pre', margin: 0, padding: '16px', color: '#0f0', fontSize: '12px' }}>${obj.data.body}</pre>`,
         `        </Panel>`,
         `      </SceneObject>`,
       ].join('\n');

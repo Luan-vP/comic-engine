@@ -24,6 +24,7 @@ export async function saveScene(comicBookSlug, sceneSlug, sceneData, layerFiles 
   const sceneFile = bucket.file(`${comicBookSlug}/${sceneSlug}/scene.json`);
   await sceneFile.save(JSON.stringify(sceneData, null, 2), {
     contentType: 'application/json',
+    metadata: { cacheControl: 'no-cache, max-age=0' },
   });
 
   for (const [filename, buffer] of Object.entries(layerFiles)) {
@@ -43,6 +44,7 @@ export async function saveManifest(comicBookSlug, manifest) {
   const file = bucket.file(`${comicBookSlug}/manifest.json`);
   await file.save(JSON.stringify(manifest, null, 2), {
     contentType: 'application/json',
+    metadata: { cacheControl: 'no-cache, max-age=0' },
   });
 }
 

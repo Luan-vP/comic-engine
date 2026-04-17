@@ -26,12 +26,16 @@ export function Panel({
 }) {
   const { theme } = useTheme();
 
+  // Theme-level panel overrides (e.g. theme.panel.default for torn-paper edges)
+  const themePanel = theme.panel || {};
+
   const variantStyles = {
     default: {
       background: `linear-gradient(135deg, ${theme.colors.background} 0%, rgba(0,0,0,0.8) 100%)`,
       border: `2px solid ${theme.colors.primary}`,
       borderRadius: '8px',
       boxShadow: `0 0 40px ${theme.colors.shadow}, inset 0 0 60px rgba(0,0,0,0.5)`,
+      ...(themePanel.default || {}),
     },
     borderless: {
       background: 'transparent',
@@ -78,8 +82,8 @@ export function Panel({
         ...style,
       }}
     >
-      {/* Halftone overlay for comic effect */}
-      {variant === 'default' && (
+      {/* Halftone overlay for comic effect (skip if theme overrides default panel) */}
+      {variant === 'default' && !themePanel.default && (
         <div
           style={{
             position: 'absolute',
