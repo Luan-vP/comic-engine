@@ -3,7 +3,12 @@ import { useTheme } from '../../theme/ThemeContext';
 
 /**
  * FilmGrain - Animated noise overlay for that analog film look
- * Uses canvas for performant real-time noise generation
+ * Uses canvas for performant real-time noise generation.
+ *
+ * Performance note: the backing ImageData buffer (~2MB at typical sizes)
+ * is allocated once per canvas size and reused across animation frames.
+ * Only on resize do we allocate a new buffer. Previously, createImageData
+ * was called every frame, producing garbage and GC pressure.
  */
 export function FilmGrain({
   intensity: intensityOverride,
@@ -26,9 +31,15 @@ export function FilmGrain({
     let lastTime = 0;
     const frameInterval = 1000 / speed;
 
+    // Reused ImageData buffer. Reallocated only on resize (or first frame).
+    let imageData = null;
+
     const resize = () => {
       canvas.width = window.innerWidth / 2; // Lower res for performance
       canvas.height = window.innerHeight / 2;
+      // Invalidate cached buffer so it is reallocated at the new size on
+      // the next frame.
+      imageData = null;
     };
 
     const generateNoise = (timestamp) => {
@@ -38,7 +49,21 @@ export function FilmGrain({
       }
       lastTime = timestamp;
 
-      const imageData = ctx.createImageData(canvas.width, canvas.height);
+      // Lazily (re)allocate buffer on first frame and after resize.
+      if (
+        !imageData ||
+        imageData.width !== canvas.width ||
+        imageData.height !== canvas.height
+      ) {
+        imageData = ctx.createImageData(canvas.width, canvas.height);
+        // Alpha channel is constant — initialize once so the hot loop
+        // below can skip writing it.
+        const data = imageData.data;
+        for (let i = 3; i < data.length; i += 4) {
+          data[i] = 255;
+        }
+      }
+
       const data = imageData.data;
 
       for (let i = 0; i < data.length; i += 4) {
@@ -53,7 +78,7 @@ export function FilmGrain({
           data[i + 1] = Math.random() * 255; // G
           data[i + 2] = Math.random() * 255; // B
         }
-        data[i + 3] = 255; // A
+        // Alpha already set to 255 at allocation time.
       }
 
       ctx.putImageData(imageData, 0, 0);

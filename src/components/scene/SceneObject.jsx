@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { useScene } from './Scene';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
+import { useSceneStatic } from './Scene';
 import { useGroup } from './SceneObjectGroup';
 
 /**
@@ -42,6 +42,12 @@ import { useGroup } from './SceneObjectGroup';
  * Epic hero shot (low angle):    rotation={[-25, 0, 0]}
  * Wall on the left:              rotation={[0, 60, 0]}
  * Floor beneath:                 rotation={[70, 0, 0]}
+ *
+ * PERFORMANCE NOTE:
+ * scrollZ-driven transform/opacity updates are applied imperatively via a ref
+ * (bypassing React reconciliation) to keep smooth 60fps scrolling even with
+ * many SceneObjects in the tree. Props like position/rotation/scale still
+ * flow through React as normal.
  */
 export function SceneObject({
   children,
@@ -62,13 +68,14 @@ export function SceneObject({
 }) {
   const {
     mousePos,
-    scrollZ,
     parallaxIntensity,
     mouseInfluence,
     perspective,
     editActive,
     groupOffset: sceneGroupOffset,
-  } = useScene();
+    scrollZRef,
+    subscribeScrollZ,
+  } = useSceneStatic();
   // Prefer the nearest group's offset over the scene-level offset so each
   // SceneObjectGroup can move its children independently.
   const group = useGroup();
@@ -76,6 +83,10 @@ export function SceneObject({
 
   const [x, y, z] = position;
   const [rx, ry, rz] = rotation;
+
+  // Ref to the root DOM element — we imperatively update its transform and
+  // opacity on scrollZ changes to avoid a React re-render per wheel tick.
+  const elementRef = useRef(null);
 
   // Auto-calculate parallax factor from Z depth if not specified
   // Objects further back (positive Z) move less
@@ -134,32 +145,114 @@ export function SceneObject({
   const gx = groupOffset?.x || 0;
   const gy = groupOffset?.y || 0;
 
-  // Z-depth culling: fade out and hide objects that have scrolled past the camera
-  const cssZ = scrollZ - z; // positive = toward/past viewer
+  // Z-depth culling uses React state so the node can be removed from the
+  // tree when fully past the camera. We only toggle on threshold crossings,
+  // not every wheel tick.
   const fadeStart = perspective * 0.4;
   const fadeEnd = perspective * 0.6;
-  const culled = cssZ >= fadeEnd;
-  const zOpacity = cssZ <= fadeStart ? 1 : 1 - (cssZ - fadeStart) / (fadeEnd - fadeStart);
+  const [culled, setCulled] = useState(() => {
+    const initialScrollZ = scrollZRef?.current ?? 0;
+    return initialScrollZ - z >= fadeEnd;
+  });
 
-  // Build the 3D transform
-  const transform = useMemo(() => {
-    const parts = [
-      // First translate to position (including mouse offset and group drag offset)
-      `translate3d(${x + mouseOffset.x + gx}px, ${y + mouseOffset.y + gy}px, ${scrollZ - z}px)`,
-      // Then apply rotations
-      `rotateX(${rx}deg)`,
-      `rotateY(${ry}deg)`,
-      `rotateZ(${rz}deg)`,
-      // Finally scale
-      `scale(${scale})`,
-    ];
-    return parts.join(' ');
-  }, [x, y, z, rx, ry, rz, scale, mouseOffset, scrollZ, gx, gy]);
+  // Helper: compute the rotation/scale tail of the transform string — this
+  // never changes with scrollZ so we memoize it.
+  const rotateScaleTail = useMemo(
+    () =>
+      `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${scale})`,
+    [rx, ry, rz, scale],
+  );
+
+  // Helper: compute transform for a given scrollZ, using the latest
+  // position/offset closure values.
+  const buildTransform = (currentScrollZ) => {
+    const tx = x + mouseOffset.x + gx;
+    const ty = y + mouseOffset.y + gy;
+    const tz = currentScrollZ - z;
+    return `translate3d(${tx}px, ${ty}px, ${tz}px) ${rotateScaleTail}`;
+  };
+
+  // Helper: compute opacity for a given scrollZ.
+  const computeOpacity = (currentScrollZ) => {
+    const cssZ = currentScrollZ - z;
+    if (cssZ <= fadeStart) return 1;
+    if (cssZ >= fadeEnd) return 0;
+    return 1 - (cssZ - fadeStart) / (fadeEnd - fadeStart);
+  };
+
+  // Imperatively sync transform + opacity + culling to the live scrollZ.
+  // This effect runs once on mount and whenever any input that feeds the
+  // transform (besides scrollZ itself) changes. Inside, we subscribe to
+  // scrollZ updates so we can mutate the DOM directly without React re-renders.
+  useEffect(() => {
+    if (!subscribeScrollZ || !scrollZRef) return undefined;
+
+    const applyScrollZ = (currentScrollZ) => {
+      const el = elementRef.current;
+      if (!el) return;
+
+      const cssZ = currentScrollZ - z;
+      const shouldCull = cssZ >= fadeEnd;
+      if (shouldCull) {
+        // Defer to React to unmount on transition into culled state so
+        // pointer events and children are released.
+        setCulled((prev) => (prev ? prev : true));
+        return;
+      }
+      // If we were culled and have returned to view, let React re-mount.
+      // We intentionally do not early-return above for prev=false path.
+      el.style.transform = buildTransform(currentScrollZ);
+      el.style.opacity = computeOpacity(currentScrollZ);
+    };
+
+    // Initial sync using the current ref value (accurate for both mounted
+    // and remounted nodes).
+    const initial = scrollZRef.current ?? 0;
+    const initiallyCulled = initial - z >= fadeEnd;
+    if (initiallyCulled) {
+      setCulled(true);
+    } else {
+      // Ensure culled flag is cleared when we come back into range.
+      setCulled(false);
+      const el = elementRef.current;
+      if (el) {
+        el.style.transform = buildTransform(initial);
+        el.style.opacity = computeOpacity(initial);
+      }
+    }
+
+    const unsubscribe = subscribeScrollZ(applyScrollZ);
+    return unsubscribe;
+    // Re-subscribe when anything that feeds the transform / culling threshold
+    // changes. scrollZ itself is intentionally not in this list — it is read
+    // imperatively from the ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    x,
+    y,
+    z,
+    rotateScaleTail,
+    mouseOffset,
+    gx,
+    gy,
+    fadeStart,
+    fadeEnd,
+    subscribeScrollZ,
+    scrollZRef,
+  ]);
 
   if (culled) return null;
 
+  // Compute the initial transform/opacity using the latest ref value so the
+  // first paint is correct. Subsequent scrollZ updates are applied imperatively
+  // by the effect above.
+  const initialScrollZ = scrollZRef?.current ?? 0;
+  const initialTransform = buildTransform(initialScrollZ);
+  const initialOpacity = computeOpacity(initialScrollZ);
+
   return (
     <div
+      ref={elementRef}
       className={className}
       onClick={onClick}
       onMouseDown={
@@ -174,10 +267,10 @@ export function SceneObject({
       onMouseLeave={onHover ? () => onHover(false) : undefined}
       style={{
         ...anchorStyles,
-        transform,
+        transform: initialTransform,
         transformStyle: 'preserve-3d',
         transformOrigin: origin,
-        opacity: zOpacity,
+        opacity: initialOpacity,
         pointerEvents: editActive ? (onClick ? 'auto' : 'none') : interactive ? 'auto' : 'none',
         cursor: editActive && onClick ? 'pointer' : undefined,
         transition: editActive ? 'none' : 'transform 0.1s ease-out, opacity 0.2s ease-out',

@@ -1,13 +1,14 @@
 import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Scene, SceneObject } from '../components/scene';
-import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
+import { Scene, SceneObject, SavedObjectRenderer } from '../components/scene';
 import { OverlayStack } from '../components/overlays';
 import { useTheme } from '../theme/ThemeContext';
 import { useComicBook } from '../hooks/useComicBook';
 import { useZScroll } from '../hooks/useZScroll';
 import { useThemeTriggers } from '../hooks/useThemeTriggers';
 import { getLayerUrl } from '../services/gcsStorage';
+import { centeredBox } from '../utils/pageLayout';
+import { computeMaxZ, computeScrollDepth } from '../utils/sceneDepth';
 
 /**
  * ComicBookReader - Read-only viewer for published comic books loaded from GCS.
@@ -90,12 +91,7 @@ export function ComicBookReader() {
     mouseInfluence = { x: 50, y: 30 },
   } = sceneConfig;
 
-  const maxZ = useMemo(() => {
-    const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
-    const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
-    const allZs = [...layerZs, ...objectZs];
-    return allZs.length ? Math.max(...allZs) : 0;
-  }, [layers, objects]);
+  const maxZ = useMemo(() => computeMaxZ(layers, objects), [layers, objects]);
 
   const slides = useMemo(
     () =>
@@ -107,9 +103,10 @@ export function ComicBookReader() {
     [layers],
   );
 
-  const scrollDepth = useMemo(() => {
-    return (maxZ || 500) + perspective;
-  }, [maxZ, perspective]);
+  const scrollDepth = useMemo(
+    () => computeScrollDepth(maxZ, perspective),
+    [maxZ, perspective],
+  );
 
   const { scrollZ, containerRef } = useZScroll({
     slides,
@@ -139,20 +136,9 @@ export function ComicBookReader() {
     }
   }, [activeThemeName, currentScene, setTheme]);
 
-  const centeredBox = {
-    width: '100%',
-    height: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: theme.colors.backgroundGradient,
-    fontFamily: theme.typography.fontBody,
-  };
-
   if (loading) {
     return (
-      <div style={centeredBox}>
+      <div style={centeredBox(theme)}>
         <div style={{ color: theme.colors.textMuted, fontSize: '14px', letterSpacing: '2px' }}>
           Loading…
         </div>
@@ -162,7 +148,7 @@ export function ComicBookReader() {
 
   if (error) {
     return (
-      <div style={centeredBox}>
+      <div style={centeredBox(theme)}>
         <div
           style={{
             color: theme.colors.primary,
@@ -182,7 +168,7 @@ export function ComicBookReader() {
 
   if (!currentScene) {
     return (
-      <div style={centeredBox}>
+      <div style={centeredBox(theme)}>
         <div style={{ color: theme.colors.textMuted, fontSize: '14px', letterSpacing: '2px' }}>
           No scenes found
         </div>
@@ -241,26 +227,6 @@ export function ComicBookReader() {
         ))}
       </Scene>
     </>
-  );
-}
-
-function SavedObjectRenderer({ object, onObjectClick }) {
-  const position = object.position || [0, 0, 0];
-  const parallaxFactor = object.parallaxFactor ?? 0.6;
-
-  const cardType = CARD_TYPE_REGISTRY.find((ct) => ct.id === object.type);
-  const content = cardType ? cardType.renderContent(object) : null;
-
-  if (!content) return null;
-
-  return (
-    <SceneObject
-      position={position}
-      parallaxFactor={parallaxFactor}
-      onClick={onObjectClick ? () => onObjectClick(object.id) : undefined}
-    >
-      {content}
-    </SceneObject>
   );
 }
 

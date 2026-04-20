@@ -183,7 +183,7 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
 /**
  * Page Navigator - for switching between demo pages
  */
-function PageNavigator({ pages }) {
+function PageNavigator({ pages, error }) {
   const { theme } = useTheme();
   const location = useLocation();
   const [publishStatus, setPublishStatus] = useState({});
@@ -367,6 +367,20 @@ function PageNavigator({ pages }) {
           </div>
         </>
       )}
+
+      {error && (
+        <div
+          style={{
+            color: '#ef4444',
+            fontSize: '10px',
+            marginTop: '12px',
+            letterSpacing: '0.5px',
+          }}
+          title={error.message}
+        >
+          ⚠ Failed to load published comics
+        </div>
+      )}
     </div>
   );
 }
@@ -402,7 +416,7 @@ function EditorLayout() {
   });
 
   // Lift scene list here so PageNavigator and NewScenePage share the same state
-  const { pages: allPages, refetch: refetchPages } = usePages();
+  const { pages: allPages, error: pagesError, refetch: refetchPages } = usePages();
 
   // Don't show overlays on depth segmentation page (has its own controls)
   const showOverlays = location.pathname !== '/depth-segmentation';
@@ -433,7 +447,7 @@ function EditorLayout() {
       )}
 
       {/* Page navigation */}
-      <PageNavigator pages={allPages} />
+      <PageNavigator pages={allPages} error={pagesError} />
 
       {/* Main content */}
       <Routes>

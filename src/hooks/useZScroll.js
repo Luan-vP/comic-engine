@@ -117,7 +117,7 @@ export function useZScroll({
         snapTimeoutRef.current = null;
       }
 
-      const next = clamp(scrollZRef.current + e.deltaY * 0.5);
+      const next = clamp(scrollZRef.current + e.deltaY * 0.875);
       scrollZRef.current = next;
       setScrollZ(next);
 
