@@ -6,6 +6,8 @@ import { useTheme } from '../theme/ThemeContext';
 import { useSceneLoader } from '../hooks/useSceneLoader';
 import { useZScroll } from '../hooks/useZScroll';
 import { ScrollMinimap } from '../components/minimap';
+import { centeredBox } from '../utils/pageLayout';
+import { computeMaxZ, computeScrollDepth } from '../utils/sceneDepth';
 
 /**
  * DynamicScenePage - Data-driven scene renderer
@@ -33,12 +35,7 @@ export function DynamicScenePage() {
   // Auto-derive slides from layers.
   // With positive-Z-deeper convention, scrollZ=Z brings object at z=Z to camera plane.
   // So zCenter = layer.z directly, and scrollDepth covers the max Z.
-  const maxZ = useMemo(() => {
-    const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
-    const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
-    const allZs = [...layerZs, ...objectZs];
-    return allZs.length ? Math.max(...allZs) : 0;
-  }, [layers, objects]);
+  const maxZ = useMemo(() => computeMaxZ(layers, objects), [layers, objects]);
 
   const slides = useMemo(
     () =>
@@ -51,10 +48,10 @@ export function DynamicScenePage() {
     [layers, slug],
   );
 
-  const scrollDepth = useMemo(() => {
-    // Add perspective so the deepest objects can scroll past the camera
-    return (maxZ || 500) + perspective;
-  }, [maxZ, perspective]);
+  const scrollDepth = useMemo(
+    () => computeScrollDepth(maxZ, perspective),
+    [maxZ, perspective],
+  );
 
   const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll({
     slides,
@@ -226,20 +223,9 @@ export function DynamicScenePage() {
     [selectedObjectId, handleSelect],
   );
 
-  const centeredBox = {
-    width: '100%',
-    height: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: theme.colors.backgroundGradient,
-    fontFamily: theme.typography.fontBody,
-  };
-
   if (loading) {
     return (
-      <div style={centeredBox}>
+      <div style={centeredBox(theme)}>
         <div style={{ color: theme.colors.textMuted, fontSize: '14px', letterSpacing: '2px' }}>
           Loading scene…
         </div>
@@ -249,7 +235,7 @@ export function DynamicScenePage() {
 
   if (error) {
     return (
-      <div style={centeredBox}>
+      <div style={centeredBox(theme)}>
         <div
           style={{
             color: theme.colors.primary,

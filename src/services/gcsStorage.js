@@ -1,11 +1,6 @@
-const GCS_BASE = 'https://storage.googleapis.com/comic-engine';
+import { slugToTitle } from '../utils/slug';
 
-function slugToTitle(slug) {
-  return slug
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
-}
+const GCS_BASE = 'https://storage.googleapis.com/comic-engine';
 
 /**
  * List all comic books in the GCS bucket.
