@@ -1,19 +1,56 @@
-import React, { useRef, useState, useEffect, useCallback, createContext, useContext } from 'react';
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  createContext,
+  useContext,
+} from 'react';
 import { useTheme } from '../../theme/ThemeContext';
 import { InsertToolbar } from './InsertToolbar';
 import { CARD_TYPE_REGISTRY } from './cardTypes';
 
 /**
- * Scene Context - shares camera/mouse state with all scene objects
+ * Scene context split into two pieces to avoid re-rendering scroll-driven
+ * consumers (like SceneObject) on every wheel tick:
+ *
+ *  - SceneStaticContext: values that change infrequently (mousePos, editActive,
+ *    dimensions, subscribe handles, refs). Consumers re-render only when these
+ *    actually change.
+ *  - SceneScrollZContext: the current scrollZ value. Consumers that need the
+ *    React state (e.g. InsertedObjectRenderer) read from this context. Perf-
+ *    sensitive consumers instead subscribe via scrollZRef + subscribeScrollZ
+ *    exposed on SceneStaticContext and imperatively mutate their DOM.
  */
-const SceneContext = createContext(null);
+const SceneStaticContext = createContext(null);
+const SceneScrollZContext = createContext(0);
 
+/**
+ * useScene — backward-compatible hook returning the merged context.
+ * Callers that destructure `scrollZ` will re-render on scroll changes.
+ * Prefer useSceneStatic() + subscribeScrollZ for perf-sensitive consumers.
+ */
 export function useScene() {
-  const context = useContext(SceneContext);
-  if (!context) {
+  const staticContext = useContext(SceneStaticContext);
+  const scrollZ = useContext(SceneScrollZContext);
+  if (!staticContext) {
     throw new Error('useScene must be used within a Scene component');
   }
-  return context;
+  return { ...staticContext, scrollZ };
+}
+
+/**
+ * useSceneStatic — reads only the stable slice of scene context.
+ * Consumers do NOT re-render when scrollZ changes. Use this in combination
+ * with scrollZRef/subscribeScrollZ for scroll-driven imperative updates.
+ */
+export function useSceneStatic() {
+  const staticContext = useContext(SceneStaticContext);
+  if (!staticContext) {
+    throw new Error('useSceneStatic must be used within a Scene component');
+  }
+  return staticContext;
 }
 
 /**
@@ -22,8 +59,9 @@ export function useScene() {
  * Scene ↔ SceneObject.
  */
 function InsertedObjectRenderer({ object }) {
-  const { mousePos, scrollZ, parallaxIntensity, mouseInfluence, editActive, groupOffset } =
-    useContext(SceneContext);
+  const { mousePos, parallaxIntensity, mouseInfluence, editActive, groupOffset } =
+    useContext(SceneStaticContext);
+  const scrollZ = useContext(SceneScrollZContext);
 
   const [x, y, z] = object.position || [0, 0, 0];
   const parallaxFactor = object.parallaxFactor ?? 0.7 + z / 1000;
@@ -99,6 +137,34 @@ export function Scene({
   const [internalScrollZ, setInternalScrollZ] = useState(0);
   const scrollZ = controlledScrollZ !== null ? controlledScrollZ : internalScrollZ;
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  // Ref mirror of scrollZ so imperative subscribers can read latest value
+  // without closing over stale state.
+  const scrollZRef = useRef(scrollZ);
+  // Stable set of listener callbacks invoked whenever scrollZ changes.
+  const scrollZListenersRef = useRef(new Set());
+
+  // Stable subscribe function — never changes identity, so consumers can
+  // pass it into useEffect dependency arrays without churn.
+  const subscribeScrollZ = useCallback((listener) => {
+    scrollZListenersRef.current.add(listener);
+    return () => {
+      scrollZListenersRef.current.delete(listener);
+    };
+  }, []);
+
+  // Mirror scrollZ into the ref and notify subscribers on every change.
+  useEffect(() => {
+    scrollZRef.current = scrollZ;
+    scrollZListenersRef.current.forEach((listener) => {
+      try {
+        listener(scrollZ);
+      } catch (e) {
+        // Don't let one listener break others
+        console.error('scrollZ listener error', e);
+      }
+    });
+  }, [scrollZ]);
 
   // Edit mode state
   const [editActive, setEditActive] = useState(false);
@@ -221,157 +287,176 @@ export function Scene({
     setInsertedObjects([]);
   }, []);
 
-  const contextValue = {
-    mousePos: editActive ? { x: 0, y: 0 } : mousePos,
-    scrollZ,
-    dimensions,
-    parallaxIntensity,
-    mouseInfluence,
-    perspective,
-    editActive,
-    groupOffset: editActive ? groupOffset : { x: 0, y: 0 },
-    // Group selection — used by SceneObjectGroup for visual highlight and
-    // by Scene to ensure the scene-level drag only fires for ungrouped objects.
-    selectedGroupId,
-    setSelectedGroupId,
-    // Called by each SceneObjectGroup to report its current drag offset upward
-    // so Scene can include per-group offsets in handleSave.
-    registerGroupOffset,
-  };
+  // Build the stable context value. This intentionally excludes `scrollZ`
+  // so consumers of SceneStaticContext do not re-render on wheel ticks.
+  // Changes here still rerender consumers, but these values change at
+  // human-interaction speeds (mousemove, drag, edit toggle) rather than
+  // at 60fps.
+  const staticContextValue = useMemo(
+    () => ({
+      mousePos: editActive ? { x: 0, y: 0 } : mousePos,
+      dimensions,
+      parallaxIntensity,
+      mouseInfluence,
+      perspective,
+      editActive,
+      groupOffset: editActive ? groupOffset : { x: 0, y: 0 },
+      selectedGroupId,
+      setSelectedGroupId,
+      registerGroupOffset,
+      // Scroll subscription primitives — stable references.
+      scrollZRef,
+      subscribeScrollZ,
+    }),
+    [
+      mousePos,
+      dimensions,
+      parallaxIntensity,
+      mouseInfluence,
+      perspective,
+      editActive,
+      groupOffset,
+      selectedGroupId,
+      registerGroupOffset,
+      subscribeScrollZ,
+    ],
+  );
 
   return (
-    <SceneContext.Provider value={contextValue}>
-      <div
-        ref={containerRef}
-        className={className}
-        onMouseDown={editActive ? handleDragStart : undefined}
-        style={{
-          width: '100%',
-          height: '100vh',
-          overflow: 'hidden',
-          position: 'relative',
-          perspective: `${perspective}px`,
-          perspectiveOrigin: '50% 50%',
-          background: theme.colors.backgroundGradient,
-          cursor: editActive ? (isDragging ? 'grabbing' : 'grab') : 'default',
-          ...style,
-        }}
-      >
+    <SceneStaticContext.Provider value={staticContextValue}>
+      <SceneScrollZContext.Provider value={scrollZ}>
         <div
+          ref={containerRef}
+          className={className}
+          onMouseDown={editActive ? handleDragStart : undefined}
           style={{
             width: '100%',
-            height: '100%',
+            height: '100vh',
+            overflow: 'hidden',
             position: 'relative',
-            transformStyle: 'preserve-3d',
-            // Allow clicks to pass through to children at negative Z depths.
-            // Without this, the container plane at z=0 intercepts pointer events
-            // before they reach elements behind it in 3D space.
-            pointerEvents: 'none',
+            perspective: `${perspective}px`,
+            perspectiveOrigin: '50% 50%',
+            background: theme.colors.backgroundGradient,
+            cursor: editActive ? (isDragging ? 'grabbing' : 'grab') : 'default',
+            ...style,
           }}
         >
-          {children}
-          {insertedObjects.map((obj) => (
-            <InsertedObjectRenderer key={obj.id} object={obj} />
-          ))}
-        </div>
-
-        {/* Edit mode controls */}
-        {editable && (
           <div
             style={{
-              position: 'absolute',
-              top: '20px',
-              left: '20px',
-              background: 'rgba(0,0,0,0.85)',
-              backdropFilter: 'blur(10px)',
-              border: `1px solid ${editActive ? theme.colors.primary : theme.colors.border}`,
-              borderRadius: '8px',
-              padding: '12px 16px',
-              zIndex: 10000,
-              fontFamily: theme.typography.fontBody,
-              userSelect: 'none',
+              width: '100%',
+              height: '100%',
+              position: 'relative',
+              transformStyle: 'preserve-3d',
+              // Allow clicks to pass through to children at negative Z depths.
+              // Without this, the container plane at z=0 intercepts pointer events
+              // before they reach elements behind it in 3D space.
+              pointerEvents: 'none',
             }}
-            onMouseDown={(e) => e.stopPropagation()}
           >
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: theme.colors.text,
-                fontSize: '12px',
-                cursor: 'pointer',
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={editActive}
-                onChange={(e) => {
-                  setEditActive(e.target.checked);
-                  if (!e.target.checked) {
-                    handleReset();
-                    setSelectedGroupId(null);
-                  }
-                }}
-                style={{ accentColor: theme.colors.primary }}
-              />
-              Edit Layout
-            </label>
+            {children}
+            {insertedObjects.map((obj) => (
+              <InsertedObjectRenderer key={obj.id} object={obj} />
+            ))}
+          </div>
 
-            {editActive && (
-              <div style={{ marginTop: '10px' }}>
-                <div
-                  style={{
-                    color: theme.colors.textMuted,
-                    fontSize: '10px',
-                    marginBottom: '8px',
+          {/* Edit mode controls */}
+          {editable && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '20px',
+                left: '20px',
+                background: 'rgba(0,0,0,0.85)',
+                backdropFilter: 'blur(10px)',
+                border: `1px solid ${editActive ? theme.colors.primary : theme.colors.border}`,
+                borderRadius: '8px',
+                padding: '12px 16px',
+                zIndex: 10000,
+                fontFamily: theme.typography.fontBody,
+                userSelect: 'none',
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  color: theme.colors.text,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={editActive}
+                  onChange={(e) => {
+                    setEditActive(e.target.checked);
+                    if (!e.target.checked) {
+                      handleReset();
+                      setSelectedGroupId(null);
+                    }
                   }}
-                >
-                  Offset: {Math.round(groupOffset.x)}, {Math.round(groupOffset.y)}
-                </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {onSave && (
+                  style={{ accentColor: theme.colors.primary }}
+                />
+                Edit Layout
+              </label>
+
+              {editActive && (
+                <div style={{ marginTop: '10px' }}>
+                  <div
+                    style={{
+                      color: theme.colors.textMuted,
+                      fontSize: '10px',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Offset: {Math.round(groupOffset.x)}, {Math.round(groupOffset.y)}
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {onSave && (
+                      <button
+                        onClick={handleSave}
+                        disabled={!hasAnyOffset}
+                        style={{
+                          background: hasAnyOffset ? theme.colors.primary : '#555',
+                          color: hasAnyOffset ? '#000' : '#999',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '6px 12px',
+                          cursor: hasAnyOffset ? 'pointer' : 'not-allowed',
+                          fontWeight: 'bold',
+                          fontSize: '11px',
+                          fontFamily: theme.typography.fontBody,
+                        }}
+                      >
+                        Save
+                      </button>
+                    )}
                     <button
-                      onClick={handleSave}
-                      disabled={!hasAnyOffset}
+                      onClick={handleReset}
                       style={{
-                        background: hasAnyOffset ? theme.colors.primary : '#555',
-                        color: hasAnyOffset ? '#000' : '#999',
-                        border: 'none',
+                        background: 'rgba(255,255,255,0.1)',
+                        color: theme.colors.text,
+                        border: `1px solid ${theme.colors.border}`,
                         borderRadius: '4px',
                         padding: '6px 12px',
-                        cursor: hasAnyOffset ? 'pointer' : 'not-allowed',
-                        fontWeight: 'bold',
+                        cursor: 'pointer',
                         fontSize: '11px',
                         fontFamily: theme.typography.fontBody,
                       }}
                     >
-                      Save
+                      Reset
                     </button>
-                  )}
-                  <button
-                    onClick={handleReset}
-                    style={{
-                      background: 'rgba(255,255,255,0.1)',
-                      color: theme.colors.text,
-                      border: `1px solid ${theme.colors.border}`,
-                      borderRadius: '4px',
-                      padding: '6px 12px',
-                      cursor: 'pointer',
-                      fontSize: '11px',
-                      fontFamily: theme.typography.fontBody,
-                    }}
-                  >
-                    Reset
-                  </button>
+                  </div>
+                  {slug && <InsertToolbar slug={slug} onInsert={handleInsert} />}
                 </div>
-                {slug && <InsertToolbar slug={slug} onInsert={handleInsert} />}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </SceneContext.Provider>
+              )}
+            </div>
+          )}
+        </div>
+      </SceneScrollZContext.Provider>
+    </SceneStaticContext.Provider>
   );
 }
 
