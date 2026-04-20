@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Scene, SceneObject } from '../components/scene';
-import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
+import { Scene, SceneObject, SavedObjectRenderer } from '../components/scene';
 import { ObjectEditPopover } from '../components/scene/InsertModals';
 import { useTheme } from '../theme/ThemeContext';
 import { useSceneLoader } from '../hooks/useSceneLoader';
@@ -347,51 +346,6 @@ export function DynamicScenePage() {
         onSlideClick={jumpToSlide}
       />
     </>
-  );
-}
-
-/**
- * SavedObjectRenderer - renders a persisted scene object from scene.json's objects array.
- */
-function SavedObjectRenderer({ object, selected, overridePosition, onSelect, onDragStart }) {
-  const position = overridePosition || object.position || [0, 0, 0];
-  const parallaxFactor = object.parallaxFactor ?? 0.6;
-
-  const cardType = CARD_TYPE_REGISTRY.find((ct) => ct.id === object.type);
-  const content = cardType ? cardType.renderContent(object) : null;
-
-  if (!content) return null;
-
-  return (
-    <SceneObject
-      position={position}
-      parallaxFactor={parallaxFactor}
-      onClick={onSelect ? () => onSelect(object.id) : undefined}
-      onDragStart={onDragStart}
-      style={
-        selected
-          ? {
-              outline: '2px solid var(--color-primary, #ff4081)',
-              outlineOffset: '4px',
-              cursor: 'grab',
-            }
-          : undefined
-      }
-    >
-      <div style={{ position: 'relative' }}>
-        {content}
-        {onSelect && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 10,
-              cursor: 'pointer',
-            }}
-          />
-        )}
-      </div>
-    </SceneObject>
   );
 }
 
