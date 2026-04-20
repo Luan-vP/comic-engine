@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import React from 'react';
 import { ThemeProvider } from '../../../theme/ThemeContext';
-import { IframeCardModal, TextCardModal, MemoryCardModal } from '../InsertModals';
+import { IframeCardModal, TextCardModal, MemoryCardModal } from '../modals';
 
 afterEach(cleanup);
 

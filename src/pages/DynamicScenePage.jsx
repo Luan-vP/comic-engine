@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useParams } from 'react-router-dom';
 import { Scene, SceneObject } from '../components/scene';
 import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
-import { ObjectEditPopover } from '../components/scene/InsertModals';
+import { ObjectEditPopover } from '../components/scene/ObjectEditPopover';
 import { useTheme } from '../theme/ThemeContext';
 import { useSceneLoader } from '../hooks/useSceneLoader';
 import { useZScroll } from '../hooks/useZScroll';

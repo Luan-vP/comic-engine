@@ -9,7 +9,7 @@ import {
   VideoCardModal,
   ImageCardModal,
   CodeCardModal,
-} from './InsertModals';
+} from './modals';
 
 /**
  * TypingText — renders text character-by-character in a loop.
