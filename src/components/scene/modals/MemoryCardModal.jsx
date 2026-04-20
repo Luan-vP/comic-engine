@@ -1,39 +1,17 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../../theme/ThemeContext';
+import { useImageUpload } from '../../../hooks/useImageUpload';
 import ModalBase, { inputStyle } from './ModalBase';
 
 export function MemoryCardModal({ onConfirm, onCancel }) {
   const { theme } = useTheme();
-  const [imageDataUrl, setImageDataUrl] = useState(null);
-  const [originalFilename, setOriginalFilename] = useState(null);
+  const { imageDataUrl, uploading, error, handleFileChange, upload } = useImageUpload();
   const [caption, setCaption] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setOriginalFilename(file.name);
-    const reader = new FileReader();
-    reader.onload = (ev) => setImageDataUrl(ev.target.result);
-    reader.readAsDataURL(file);
-  };
 
   const handleConfirm = async () => {
     if (!imageDataUrl) return;
-    setUploading(true);
-    setError(null);
     try {
-      const res = await fetch('/_dev/assets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: imageDataUrl, filename: originalFilename }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Upload failed');
-      }
-      const { url } = await res.json();
+      const url = await upload();
       onConfirm({
         type: 'memory',
         position: [0, 0, 0],
@@ -41,10 +19,8 @@ export function MemoryCardModal({ onConfirm, onCancel }) {
         panelVariant: 'polaroid',
         data: { imageUrl: url, caption },
       });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setUploading(false);
+    } catch {
+      // error state is surfaced by the hook
     }
   };
 

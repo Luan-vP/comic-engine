@@ -183,7 +183,7 @@ function OverlayControls({ overlayConfig, setOverlayConfig }) {
 /**
  * Page Navigator - for switching between demo pages
  */
-function PageNavigator({ pages }) {
+function PageNavigator({ pages, error }) {
   const { theme } = useTheme();
   const location = useLocation();
   const [publishStatus, setPublishStatus] = useState({});
@@ -219,7 +219,11 @@ function PageNavigator({ pages }) {
   const srcPages = autoPages.filter((p) => p.section !== 'tools');
 
   const linkStyle = (isActive, isGcs) => ({
-    background: isActive ? theme.colors.primary : isGcs ? 'rgba(100,180,255,0.1)' : 'rgba(255,255,255,0.1)',
+    background: isActive
+      ? theme.colors.primary
+      : isGcs
+        ? 'rgba(100,180,255,0.1)'
+        : 'rgba(255,255,255,0.1)',
     color: isActive ? '#000' : theme.colors.text,
     border: `1px solid ${isActive ? theme.colors.primary : isGcs ? 'rgba(100,180,255,0.3)' : theme.colors.border}`,
     borderRadius: '4px',
@@ -298,7 +302,10 @@ function PageNavigator({ pages }) {
               const isActive = location.pathname === path;
               const status = publishStatus[slug];
               return (
-                <span key={slug} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                <span
+                  key={slug}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                >
                   <Link to={path} style={linkStyle(isActive, false)}>
                     {name}
                   </Link>
@@ -367,6 +374,20 @@ function PageNavigator({ pages }) {
           </div>
         </>
       )}
+
+      {error && (
+        <div
+          style={{
+            color: '#ef4444',
+            fontSize: '10px',
+            marginTop: '12px',
+            letterSpacing: '0.5px',
+          }}
+          title={error.message}
+        >
+          ⚠ Failed to load published comics
+        </div>
+      )}
     </div>
   );
 }
@@ -402,7 +423,7 @@ function EditorLayout() {
   });
 
   // Lift scene list here so PageNavigator and NewScenePage share the same state
-  const { pages: allPages, refetch: refetchPages } = usePages();
+  const { pages: allPages, error: pagesError, refetch: refetchPages } = usePages();
 
   // Don't show overlays on depth segmentation page (has its own controls)
   const showOverlays = location.pathname !== '/depth-segmentation';
@@ -433,7 +454,7 @@ function EditorLayout() {
       )}
 
       {/* Page navigation */}
-      <PageNavigator pages={allPages} />
+      <PageNavigator pages={allPages} error={pagesError} />
 
       {/* Main content */}
       <Routes>

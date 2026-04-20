@@ -7,11 +7,13 @@ export function VideoCardModal({ onConfirm, onCancel }) {
   const [videoUrl, setVideoUrl] = useState('');
   const [width, setWidth] = useState(400);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleFileUpload = useCallback(async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setError(null);
     const reader = new FileReader();
     reader.onload = async () => {
       try {
@@ -20,11 +22,15 @@ export function VideoCardModal({ onConfirm, onCancel }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ imageUrl: reader.result }),
         });
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          throw new Error(data.error || 'Upload failed');
+        }
         const data = await resp.json();
         if (data.url) setVideoUrl(data.url);
         else if (data.path) setVideoUrl(data.path);
       } catch (err) {
-        console.error('Upload failed:', err);
+        setError(err.message);
       }
       setUploading(false);
     };
@@ -95,6 +101,7 @@ export function VideoCardModal({ onConfirm, onCancel }) {
           WebM with VP9 alpha supports transparent backgrounds. Video will autoplay, loop, and be
           muted.
         </div>
+        {error && <div style={{ color: '#f55', fontSize: '11px' }}>{error}</div>}
       </div>
     </ModalBase>
   );

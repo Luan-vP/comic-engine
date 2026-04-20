@@ -80,8 +80,8 @@ export function useSceneLoader(slug, source, options = {}) {
   const save = useCallback(
     async ({ groupOffset, groupOffsets, objects: newObjects = [], replaceObjects = false }) => {
       if (resolvedSource !== 'local') {
-        // GCS backend is read-only
-        return;
+        // GCS backend is read-only — treat as a no-op success so callers don't block.
+        return true;
       }
       try {
         const existingObjects = scene?.objects || [];
@@ -94,12 +94,14 @@ export function useSceneLoader(slug, source, options = {}) {
         });
         if (!res.ok) {
           console.error('Failed to save scene positions:', await res.text());
-        } else {
-          // Update local state so UI reflects saved data immediately
-          setScene((prev) => (prev ? { ...prev, objects: allObjects } : prev));
+          return false;
         }
+        // Update local state so UI reflects saved data immediately
+        setScene((prev) => (prev ? { ...prev, objects: allObjects } : prev));
+        return true;
       } catch (err) {
         console.error('Failed to save scene positions:', err);
+        return false;
       }
     },
     [slug, scene, resolvedSource],

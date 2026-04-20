@@ -8,12 +8,14 @@ import { listComicBooks } from '../services/gcsStorage';
  * @returns {{
  *   pages: Array<{ slug: string, name: string, source: 'local'|'gcs' }>,
  *   loading: boolean,
+ *   error: Error | null,
  *   refetch: () => void,
  * }}
  */
 export function usePages() {
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
@@ -21,6 +23,7 @@ export function usePages() {
 
     async function fetchAll() {
       const results = [];
+      let gcsError = null;
 
       // Fetch local pages (dev server only — will 404 in prod, that's fine)
       try {
@@ -30,11 +33,11 @@ export function usePages() {
           if (Array.isArray(data)) {
             for (const p of data) {
               results.push({
-              slug: p.slug,
-              name: p.name,
-              source: 'local',
-              lastPublishedSlug: p.lastPublishedSlug || null,
-            });
+                slug: p.slug,
+                name: p.name,
+                source: 'local',
+                lastPublishedSlug: p.lastPublishedSlug || null,
+              });
             }
           }
         }
@@ -51,11 +54,13 @@ export function usePages() {
           results.push({ slug: book.slug, name: book.name, source: 'gcs' });
         }
       } catch (err) {
+        gcsError = err instanceof Error ? err : new Error(String(err));
         console.warn('[usePages] Failed to list GCS comic books:', err);
       }
 
       if (!cancelled) {
         setPages(results);
+        setError(gcsError);
         setLoading(false);
       }
     }
@@ -69,5 +74,5 @@ export function usePages() {
 
   const refetch = useCallback(() => setRefreshTick((t) => t + 1), []);
 
-  return { pages, loading, refetch };
+  return { pages, loading, error, refetch };
 }

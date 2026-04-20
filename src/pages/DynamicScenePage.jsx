@@ -1,12 +1,15 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Scene, SceneObject } from '../components/scene';
-import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
+import { Scene, SceneObject, SavedObjectRenderer } from '../components/scene';
 import { ObjectEditPopover } from '../components/scene/ObjectEditPopover';
+import { OverlayStack } from '../components/overlays';
 import { useTheme } from '../theme/ThemeContext';
 import { useSceneLoader } from '../hooks/useSceneLoader';
 import { useZScroll } from '../hooks/useZScroll';
+import { useThemeTriggers } from '../hooks/useThemeTriggers';
 import { ScrollMinimap } from '../components/minimap';
+import { centeredBox } from '../utils/pageLayout';
+import { computeMaxZ, computeScrollDepth } from '../utils/sceneDepth';
 
 /**
  * DynamicScenePage - Data-driven scene renderer
@@ -34,12 +37,7 @@ export function DynamicScenePage() {
   // Auto-derive slides from layers.
   // With positive-Z-deeper convention, scrollZ=Z brings object at z=Z to camera plane.
   // So zCenter = layer.z directly, and scrollDepth covers the max Z.
-  const maxZ = useMemo(() => {
-    const layerZs = layers.map((l) => (l.position || [0, 0, 0])[2]);
-    const objectZs = objects.map((o) => (o.position || [0, 0, 0])[2]);
-    const allZs = [...layerZs, ...objectZs];
-    return allZs.length ? Math.max(...allZs) : 0;
-  }, [layers, objects]);
+  const maxZ = useMemo(() => computeMaxZ(layers, objects), [layers, objects]);
 
   const slides = useMemo(
     () =>
@@ -52,49 +50,41 @@ export function DynamicScenePage() {
     [layers, slug],
   );
 
-  const scrollDepth = useMemo(() => {
-    // Add perspective so the deepest objects can scroll past the camera
-    return (maxZ || 500) + perspective;
-  }, [maxZ, perspective]);
+  const scrollDepth = useMemo(() => computeScrollDepth(maxZ, perspective), [maxZ, perspective]);
 
   const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll({
     slides,
     scrollDepth,
   });
 
-  // Theme keyframes — switch theme as user scrolls past Z thresholds
-  const themeKeyframes = sceneConfig.themeKeyframes;
-  const prevThemeRef = useRef(null);
+  // Per-scene theme: read from sceneConfig.theme (canonical schema shared with reader).
+  // See issue #90 — both reader and editor now use `theme.triggers` via useThemeTriggers.
+  const sceneTheme = sceneConfig.theme;
+  const baseThemeName = sceneTheme?.base;
+  const baseOverlays = useMemo(() => sceneTheme?.overlays || {}, [sceneTheme?.overlays]);
+  const triggers = useMemo(() => sceneTheme?.triggers || [], [sceneTheme?.triggers]);
 
-  // Set starting theme on mount (lowest z keyframe = start of scroll)
-  useEffect(() => {
-    if (!themeKeyframes || !themeKeyframes.length) return;
-    const sorted = [...themeKeyframes].sort((a, b) => a.z - b.z);
-    setTheme(sorted[0].theme);
-    prevThemeRef.current = sorted[0].theme;
-  }, [themeKeyframes, setTheme]);
+  const { activeThemeName, activeOverlays, handleObjectClick } = useThemeTriggers({
+    triggers,
+    scrollZ,
+    baseTheme: baseThemeName,
+    baseOverlays,
+  });
 
-  // Switch theme as user scrolls past Z thresholds.
-  // scrollZ increases as user scrolls deeper. Keyframe z values match object positions.
-  // Keyframe { z: 5000 } triggers when scrollZ >= 5000.
+  // Apply active theme to the global ThemeContext (use ref to avoid render loop)
+  const appliedThemeRef = useRef(null);
   useEffect(() => {
-    if (!themeKeyframes || !themeKeyframes.length) return;
-    const sorted = [...themeKeyframes].sort((a, b) => a.z - b.z);
-    let activeTheme = sorted[0].theme;
-    for (const kf of sorted) {
-      if (scrollZ >= kf.z) {
-        activeTheme = kf.theme;
-      }
+    if (activeThemeName && activeThemeName !== appliedThemeRef.current) {
+      appliedThemeRef.current = activeThemeName;
+      setTheme(activeThemeName);
     }
-    if (activeTheme !== prevThemeRef.current) {
-      prevThemeRef.current = activeTheme;
-      setTheme(activeTheme);
-    }
-  }, [scrollZ, themeKeyframes, setTheme]);
+  }, [activeThemeName, setTheme]);
 
   // Object editing — position is lifted so drag and popover share it
   const [selectedObjectId, setSelectedObjectId] = useState(null);
   const [editPosition, setEditPosition] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const selectedObject = objects.find((o) => o.id === selectedObjectId) || null;
 
   const handleSelect = useCallback(
@@ -103,6 +93,7 @@ export function DynamicScenePage() {
       if (obj) {
         setSelectedObjectId(id);
         setEditPosition([...(obj.position || [0, 0, 0])]);
+        setSaveError(null);
       }
     },
     [objects],
@@ -111,32 +102,47 @@ export function DynamicScenePage() {
   const handleDeselect = useCallback(() => {
     setSelectedObjectId(null);
     setEditPosition(null);
+    setSaveError(null);
   }, []);
 
   const handleObjectUpdate = useCallback(
-    (updated) => {
+    async (updated) => {
       const nextObjects = objects.map((o) => (o.id === updated.id ? updated : o));
-      handleSave({
+      setSaving(true);
+      setSaveError(null);
+      const ok = await handleSave({
         groupOffset: { x: 0, y: 0 },
         groupOffsets: {},
         objects: nextObjects,
         replaceObjects: true,
       });
-      handleDeselect();
+      setSaving(false);
+      if (ok) {
+        handleDeselect();
+      } else {
+        setSaveError('Failed to save — changes not persisted');
+      }
     },
     [objects, handleSave, handleDeselect],
   );
 
   const handleObjectDelete = useCallback(
-    (id) => {
+    async (id) => {
       const nextObjects = objects.filter((o) => o.id !== id);
-      handleSave({
+      setSaving(true);
+      setSaveError(null);
+      const ok = await handleSave({
         groupOffset: { x: 0, y: 0 },
         groupOffsets: {},
         objects: nextObjects,
         replaceObjects: true,
       });
-      handleDeselect();
+      setSaving(false);
+      if (ok) {
+        handleDeselect();
+      } else {
+        setSaveError('Failed to delete — object still present');
+      }
     },
     [objects, handleSave, handleDeselect],
   );
@@ -203,26 +209,17 @@ export function DynamicScenePage() {
         didDragRef.current = false;
         return;
       }
+      // Fire object-click theme trigger so triggers can be previewed in the editor.
+      handleObjectClick(id);
       if (id === selectedObjectId) return;
       handleSelect(id);
     },
-    [selectedObjectId, handleSelect],
+    [selectedObjectId, handleSelect, handleObjectClick],
   );
-
-  const centeredBox = {
-    width: '100%',
-    height: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: theme.colors.backgroundGradient,
-    fontFamily: theme.typography.fontBody,
-  };
 
   if (loading) {
     return (
-      <div style={centeredBox}>
+      <div style={centeredBox(theme)}>
         <div style={{ color: theme.colors.textMuted, fontSize: '14px', letterSpacing: '2px' }}>
           Loading scene…
         </div>
@@ -232,7 +229,7 @@ export function DynamicScenePage() {
 
   if (error) {
     return (
-      <div style={centeredBox}>
+      <div style={centeredBox(theme)}>
         <div
           style={{
             color: theme.colors.primary,
@@ -253,6 +250,17 @@ export function DynamicScenePage() {
 
   return (
     <>
+      <OverlayStack
+        filmGrain={activeOverlays.filmGrain}
+        vignette={activeOverlays.vignette}
+        scanlines={activeOverlays.scanlines}
+        particles={activeOverlays.particles}
+        ascii={activeOverlays.ascii}
+        inkSplatter={activeOverlays.inkSplatter}
+        graffitiSpray={activeOverlays.graffitiSpray}
+        halftone={activeOverlays.halftone}
+        speedLines={activeOverlays.speedLines}
+      />
       <Scene
         perspective={perspective}
         parallaxIntensity={parallaxIntensity}
@@ -302,57 +310,33 @@ export function DynamicScenePage() {
         />
       )}
 
+      {(saving || saveError) && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '50px',
+            right: '20px',
+            zIndex: 10003,
+            padding: '6px 12px',
+            borderRadius: '4px',
+            fontSize: '11px',
+            letterSpacing: '1px',
+            fontFamily: theme.typography.fontBody,
+            background: saveError ? 'rgba(255,80,80,0.2)' : 'rgba(0,0,0,0.7)',
+            color: saveError ? '#f55' : theme.colors.textMuted,
+            border: saveError ? '1px solid rgba(255,80,80,0.4)' : '1px solid transparent',
+          }}
+        >
+          {saveError || 'Saving…'}
+        </div>
+      )}
+
       <ScrollMinimap
         slides={slidesWithProgress}
         currentSlideIndex={currentSlideIndex}
         onSlideClick={jumpToSlide}
       />
     </>
-  );
-}
-
-/**
- * SavedObjectRenderer - renders a persisted scene object from scene.json's objects array.
- */
-function SavedObjectRenderer({ object, selected, overridePosition, onSelect, onDragStart }) {
-  const position = overridePosition || object.position || [0, 0, 0];
-  const parallaxFactor = object.parallaxFactor ?? 0.6;
-
-  const cardType = CARD_TYPE_REGISTRY.find((ct) => ct.id === object.type);
-  const content = cardType ? cardType.renderContent(object) : null;
-
-  if (!content) return null;
-
-  return (
-    <SceneObject
-      position={position}
-      parallaxFactor={parallaxFactor}
-      onClick={onSelect ? () => onSelect(object.id) : undefined}
-      onDragStart={onDragStart}
-      style={
-        selected
-          ? {
-              outline: '2px solid var(--color-primary, #ff4081)',
-              outlineOffset: '4px',
-              cursor: 'grab',
-            }
-          : undefined
-      }
-    >
-      <div style={{ position: 'relative' }}>
-        {content}
-        {onSelect && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 10,
-              cursor: 'pointer',
-            }}
-          />
-        )}
-      </div>
-    </SceneObject>
   );
 }
 
