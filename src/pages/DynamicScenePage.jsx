@@ -2,9 +2,11 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useParams } from 'react-router-dom';
 import { Scene, SceneObject, SavedObjectRenderer } from '../components/scene';
 import { ObjectEditPopover } from '../components/scene/InsertModals';
+import { OverlayStack } from '../components/overlays';
 import { useTheme } from '../theme/ThemeContext';
 import { useSceneLoader } from '../hooks/useSceneLoader';
 import { useZScroll } from '../hooks/useZScroll';
+import { useThemeTriggers } from '../hooks/useThemeTriggers';
 import { ScrollMinimap } from '../components/minimap';
 import { centeredBox } from '../utils/pageLayout';
 import { computeMaxZ, computeScrollDepth } from '../utils/sceneDepth';
@@ -58,35 +60,28 @@ export function DynamicScenePage() {
     scrollDepth,
   });
 
-  // Theme keyframes — switch theme as user scrolls past Z thresholds
-  const themeKeyframes = sceneConfig.themeKeyframes;
-  const prevThemeRef = useRef(null);
+  // Per-scene theme: read from sceneConfig.theme (canonical schema shared with reader).
+  // See issue #90 — both reader and editor now use `theme.triggers` via useThemeTriggers.
+  const sceneTheme = sceneConfig.theme;
+  const baseThemeName = sceneTheme?.base;
+  const baseOverlays = useMemo(() => sceneTheme?.overlays || {}, [sceneTheme?.overlays]);
+  const triggers = useMemo(() => sceneTheme?.triggers || [], [sceneTheme?.triggers]);
 
-  // Set starting theme on mount (lowest z keyframe = start of scroll)
-  useEffect(() => {
-    if (!themeKeyframes || !themeKeyframes.length) return;
-    const sorted = [...themeKeyframes].sort((a, b) => a.z - b.z);
-    setTheme(sorted[0].theme);
-    prevThemeRef.current = sorted[0].theme;
-  }, [themeKeyframes, setTheme]);
+  const { activeThemeName, activeOverlays, handleObjectClick } = useThemeTriggers({
+    triggers,
+    scrollZ,
+    baseTheme: baseThemeName,
+    baseOverlays,
+  });
 
-  // Switch theme as user scrolls past Z thresholds.
-  // scrollZ increases as user scrolls deeper. Keyframe z values match object positions.
-  // Keyframe { z: 5000 } triggers when scrollZ >= 5000.
+  // Apply active theme to the global ThemeContext (use ref to avoid render loop)
+  const appliedThemeRef = useRef(null);
   useEffect(() => {
-    if (!themeKeyframes || !themeKeyframes.length) return;
-    const sorted = [...themeKeyframes].sort((a, b) => a.z - b.z);
-    let activeTheme = sorted[0].theme;
-    for (const kf of sorted) {
-      if (scrollZ >= kf.z) {
-        activeTheme = kf.theme;
-      }
+    if (activeThemeName && activeThemeName !== appliedThemeRef.current) {
+      appliedThemeRef.current = activeThemeName;
+      setTheme(activeThemeName);
     }
-    if (activeTheme !== prevThemeRef.current) {
-      prevThemeRef.current = activeTheme;
-      setTheme(activeTheme);
-    }
-  }, [scrollZ, themeKeyframes, setTheme]);
+  }, [activeThemeName, setTheme]);
 
   // Object editing — position is lifted so drag and popover share it
   const [selectedObjectId, setSelectedObjectId] = useState(null);
@@ -217,10 +212,12 @@ export function DynamicScenePage() {
         didDragRef.current = false;
         return;
       }
+      // Fire object-click theme trigger so triggers can be previewed in the editor.
+      handleObjectClick(id);
       if (id === selectedObjectId) return;
       handleSelect(id);
     },
-    [selectedObjectId, handleSelect],
+    [selectedObjectId, handleSelect, handleObjectClick],
   );
 
   if (loading) {
@@ -256,6 +253,17 @@ export function DynamicScenePage() {
 
   return (
     <>
+      <OverlayStack
+        filmGrain={activeOverlays.filmGrain}
+        vignette={activeOverlays.vignette}
+        scanlines={activeOverlays.scanlines}
+        particles={activeOverlays.particles}
+        ascii={activeOverlays.ascii}
+        inkSplatter={activeOverlays.inkSplatter}
+        graffitiSpray={activeOverlays.graffitiSpray}
+        halftone={activeOverlays.halftone}
+        speedLines={activeOverlays.speedLines}
+      />
       <Scene
         perspective={perspective}
         parallaxIntensity={parallaxIntensity}
