@@ -103,10 +103,7 @@ export function ComicBookReader() {
     [layers],
   );
 
-  const scrollDepth = useMemo(
-    () => computeScrollDepth(maxZ, perspective),
-    [maxZ, perspective],
-  );
+  const scrollDepth = useMemo(() => computeScrollDepth(maxZ, perspective), [maxZ, perspective]);
 
   const { scrollZ, containerRef } = useZScroll({
     slides,

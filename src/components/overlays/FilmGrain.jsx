@@ -50,11 +50,7 @@ export function FilmGrain({
       lastTime = timestamp;
 
       // Lazily (re)allocate buffer on first frame and after resize.
-      if (
-        !imageData ||
-        imageData.width !== canvas.width ||
-        imageData.height !== canvas.height
-      ) {
+      if (!imageData || imageData.width !== canvas.width || imageData.height !== canvas.height) {
         imageData = ctx.createImageData(canvas.width, canvas.height);
         // Alpha channel is constant — initialize once so the hot loop
         // below can skip writing it.

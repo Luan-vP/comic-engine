@@ -44,7 +44,9 @@ describe('useThemeTriggers — baseline', () => {
 
 describe('useThemeTriggers — zDepth triggers', () => {
   it('switches theme once scrollZ crosses a forward threshold', () => {
-    const triggers = [{ type: 'zDepth', zThreshold: 500, direction: 'forward', theme: 'cyberpunk' }];
+    const triggers = [
+      { type: 'zDepth', zThreshold: 500, direction: 'forward', theme: 'cyberpunk' },
+    ];
 
     const { result, rerender } = renderHook(
       ({ scrollZ }) => useThemeTriggers({ triggers, scrollZ, baseTheme: 'noir' }),
@@ -160,9 +162,7 @@ describe('useThemeTriggers — zDepth triggers', () => {
 
 describe('useThemeTriggers — objectClick triggers', () => {
   it('switches theme when handleObjectClick is called for a matching objectId', () => {
-    const triggers = [
-      { type: 'objectClick', objectId: 'door-1', theme: 'dreamscape' },
-    ];
+    const triggers = [{ type: 'objectClick', objectId: 'door-1', theme: 'dreamscape' }];
 
     const { result } = renderHook(() =>
       useThemeTriggers({ triggers, scrollZ: 0, baseTheme: 'noir' }),

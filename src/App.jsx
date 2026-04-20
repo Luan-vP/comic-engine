@@ -219,7 +219,11 @@ function PageNavigator({ pages, error }) {
   const srcPages = autoPages.filter((p) => p.section !== 'tools');
 
   const linkStyle = (isActive, isGcs) => ({
-    background: isActive ? theme.colors.primary : isGcs ? 'rgba(100,180,255,0.1)' : 'rgba(255,255,255,0.1)',
+    background: isActive
+      ? theme.colors.primary
+      : isGcs
+        ? 'rgba(100,180,255,0.1)'
+        : 'rgba(255,255,255,0.1)',
     color: isActive ? '#000' : theme.colors.text,
     border: `1px solid ${isActive ? theme.colors.primary : isGcs ? 'rgba(100,180,255,0.3)' : theme.colors.border}`,
     borderRadius: '4px',
@@ -298,7 +302,10 @@ function PageNavigator({ pages, error }) {
               const isActive = location.pathname === path;
               const status = publishStatus[slug];
               return (
-                <span key={slug} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                <span
+                  key={slug}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                >
                   <Link to={path} style={linkStyle(isActive, false)}>
                     {name}
                   </Link>

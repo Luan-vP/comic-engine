@@ -33,11 +33,11 @@ export function usePages() {
           if (Array.isArray(data)) {
             for (const p of data) {
               results.push({
-              slug: p.slug,
-              name: p.name,
-              source: 'local',
-              lastPublishedSlug: p.lastPublishedSlug || null,
-            });
+                slug: p.slug,
+                name: p.name,
+                source: 'local',
+                lastPublishedSlug: p.lastPublishedSlug || null,
+              });
             }
           }
         }

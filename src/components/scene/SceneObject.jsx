@@ -158,8 +158,7 @@ export function SceneObject({
   // Helper: compute the rotation/scale tail of the transform string — this
   // never changes with scrollZ so we memoize it.
   const rotateScaleTail = useMemo(
-    () =>
-      `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${scale})`,
+    () => `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${scale})`,
     [rx, ry, rz, scale],
   );
 

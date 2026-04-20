@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Scene, SceneObject, SavedObjectRenderer } from '../components/scene';
-import { ObjectEditPopover } from '../components/scene/InsertModals';
+import { ObjectEditPopover } from '../components/scene/ObjectEditPopover';
 import { OverlayStack } from '../components/overlays';
 import { useTheme } from '../theme/ThemeContext';
 import { useSceneLoader } from '../hooks/useSceneLoader';
@@ -50,10 +50,7 @@ export function DynamicScenePage() {
     [layers, slug],
   );
 
-  const scrollDepth = useMemo(
-    () => computeScrollDepth(maxZ, perspective),
-    [maxZ, perspective],
-  );
+  const scrollDepth = useMemo(() => computeScrollDepth(maxZ, perspective), [maxZ, perspective]);
 
   const { scrollZ, currentSlideIndex, jumpToSlide, slidesWithProgress, containerRef } = useZScroll({
     slides,

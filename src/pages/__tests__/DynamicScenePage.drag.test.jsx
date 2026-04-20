@@ -61,7 +61,7 @@ vi.mock('../../components/scene/cardTypes', () => ({
 
 // Minimal edit popover — we only need to know when it opens/closes to verify
 // selection state changes.
-vi.mock('../../components/scene/InsertModals', () => ({
+vi.mock('../../components/scene/ObjectEditPopover', () => ({
   ObjectEditPopover: ({ object, onClose }) => (
     <div data-testid="edit-popover">
       popover for {object.id}
