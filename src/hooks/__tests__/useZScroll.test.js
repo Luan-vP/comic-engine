@@ -192,3 +192,94 @@ describe('useZScroll — keyboard navigation', () => {
     expect(calls).toContain('keydown');
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Edge cases — single slide, no slides, overlapping zCenter
+// (Issue #84 — test coverage for drag, scroll, and theme trigger systems)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('useZScroll — edge cases', () => {
+  it('handles a single slide without throwing', () => {
+    const single = [{ id: 'only', label: 'Only', zCenter: 250 }];
+    const { result } = renderHook(() =>
+      useZScroll({ slides: single, scrollDepth: 500, snapEnabled: false }),
+    );
+
+    expect(result.current.currentSlideIndex).toBe(0);
+    expect(result.current.slidesWithProgress).toHaveLength(1);
+
+    act(() => {
+      result.current.jumpToSlide(0);
+    });
+
+    expect(result.current.scrollZ).toBeCloseTo(250, 0);
+    expect(result.current.currentSlideIndex).toBe(0);
+  });
+
+  it('single slide — jumpToSlide with any index clamps to that slide', () => {
+    const single = [{ id: 'only', label: 'Only', zCenter: 100 }];
+    const { result } = renderHook(() =>
+      useZScroll({ slides: single, scrollDepth: 500, snapEnabled: false }),
+    );
+
+    act(() => {
+      result.current.jumpToSlide(42);
+    });
+
+    expect(result.current.scrollZ).toBeCloseTo(100, 0);
+  });
+
+  it('handles empty slides array — safe defaults', () => {
+    const { result } = renderHook(() =>
+      useZScroll({ slides: [], scrollDepth: 400, snapEnabled: false }),
+    );
+
+    expect(result.current.scrollZ).toBe(0);
+    expect(result.current.currentSlideIndex).toBe(0);
+    expect(result.current.slidesWithProgress).toEqual([]);
+    expect(result.current.progress).toBe(0);
+  });
+
+  it('handles missing slides option (default [])', () => {
+    const { result } = renderHook(() => useZScroll());
+    expect(result.current.scrollZ).toBe(0);
+    expect(result.current.currentSlideIndex).toBe(0);
+    expect(result.current.slidesWithProgress).toEqual([]);
+  });
+
+  it('handles overlapping zCenter values — first overlapping slide is chosen as nearest', () => {
+    // Two slides share zCenter=200. Implementation picks the first encountered
+    // one because the reduce uses strict `<` comparison.
+    const overlap = [
+      { id: 'a', label: 'A', zCenter: 0 },
+      { id: 'b', label: 'B', zCenter: 200 },
+      { id: 'c', label: 'C', zCenter: 200 },
+      { id: 'd', label: 'D', zCenter: 400 },
+    ];
+    const { result } = renderHook(() =>
+      useZScroll({ slides: overlap, scrollDepth: 400, snapEnabled: false }),
+    );
+
+    // Jumping to index 1 moves to zCenter=200, matching slide 'b' and 'c'
+    act(() => {
+      result.current.jumpToSlide(1);
+    });
+
+    expect(result.current.scrollZ).toBeCloseTo(200, 0);
+    // currentSlideIndex scans forward with strict-less-than so first overlap (1) wins
+    expect(result.current.currentSlideIndex).toBe(1);
+  });
+
+  it('handles overlapping zCenter — slidesWithProgress marks only one active', () => {
+    const overlap = [
+      { id: 'a', label: 'A', zCenter: 200 },
+      { id: 'b', label: 'B', zCenter: 200 },
+    ];
+    const { result } = renderHook(() =>
+      useZScroll({ slides: overlap, scrollDepth: 400, snapEnabled: false }),
+    );
+
+    const activeCount = result.current.slidesWithProgress.filter((s) => s.isActive).length;
+    expect(activeCount).toBe(1);
+  });
+});
