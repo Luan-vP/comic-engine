@@ -127,11 +127,18 @@ function dataUrlToBuffer(dataUrl) {
 }
 
 function dataUrlExtension(dataUrl) {
-  const match = dataUrl.match(/^data:image\/([a-z]+);base64,/);
+  const match = dataUrl.match(/^data:(image|video)\/([a-z0-9]+);base64,/);
   if (!match) return 'png';
-  const mime = match[1];
-  if (mime === 'jpeg') return 'jpg';
-  return mime;
+  const type = match[1];
+  const subtype = match[2];
+  if (type === 'image') {
+    if (subtype === 'jpeg') return 'jpg';
+    return subtype;
+  }
+  // video/*
+  if (subtype === 'quicktime') return 'mov';
+  if (subtype === 'mp4' || subtype === 'webm' || subtype === 'ogg') return subtype;
+  return subtype;
 }
 
 function readBody(req) {
