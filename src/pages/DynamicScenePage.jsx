@@ -95,6 +95,8 @@ export function DynamicScenePage() {
   // Object editing — position is lifted so drag and popover share it
   const [selectedObjectId, setSelectedObjectId] = useState(null);
   const [editPosition, setEditPosition] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const selectedObject = objects.find((o) => o.id === selectedObjectId) || null;
 
   const handleSelect = useCallback(
@@ -103,6 +105,7 @@ export function DynamicScenePage() {
       if (obj) {
         setSelectedObjectId(id);
         setEditPosition([...(obj.position || [0, 0, 0])]);
+        setSaveError(null);
       }
     },
     [objects],
@@ -111,32 +114,47 @@ export function DynamicScenePage() {
   const handleDeselect = useCallback(() => {
     setSelectedObjectId(null);
     setEditPosition(null);
+    setSaveError(null);
   }, []);
 
   const handleObjectUpdate = useCallback(
-    (updated) => {
+    async (updated) => {
       const nextObjects = objects.map((o) => (o.id === updated.id ? updated : o));
-      handleSave({
+      setSaving(true);
+      setSaveError(null);
+      const ok = await handleSave({
         groupOffset: { x: 0, y: 0 },
         groupOffsets: {},
         objects: nextObjects,
         replaceObjects: true,
       });
-      handleDeselect();
+      setSaving(false);
+      if (ok) {
+        handleDeselect();
+      } else {
+        setSaveError('Failed to save — changes not persisted');
+      }
     },
     [objects, handleSave, handleDeselect],
   );
 
   const handleObjectDelete = useCallback(
-    (id) => {
+    async (id) => {
       const nextObjects = objects.filter((o) => o.id !== id);
-      handleSave({
+      setSaving(true);
+      setSaveError(null);
+      const ok = await handleSave({
         groupOffset: { x: 0, y: 0 },
         groupOffsets: {},
         objects: nextObjects,
         replaceObjects: true,
       });
-      handleDeselect();
+      setSaving(false);
+      if (ok) {
+        handleDeselect();
+      } else {
+        setSaveError('Failed to delete — object still present');
+      }
     },
     [objects, handleSave, handleDeselect],
   );
@@ -300,6 +318,27 @@ export function DynamicScenePage() {
           onDelete={handleObjectDelete}
           onClose={handleDeselect}
         />
+      )}
+
+      {(saving || saveError) && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '50px',
+            right: '20px',
+            zIndex: 10003,
+            padding: '6px 12px',
+            borderRadius: '4px',
+            fontSize: '11px',
+            letterSpacing: '1px',
+            fontFamily: theme.typography.fontBody,
+            background: saveError ? 'rgba(255,80,80,0.2)' : 'rgba(0,0,0,0.7)',
+            color: saveError ? '#f55' : theme.colors.textMuted,
+            border: saveError ? '1px solid rgba(255,80,80,0.4)' : '1px solid transparent',
+          }}
+        >
+          {saveError || 'Saving…'}
+        </div>
       )}
 
       <ScrollMinimap
