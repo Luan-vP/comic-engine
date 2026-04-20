@@ -479,54 +479,6 @@ export default function sceneExporter() {
         }
       });
 
-      // POST /_dev/scenes/:slug/assets — Upload an image asset for a scene
-      server.middlewares.use('/_dev/scenes', async (req, res, next) => {
-        if (req.method !== 'POST') return next();
-
-        const match = req.url?.match(/^\/([a-z0-9-]+)\/assets\/?$/);
-        if (!match) return next();
-
-        const slug = match[1];
-
-        try {
-          const sceneDir = path.join(scenesDir, slug);
-          const metaPath = path.join(sceneDir, 'scene.json');
-
-          if (!fs.existsSync(metaPath)) {
-            res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: `Scene "${slug}" not found` }));
-            return;
-          }
-
-          const body = await readBody(req);
-          const { imageUrl } = body;
-
-          if (!imageUrl) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'imageUrl (data URL) is required' }));
-            return;
-          }
-
-          const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/webm', 'video/mp4']);
-          const mimeMatch = imageUrl.match(/^data:([^;]+);base64,/);
-          if (!mimeMatch || !ALLOWED_MIME.has(mimeMatch[1])) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Only image/video uploads are accepted' }));
-            return;
-          }
-
-          const ext = dataUrlExtension(imageUrl);
-          const filename = `upload-${Date.now()}.${ext}`;
-          fs.writeFileSync(path.join(sceneDir, filename), dataUrlToBuffer(imageUrl));
-
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ path: `/local-scenes/${slug}/${filename}` }));
-        } catch (err) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: err.message }));
-        }
-      });
-
       // POST /_dev/assets — Upload an image asset to GCS /assets/ with collision check
       server.middlewares.use('/_dev/assets', async (req, res, next) => {
         if (req.method !== 'POST') return next();
@@ -588,11 +540,20 @@ export default function sceneExporter() {
 
         try {
           const body = await readBody(req);
-          const { comicBookSlug } = body;
+          const rawComicBookSlug = body.comicBookSlug;
 
-          if (!comicBookSlug) {
+          if (!rawComicBookSlug) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'comicBookSlug is required' }));
+            return;
+          }
+
+          // Sanitize to a URL-safe slug so we never create GCS paths with
+          // unexpected characters (spaces, uppercase, symbols).
+          const comicBookSlug = toSlug(rawComicBookSlug);
+          if (!comicBookSlug) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'comicBookSlug must contain at least one alphanumeric character' }));
             return;
           }
 
