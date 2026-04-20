@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { CARD_TYPE_REGISTRY } from './src/components/scene/cardTypesData.js';
+import { toSlug, slugToTitle } from './src/utils/slug.js';
 
 const GCS_BUCKET_NAME = 'comic-engine';
 
@@ -104,20 +105,6 @@ export async function reorderManifest(comicBookSlug, orderedSlugs) {
   const updatedManifest = { scenes: [...reordered, ...rest] };
   await saveManifest(comicBookSlug, updatedManifest);
   return updatedManifest;
-}
-
-function toSlug(name) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-function slugToTitle(slug) {
-  return slug
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
 }
 
 function dataUrlToBuffer(dataUrl) {
