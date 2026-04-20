@@ -1,7 +1,6 @@
 import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Scene, SceneObject } from '../components/scene';
-import { CARD_TYPE_REGISTRY } from '../components/scene/cardTypes';
+import { Scene, SceneObject, SavedObjectRenderer } from '../components/scene';
 import { OverlayStack } from '../components/overlays';
 import { useTheme } from '../theme/ThemeContext';
 import { useComicBook } from '../hooks/useComicBook';
@@ -241,26 +240,6 @@ export function ComicBookReader() {
         ))}
       </Scene>
     </>
-  );
-}
-
-function SavedObjectRenderer({ object, onObjectClick }) {
-  const position = object.position || [0, 0, 0];
-  const parallaxFactor = object.parallaxFactor ?? 0.6;
-
-  const cardType = CARD_TYPE_REGISTRY.find((ct) => ct.id === object.type);
-  const content = cardType ? cardType.renderContent(object) : null;
-
-  if (!content) return null;
-
-  return (
-    <SceneObject
-      position={position}
-      parallaxFactor={parallaxFactor}
-      onClick={onObjectClick ? () => onObjectClick(object.id) : undefined}
-    >
-      {content}
-    </SceneObject>
   );
 }
 
